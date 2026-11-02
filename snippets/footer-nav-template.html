@@ -1,0 +1,379 @@
+<!-- ============================================================
+     友人主题 v4.0 · 页脚 HTML 代码模板
+     ============================================================
+     粘贴位置：博客园 -> 管理 -> 设置 -> 博客设置 -> 页脚 HTML 代码
+     注意：
+       1. 必须先申请「JS 权限」（设置页最下方有链接），否则 script 不执行
+       2. 修改后 Ctrl+F5 强制刷新
+       3. 增删菜单项只需改 HTML，不需要动 JS
+     ============================================================ -->
+
+<!-- ======= 1. 顶部导航条 ======= -->
+<!-- 使用说明（都在本 div 内操作）：
+     - 加菜单项：复制一行 `<li><a href="链接地址">显示文字</a></li>` 插入
+     - 删菜单项：删除整行 `<li>...</li>`
+     - 菜单链接：带 `data-nav="home"` / `data-nav="contact"` / `data-nav="rss"` 的三项
+                 由 JS 自动填入真实地址（无需手动改，但建议手动指定）
+     - 隐藏统计数字：删除下面 `nav-stats` 整块
+     - 隐藏导航条：删除整个 `custom-top-nav` div
+-->
+<div class="custom-top-nav">
+    <div class="nav-left">
+        <div class="site-name" id="siteName">友人a丶的笔记</div>
+        <ul class="nav-links">
+            <!-- 菜单项 ← 从这里开始增删，一行一个菜单项 -->
+            <li><a data-nav="home" href="https://www.cnblogs.com/">首页</a></li>
+            <li><a href="https://i.cnblogs.com/posts/edit">新随笔</a></li>
+            <li><a data-nav="contact" href="mailto:your.email@example.com">联系</a></li>
+            <li><a data-nav="rss" href="https://www.cnblogs.com/your.cnblogs.com/rss/">订阅</a></li>
+            <li><a href="https://i.cnblogs.com/">管理</a></li>
+            <!-- 加菜单项：复制上面这一行，改 href 和文字即可 -->
+        </ul>
+    </div>
+    <div class="nav-right" id="navStats">
+        <span id="navPost">随笔 - -</span>
+        <span id="navArticle">文章 - -</span>
+        <span id="navComment">评论 - -</span>
+        <span id="navView">阅读 - -</span>
+    </div>
+</div>
+
+<!-- ======= 2. 博客标题（登录后会识别） ======= -->
+<!-- 注意：此 div 仅用于获取站点名称，AJAX 是用来填 RSS 链接的 -->
+<div id="blogTitle" style="display:none;visibility:hidden;position:absolute;">
+    <h1 id="Header1_HeaderTitle"></h1>
+</div>
+
+<!-- ======= 3. CSS 样式（页面定制 CSS 已包含全局样式，这里是局部增强） ======= -->
+<style>
+/* 确保导航条阴影足够覆盖背景 */
+.custom-top-nav {
+    background: #ffffff;
+    border-bottom: 1px solid #eef0f2;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
+}
+.custom-top-nav .nav-left .site-name {
+    color: #1f2329;
+    font-weight: 600;
+}
+.custom-top-nav .nav-links li a {
+    color: #4a5568;
+    transition: color .2s;
+}
+.custom-top-nav .nav-links li a:hover {
+    color: #d05ce8;
+}
+.custom-top-nav .nav-links li a.current {
+    color: #d05ce8 !important;
+    font-weight: 600;
+}
+.custom-top-nav .nav-right a {
+    color: #a0aec0;
+    font-size: 13px;
+}
+.custom-top-nav .nav-right a:hover {
+    color: #d05ce8;
+}
+</style>
+
+<!-- ======= 4. 功能脚本 ======= -->
+<script>
+(function () {
+    'use strict';
+
+    /* ============================================================
+       0. 核心配置
+       ============================================================ */
+
+    /* ============================================================
+       1. 导航统计数字同步
+       ============================================================ */
+    function syncStats() {
+        var stats = document.getElementById('navStats');
+        if (!stats) return;
+        [
+            ['stats_post_count', 'navPost'],
+            ['stats_article_count', 'navArticle'],
+            ['stats-comment_count', 'navComment']
+        ].forEach(function (p) {
+            var src = document.getElementById(p[0]);
+            var dst = document.getElementById(p[1]);
+            if (src && dst) dst.textContent = src.textContent.trim();
+        });
+        var viewEl = document.getElementById('stats-total-view-count');
+        var navView = document.getElementById('navView');
+        if (viewEl && navView) {
+            var inner = viewEl.querySelector('span[title]');
+            navView.textContent = inner
+                ? '阅读 - ' + inner.title.replace('总阅读数: ', '').trim()
+                : viewEl.textContent.trim();
+        }
+    }
+
+    /* ============================================================
+       2. 导航链接：自动补全
+       ============================================================ */
+    function initNavLinks() {
+        var m = location.pathname.match(/^\/(\w[\w\d_\-]*)(\/|$)/);
+        if (!m) return;
+        var user = m[1];
+        var base = 'https://www.cnblogs.com/' + user;
+
+        var titleEl = document.getElementById('Header1_HeaderTitle');
+        var siteName = titleEl ? titleEl.textContent.trim() : user;
+
+        // 更新站点名称
+        var nameEl = document.getElementById('siteName');
+        if (nameEl) nameEl.textContent = siteName;
+
+        // data-nav 自动填地址
+        function set(key, href) {
+            var el = document.querySelector('.nav-links a[data-nav="' + key + '"]');
+            if (el) el.setAttribute('href', href);
+        }
+        set('home', base + '/');
+        set('contact', 'https://msg.cnblogs.com/send/' + encodeURIComponent(siteName));
+        set('rss', base + '/rss/');
+
+        // 标记当前页（高亮）
+        var links = document.querySelectorAll('.nav-links li a');
+        for (var i = 0; i < links.length; i++) {
+            var a = links[i];
+            var href = a.getAttribute('href');
+            if (href === '#' || !href) continue;
+            if (href === base + '/' || href === base) {
+                a.classList.add('current');
+            }
+        }
+    }
+
+    /* ============================================================
+       3. 搜索按钮改名
+       ============================================================ */
+    function initSidebar() {
+        var tries = 0;
+        var timer = setInterval(function () {
+            var btn = document.getElementById('btnZzk');
+            if (btn && btn.value !== '搜索') btn.value = '搜索';
+            if (++tries > 25) clearInterval(timer);
+        }, 300);
+    }
+
+    /* ============================================================
+       4. RSS 订阅弹层
+       ============================================================ */
+    function initSubscribe() {
+        var link = document.querySelector('.nav-links a[data-nav="rss"]');
+        if (!link) return;
+        link.removeAttribute('target');
+
+        // 使用博客园原生的订阅逻辑（需要登录）
+        var assetsReady = false;
+        function loadAssets(cb) {
+            if (assetsReady || typeof window.dialog === 'function') { assetsReady = true; return cb(); }
+            if (!document.querySelector('link[data-qm-art]')) {
+                var css = document.createElement('link');
+                css.rel = 'stylesheet';
+                css.setAttribute('data-qm-art', '1');
+                css.href = 'https://assets.cnblogs.com/scripts/artDialog/ui-dialog.css';
+                document.head.appendChild(css);
+            }
+            var js = document.createElement('script');
+            js.src = 'https://assets.cnblogs.com/scripts/artDialog/dialog-min.js';
+            js.onload = function () { assetsReady = true; cb(); };
+            js.onerror = function () { cb(); };
+            document.head.appendChild(js);
+        }
+
+        function nativeSubscribe() {
+            loadAssets(function () {
+                var mgr = window.blogSubscribeManager;
+                if (typeof window.dialog !== 'function' || !mgr) { rssDialog(); return; }
+
+                if (window.isBlogOwner) {
+                    window.dialog({
+                        title: '博客订阅',
+                        content: '这是你自己的博客，不需要订阅～',
+                        okValue: '知道了',
+                        statusbar: '<a href="https://www.cnblogs.com/' + (window.currentBlogApp || '') + '/rss/" target="_blank" rel="noopener">Rss</a>'
+                    }).show();
+                    return;
+                }
+
+                if (!window.isLogined) { mgr.login(); return; }
+
+                var el = document.getElementById('blog_nav_rss');
+                var subscribed = el && /已订阅|UnSubscribe/i.test(el.textContent);
+                (subscribed ? mgr.unsubscribe() : mgr.subscribe());
+            });
+        }
+
+        // Feedly 链接
+        var rssDialog = function () {
+            var url = link.href;
+            var mask = document.createElement('div');
+            mask.className = 'qm-sub-mask';
+            mask.innerHTML =
+                '<div class="qm-sub">' +
+                  '<h4>订阅「' + (document.getElementById('Header1_HeaderTitle') || {textContent: '本站'}).textContent.trim() + '」</h4>' +
+                  '<p>把下面这个地址粘贴到你的 RSS 阅读器里（Feedly、Inoreader、NetNewsWire 等）。</p>' +
+                  '<div class="qm-sub-row">' +
+                    '<input type="text" readonly>' +
+                    '<button class="qm-sub-btn" type="button">复制</button>' +
+                  '</div>' +
+                  '<div class="qm-sub-links">' +
+                    '<a href="#" class="qm-sub-close">关闭</a>' +
+                    '<a href="https://feedly.com/i/subscription/feed/' + encodeURIComponent(url) + '" target="_blank" rel="noopener">用 Feedly 订阅</a>' +
+                  '</div>' +
+                '</div>';
+
+            var input = mask.querySelector('input');
+            var btn = mask.querySelector('.qm-sub-btn');
+            input.value = url;
+
+            btn.addEventListener('click', function () {
+                function ok() {
+                    btn.textContent = '已复制';
+                    btn.classList.add('done');
+                    setTimeout(function () {
+                        btn.textContent = '复制';
+                        btn.classList.remove('done');
+                    }, 1600);
+                }
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(url).then(ok).catch(fallback);
+                } else {
+                    fallback();
+                }
+                function fallback() {
+                    input.focus();
+                    input.select();
+                    try { document.execCommand('copy'); ok(); } catch (err) {}
+                }
+            });
+
+            function close() {
+                mask.classList.remove('show');
+                setTimeout(function () { if (mask.parentNode) mask.remove(); }, 220);
+                document.removeEventListener('keydown', onKey);
+            }
+            function onKey(ev) { if (ev.key === 'Escape') close(); }
+
+            mask.addEventListener('click', function (ev) { if (ev.target === mask) close(); });
+            mask.querySelector('.qm-sub-close').addEventListener('click', function (ev) {
+                ev.preventDefault();
+                close();
+            });
+            document.addEventListener('keydown', onKey);
+
+            document.body.appendChild(mask);
+            requestAnimationFrame(function () { mask.classList.add('show'); });
+            setTimeout(function () { input.focus(); input.select(); }, 60);
+        };
+
+        link.addEventListener('click', function (e) {
+            e.preventDefault();
+            nativeSubscribe();
+        });
+
+        setTimeout(function () { loadAssets(function () {}); }, 2500);
+    }
+
+    /* ============================================================
+       5. 推荐/关注按钮（localStorage 状态）
+       ============================================================ */
+    function initActions() {
+        var key = location.pathname.replace(/\/$/, '');
+
+        function sweep(host) {
+            if (!host) return;
+            [].slice.call(host.children).forEach(function (el) {
+                if (el.tagName === 'SPAN' && !el.className) el.remove();
+            });
+        }
+
+        function bind(el, storeKey, onText, offText) {
+            if (!el) return;
+            if (el.getAttribute('data-qm-bound') === '1') return;
+            el.setAttribute('data-qm-bound', '1');
+
+            var original = el.getAttribute('data-qm-orig') || el.textContent.trim();
+            el.setAttribute('data-qm-orig', original);
+
+            var storage = 'qm_' + storeKey + ':' + key;
+            var on = false;
+            try { on = localStorage.getItem(storage) === '1'; } catch (e) {}
+
+            function render() {
+                el.textContent = on ? onText : original;
+                el.classList.toggle('qm-on', on);
+                el.setAttribute('aria-pressed', on ? 'true' : 'false');
+            }
+
+            el.onclick = null;
+            el.removeAttribute('onclick');
+
+            el.addEventListener('click', function (e) {
+                e.preventDefault();
+                on = !on;
+                try { localStorage.setItem(storage, on ? '1' : '0'); } catch (err) {}
+                render();
+                sweep(document.getElementById('blog_post_info'));
+                sweep(document.getElementById('green_channel'));
+            });
+
+            render();
+        }
+
+        var tries = 0;
+        var timer = setInterval(function () {
+            var info = document.getElementById('blog_post_info');
+            var channel = document.getElementById('green_channel');
+
+            if (channel) {
+                if (channel.getAttribute('data-qm-watch') !== '1') {
+                    channel.setAttribute('data-qm-watch', '1');
+                    sweep(channel);
+                    new MutationObserver(function () { sweep(channel); })
+                        .observe(channel, { childList: true });
+                }
+                if (info && info.getAttribute('data-qm-watch') !== '1') {
+                    info.setAttribute('data-qm-watch', '1');
+                    sweep(info);
+                    new MutationObserver(function () { sweep(info); })
+                        .observe(info, { childList: true });
+                }
+                bind(document.getElementById('green_channel_digg'), 'digg', '已推荐', '好文要顶');
+                bind(document.getElementById('green_channel_follow'), 'follow', '已关注', '关注我');
+            }
+
+            if (++tries > 60) clearInterval(timer);
+        }, 250);
+    }
+
+    /* ============================================================
+       6. 启动
+       ============================================================ */
+    function boot() {
+        syncStats();
+        initNavLinks();
+        initSubscribe();
+        initSidebar();
+        initActions();
+
+        // 定期补统计
+        var attempts = 0;
+        var timer = setInterval(function () {
+            syncStats();
+            var stats = document.getElementById('navStats');
+            if (!stats || !stats.textContent.indexOf('随笔 - -') || ++attempts > 10) clearInterval(timer);
+        }, 500);
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', boot);
+    } else {
+        boot();
+    }
+})();
+</script>

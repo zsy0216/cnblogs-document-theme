@@ -1,0 +1,217 @@
+<!-- 本地预览 - 三栏白卡风格 v4.0 -->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>友人a丶的笔记 · 预览</title>
+    <link rel="stylesheet" href="style-v4.css">
+</head>
+<body>
+    <!-- 顶部导航 -->
+    <div class="custom-top-nav">
+        <div class="nav-left">
+            <div class="site-name">友人a丶的笔记</div>
+            <ul class="nav-links">
+                <li><a data-nav="home" href="https://www.cnblogs.com/" class="current">首页</a></li>
+                <li><a href="https://i.cnblogs.com/posts/edit">新随笔</a></li>
+                <li><a data-nav="contact" href="mailto:your.email@example.com">联系</a></li>
+                <li><a data-nav="rss" href="https://www.cnblogs.com/your.cnblogs.com/rss/">订阅</a></li>
+                <li><a href="https://i.cnblogs.com/">管理</a></li>
+            </ul>
+        </div>
+        <div class="nav-right" id="navStats">
+            <span id="navPost">随笔 - 35</span>
+            <span id="navArticle">文章 - 12</span>
+            <span id="navComment">评论 - 128</span>
+            <span id="navView">阅读 - 15680</span>
+        </div>
+    </div>
+
+    <!-- 主容器 -->
+    <div id="main">
+        <!-- 左侧目录 -->
+        <aside id="sideBar">
+            <div id="sideBarMain">
+                <div class="sidebar-module">
+                    <h3>文章目录</h3>
+                    <ul>
+                        <li class="current"><a href="#">开发环境</a>
+                            <ul>
+                                <li><a href="#">ESP-IDF</a></li>
+                                <li><a href="#">Arduino</a></li>
+                                <li><a href="#">PlatformIO</a></li>
+                            </ul>
+                        </li>
+                        <li><a href="#">单片机</a></li>
+                        <li><a href="#">运维笔记</a></li>
+                        <li><a href="#">工作笔记</a></li>
+                        <li><a href="#">Golang</a></li>
+                    </ul>
+                </div>
+                <div class="sidebar-module">
+                    <h3>搜索</h3>
+                    <div class="mySearch">
+                        <form method="get" action="/search/">
+                            <input type="text" placeholder="搜索文章...">
+                            <button type="submit">搜索</button>
+                        </form>
+                    </div>
+                </div>
+                <div class="sidebar-module">
+                    <h3>分类</h3>
+                    <ul>
+                        <li><a href="#">工作笔记</a></li>
+                        <li><a href="#">运维笔记</a></li>
+                        <li><a href="#">单片机</a></li>
+                        <li><a href="#">Android</a></li>
+                        <li><a href="#">Golang</a></li>
+                    </ul>
+                </div>
+            </div>
+        </aside>
+
+        <!-- 中间文章列表 -->
+        <div id="mainContent">
+            <!-- 文章 1（大封面图） -->
+            <article class="day">
+                <div class="postImage">
+                    <img src="https://nicen.cn/upload/images/welcome-cover.jpg" alt="封面图"
+                         onerror="this.src='https://images.unsplash.com/photo-1516233758467-47406161a674?w=800&q=80'">
+                    <span class="category_tag">我的原创</span>
+                    <div class="overlay">
+                        <h3 class="postTitle"><a href="#">客盈 Chat AI自动应答功能从0到1，快速上手</a></h3>
+                    </div>
+                </div>
+                <div class="postDesc">
+                    <span>友人a丶</span>
+                    <span>2026-09-29</span>
+                    <span>🔥 1301 热度</span>
+                    <span>💬 0 评论</span>
+                </div>
+            </article>
+
+            <!-- 文章 2 -->
+            <article class="day">
+                <div class="postImage">
+                    <img src="https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800&q=80" alt="封面图">
+                    <span class="category_tag">运维笔记</span>
+                    <div class="overlay">
+                        <h3 class="postTitle"><a href="#">Nginx进阶使用手册，Nginx知识体系构建与实战要点</a></h3>
+                    </div>
+                </div>
+                <div class="postDesc">
+                    <span>友人a丶</span>
+                    <span>2025-12-03</span>
+                    <span>🔥 632 热度</span>
+                    <span>💬 2 评论</span>
+                </div>
+            </article>
+
+            <!-- 文章 3 -->
+            <article class="day">
+                <div class="postImage">
+                    <img src="https://images.unsplash.com/photo-1534423869855-0ac107bb733f?w=800&q=80" alt="封面图">
+                    <span class="category_tag">单片机</span>
+                    <div class="overlay">
+                        <h3 class="postTitle"><a href="#">ESP32单片机开发 从入门到精通</a></h3>
+                    </div>
+                </div>
+                <div class="postDesc">
+                    <span>友人a丶</span>
+                    <span>2025-07-15</span>
+                    <span>🔥 373 热度</span>
+                    <span>💬 0 评论</span>
+                </div>
+            </article>
+
+            <!-- 文章 4 -->
+            <article class="day">
+                <div class="postImage">
+                    <img src="https://images.unsplash.com/photo-1461749860325-ae0f8549d44d?w=800&q=80" alt="封面图">
+                    <span class="category_tag">运维笔记</span>
+                    <div class="overlay">
+                        <h3 class="postTitle"><a href="#">Wsl从入门到精通，Wsl快速上手</a></h3>
+                    </div>
+                </div>
+                <div class="postDesc">
+                    <span>友人a丶</span>
+                    <span>2025-06-02</span>
+                    <span>🔥 545 热度</span>
+                    <span>💬 2 评论</span>
+                </div>
+            </article>
+        </div>
+
+        <!-- 右侧 -->
+        <aside id="rightColumn">
+            <div class="sidebar-module">
+                <div id="profile_block">
+                    <div id="profile_card">
+                        <img src="https://pic.cnblogs.com/avatar/2017/05/07/18961/20170507121425.png" alt="头像" class="author_avatar">
+                        <span class="author_name">友人a丶</span>
+                        <span class="author_desc">真实、随性、洒脱、自由。</span>
+                    </div>
+                    <div class="stats">
+                        <div>
+                            <span class="num">275</span>
+                            <span class="desc">文章</span>
+                        </div>
+                        <div>
+                            <span class="num">1046</span>
+                            <span class="desc">评论</span>
+                        </div>
+                        <div>
+                            <span class="num">1173246</span>
+                            <span class="desc">阅读</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sidebar-module">
+                <h3>最新评论</h3>
+                <ul id="blog-news">
+                    <li>
+                        <a href="#">麟懿</a>：我发现个问题，代码块的数字序号与代码行不对齐，行数越多差距越大。
+                        <span class="recent_comment_author">发表于：客盈 Chat AI自动应答功能从0到1，快速上手</span>
+                    </li>
+                    <li>
+                        <a href="#">惬意</a>：改一下友链吧 网站换了 将jylbcg.cn 改成yblog.com
+                        <span class="recent_comment_author">发表于：盘点这些年业余做的那些赚到钱的活儿</span>
+                    </li>
+                    <li>
+                        <a href="#">友人a丶</a>：@郑重: 有问题可以在评论区留言~
+                        <span class="recent_comment_author">发表于：ESP32单片机开发 从入门到精通</span>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="sidebar-module">
+                <h3>推荐</h3>
+                <ul id="blog-news">
+                    <li><a href="#">John Liao 的笔记</a></li>
+                    <li><a href="#">行者无疆</a></li>
+                    <li><a href="#">华为云服务器</a></li>
+                </ul>
+            </div>
+
+            <div class="sidebar-module">
+                <h3>归档</h3>
+                <ul id="blog-news">
+                    <li><a href="#">2026年11月 (3)</a></li>
+                    <li><a href="#">2026年10月 (5)</a></li>
+                    <li><a href="#">2026年9月 (12)</a></li>
+                    <li><a href="#">2025年12月 (8)</a></li>
+                </ul>
+            </div>
+        </aside>
+    </div>
+
+    <!-- 页脚 -->
+    <div id="footer">
+        <p>Copyright © 2026 Ep流苏</p>
+        <p>Powered by <a href="https://www.cnblogs.com" target="_blank">博客园</a></p>
+    </div>
+</body>
+</html>
