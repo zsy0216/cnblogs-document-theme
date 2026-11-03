@@ -1,14 +1,15 @@
 <!-- ============================================================
-     友人主题 v4.0 · 页脚 HTML 代码模板
+     友人主题 v5.0 · 页脚 HTML 代码模板
      ============================================================
      粘贴位置：博客园 -> 管理 -> 设置 -> 博客设置 -> 页脚 HTML 代码
      注意：
        1. 必须先申请「JS 权限」（设置页最下方有链接），否则 script 不执行
        2. 修改后 Ctrl+F5 强制刷新
        3. 增删菜单项只需改 HTML，不需要动 JS
+       4. 顶栏导航是纯 HTML 实现，适用所有页面
      ============================================================ -->
 
-<!-- ======= 1. 顶部导航条 ======= -->
+<!-- ======= 1. 顶部导航条（仿 nicen.cn） ======= -->
 <!-- 使用说明（都在本 div 内操作）：
      - 加菜单项：复制一行 `<li><a href="链接地址">显示文字</a></li>` 插入
      - 删菜单项：删除整行 `<li>...</li>`
@@ -18,23 +19,26 @@
      - 隐藏导航条：删除整个 `custom-top-nav` div
 -->
 <div class="custom-top-nav">
-    <div class="nav-left">
-        <div class="site-name" id="siteName">友人a丶的笔记</div>
-        <ul class="nav-links">
-            <!-- 菜单项 ← 从这里开始增删，一行一个菜单项 -->
-            <li><a data-nav="home" href="https://www.cnblogs.com/">首页</a></li>
-            <li><a href="https://i.cnblogs.com/posts/edit">新随笔</a></li>
-            <li><a data-nav="contact" href="mailto:your.email@example.com">联系</a></li>
-            <li><a data-nav="rss" href="https://www.cnblogs.com/your.cnblogs.com/rss/">订阅</a></li>
-            <li><a href="https://i.cnblogs.com/">管理</a></li>
-            <!-- 加菜单项：复制上面这一行，改 href 和文字即可 -->
-        </ul>
-    </div>
-    <div class="nav-right" id="navStats">
-        <span id="navPost">随笔 - -</span>
-        <span id="navArticle">文章 - -</span>
-        <span id="navComment">评论 - -</span>
-        <span id="navView">阅读 - -</span>
+    <div class="nav-inner">
+        <div class="nav-left">
+            <div class="site-name" id="siteName">Ep流苏</div>
+            <ul class="nav-links">
+                <!-- 菜单项 ← 从这里开始增删，一行一个菜单项 -->
+                <li><a data-nav="home" href="https://www.cnblogs.com/zhangshuaiyin/">首页</a></li>
+                <li><a href="https://i.cnblogs.com/posts/edit">新随笔</a></li>
+                <li><a data-nav="contact" href="mailto:your.email@example.com">联系</a></li>
+                <li><a data-nav="rss" href="https://www.cnblogs.com/zhangshuaiyin/rss/">订阅</a></li>
+                <li><a href="https://github.com/zsy0216">GitHub</a></li>
+                <li><a href="https://i.cnblogs.com/">管理</a></li>
+                <!-- 加菜单项：复制上面这一行，改 href 和文字即可 -->
+            </ul>
+        </div>
+        <div class="nav-right" id="navStats">
+            <span id="navPost">随笔 - -</span>
+            <span id="navArticle">文章 - -</span>
+            <span id="navComment">评论 - -</span>
+            <span id="navView">阅读 - -</span>
+        </div>
     </div>
 </div>
 
@@ -48,28 +52,51 @@
 <style>
 /* 确保导航条阴影足够覆盖背景 */
 .custom-top-nav {
-    background: #ffffff;
-    border-bottom: 1px solid #eef0f2;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
+    background: #ffffff !important;
+    border-bottom: 1px solid #eef0f2 !important;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03) !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    z-index: 1000 !important;
+}
+.custom-top-nav .nav-inner {
+    max-width: 1280px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 56px;
+    padding: 0 20px;
 }
 .custom-top-nav .nav-left .site-name {
     color: #1f2329;
     font-weight: 600;
+    font-size: 18px;
 }
 .custom-top-nav .nav-links li a {
     color: #4a5568;
-    transition: color .2s;
+    font-size: 15px;
+    font-weight: 500;
+    padding: 6px 12px;
+    border-radius: 6px;
+    transition: color .25s;
+    text-decoration: none;
 }
 .custom-top-nav .nav-links li a:hover {
     color: #d05ce8;
+    background: rgba(208, 92, 232, 0.08);
 }
 .custom-top-nav .nav-links li a.current {
     color: #d05ce8 !important;
     font-weight: 600;
+    background: rgba(208, 92, 232, 0.08) !important;
 }
 .custom-top-nav .nav-right a {
     color: #a0aec0;
     font-size: 13px;
+    text-decoration: none;
 }
 .custom-top-nav .nav-right a:hover {
     color: #d05ce8;
@@ -167,65 +194,28 @@
         if (!link) return;
         link.removeAttribute('target');
 
-        // 使用博客园原生的订阅逻辑（需要登录）
-        var assetsReady = false;
-        function loadAssets(cb) {
-            if (assetsReady || typeof window.dialog === 'function') { assetsReady = true; return cb(); }
-            if (!document.querySelector('link[data-qm-art]')) {
-                var css = document.createElement('link');
-                css.rel = 'stylesheet';
-                css.setAttribute('data-qm-art', '1');
-                css.href = 'https://assets.cnblogs.com/scripts/artDialog/ui-dialog.css';
-                document.head.appendChild(css);
-            }
-            var js = document.createElement('script');
-            js.src = 'https://assets.cnblogs.com/scripts/artDialog/dialog-min.js';
-            js.onload = function () { assetsReady = true; cb(); };
-            js.onerror = function () { cb(); };
-            document.head.appendChild(js);
-        }
-
-        function nativeSubscribe() {
-            loadAssets(function () {
-                var mgr = window.blogSubscribeManager;
-                if (typeof window.dialog !== 'function' || !mgr) { rssDialog(); return; }
-
-                if (window.isBlogOwner) {
-                    window.dialog({
-                        title: '博客订阅',
-                        content: '这是你自己的博客，不需要订阅～',
-                        okValue: '知道了',
-                        statusbar: '<a href="https://www.cnblogs.com/' + (window.currentBlogApp || '') + '/rss/" target="_blank" rel="noopener">Rss</a>'
-                    }).show();
-                    return;
-                }
-
-                if (!window.isLogined) { mgr.login(); return; }
-
-                var el = document.getElementById('blog_nav_rss');
-                var subscribed = el && /已订阅|UnSubscribe/i.test(el.textContent);
-                (subscribed ? mgr.unsubscribe() : mgr.subscribe());
-            });
-        }
-
-        // Feedly 链接
-        var rssDialog = function () {
+        link.addEventListener('click', function (e) {
+            e.preventDefault();
             var url = link.href;
             var mask = document.createElement('div');
             mask.className = 'qm-sub-mask';
+            mask.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);';
             mask.innerHTML =
                 '<div class="qm-sub">' +
                   '<h4>订阅「' + (document.getElementById('Header1_HeaderTitle') || {textContent: '本站'}).textContent.trim() + '」</h4>' +
                   '<p>把下面这个地址粘贴到你的 RSS 阅读器里（Feedly、Inoreader、NetNewsWire 等）。</p>' +
                   '<div class="qm-sub-row">' +
-                    '<input type="text" readonly>' +
+                    '<input type="text" readonly value="' + url + '">' +
                     '<button class="qm-sub-btn" type="button">复制</button>' +
                   '</div>' +
                   '<div class="qm-sub-links">' +
-                    '<a href="#" class="qm-sub-close">关闭</a>' +
                     '<a href="https://feedly.com/i/subscription/feed/' + encodeURIComponent(url) + '" target="_blank" rel="noopener">用 Feedly 订阅</a>' +
+                    '<a href="#" class="qm-sub-close">关闭</a>' +
                   '</div>' +
                 '</div>';
+
+            var maskDiv = mask.querySelector('div');
+            maskDiv.style.cssText = 'background:#fff;padding:24px;border-radius:12px;max-width:400px;width:90%;';
 
             var input = mask.querySelector('input');
             var btn = mask.querySelector('.qm-sub-btn');
@@ -234,10 +224,10 @@
             btn.addEventListener('click', function () {
                 function ok() {
                     btn.textContent = '已复制';
-                    btn.classList.add('done');
+                    btn.style.background = '#d05ce8';
                     setTimeout(function () {
                         btn.textContent = '复制';
-                        btn.classList.remove('done');
+                        btn.style.background = '';
                     }, 1600);
                 }
                 if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -253,8 +243,7 @@
             });
 
             function close() {
-                mask.classList.remove('show');
-                setTimeout(function () { if (mask.parentNode) mask.remove(); }, 220);
+                mask.remove();
                 document.removeEventListener('keydown', onKey);
             }
             function onKey(ev) { if (ev.key === 'Escape') close(); }
@@ -267,16 +256,8 @@
             document.addEventListener('keydown', onKey);
 
             document.body.appendChild(mask);
-            requestAnimationFrame(function () { mask.classList.add('show'); });
             setTimeout(function () { input.focus(); input.select(); }, 60);
-        };
-
-        link.addEventListener('click', function (e) {
-            e.preventDefault();
-            nativeSubscribe();
         });
-
-        setTimeout(function () { loadAssets(function () {}); }, 2500);
     }
 
     /* ============================================================
