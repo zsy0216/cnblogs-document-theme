@@ -1,5 +1,5 @@
 /* ============================================================
-   友人主题 v5.0 — 适配博客园「本色」主题
+   友人主题 v5.2 — 适配博客园「本色」主题
    风格参考：https://nicen.cn/
    视觉特征：纯白卡片 / 大封面图 / 左中右三栏 / 粉紫强调色
    ============================================================
@@ -148,9 +148,11 @@ a:hover { color: var(--ink-link-h); }
 .custom-top-nav .nav-right a:hover { color: var(--accent); }
 
 /* 隐藏博客园原始顶栏 */
-#blogTopNav, #site_nav_top, #comment_cache, #right_zhbs { display: none !important; }
+#blogTopNav, #site_nav_top, #comment_cache, #right_zhbs, #blogTitle1, #BlogMenu,
+#fp_feedback, #cnblogs_top_nav { display: none !important; }
 .blogTitle h1 { display: none !important; }
 #banner { display: none !important; }
+#blogTitle { display: none !important; }
 
 /* ============================================================
    3. 三栏布局
@@ -158,8 +160,8 @@ a:hover { color: var(--ink-link-h); }
 #home { background: transparent !important; }
 #main {
     max-width: 1280px;
-    margin: 20px auto 0;
-    padding: 0 20px;
+    margin: 0 auto;
+    padding: 0 20px 20px;
     display: flex;
     align-items: flex-start;
     gap: 20px;
@@ -203,32 +205,38 @@ a:hover { color: var(--ink-link-h); }
     visibility: visible !important;
     opacity: 1 !important;
 }
+#rightColumn > * {
+    margin-bottom: 0;
+}
+
+/* 隐藏中间区域多余内容 */
+#mainContent .postDesc .postervisor,
+#mainContent .postDesc .list-icon,
+#mainContent .postDesc #blogPostInfo,
+#mainContent .post .post_info,
+#mainContent .post .business_forum,
+#mainContent .post .post_cmt,
+#mainContent .post .post_item_foot { display: none !important; }
+#mainContent .post .post_body { padding: 0 !important; }
 
 /* ============================================================
    4. 左侧文章目录
    ============================================================ */
-#sideBarMain > div:not(#leftcontentcontainer),
-#sideBarMain > #blog-sidecolumn,
-#sideBarMain #blog-sidecolumn .sidebar-block {
+/* 隐藏默认侧边栏菜单 */
+#sideBar .mylist, #sideBar #navMenu, #sideBar #navList,
+#sideBar .blogItem, #sideBar .menuList { display: none !important; }
+
+/* 目录卡片 */
+#catalog {
     background: var(--bg-card);
     border-radius: var(--radius);
     border: 1px solid var(--border-card);
     box-shadow: var(--shadow-card);
     padding: 18px;
-    margin: 0 !important;
     box-sizing: border-box;
     width: 100%;
-    transition: box-shadow .3s ease;
 }
-#sideBarMain > div:not(#leftcontentcontainer):hover {
-    box-shadow: var(--shadow-card-hover);
-}
-
-/* 模块标题 */
-#sideBar .catListTitle,
-#sideBarMain #blog-sidecolumn .sidebar-block h3,
-#sideBarMain #blog-sidecolumn .sidebar-block .catListTitle {
-    display: block;
+#catalog h3 {
     font-size: 14px;
     font-weight: 600;
     color: var(--ink-title);
@@ -236,27 +244,23 @@ a:hover { color: var(--ink-link-h); }
     padding-bottom: 10px;
     border-bottom: 1px solid var(--border-card);
 }
-
-/* 目录列表 */
-#sideBar ul { padding-left: 0; list-style: none; margin: 0; }
-#sideBar ul li { margin-bottom: 10px; font-size: 13px; }
-#sideBar ul li:last-child { margin-bottom: 0; }
-#sideBar ul li a {
+#catalog ul { padding-left: 0; list-style: none; margin: 0; }
+#catalog ul li { margin-bottom: 10px; }
+#catalog ul li:last-child { margin-bottom: 0; }
+#catalog ul li a {
     color: var(--ink-body);
     display: block;
     padding: 4px 8px;
     border-radius: var(--radius-sm);
     transition: all .2s;
+    font-size: 13px;
+    text-decoration: none;
 }
-#sideBar ul li a:hover {
+#catalog ul li a:hover {
     background: var(--tag-bg);
     color: var(--accent);
 }
-
-/* 当前/展开项高亮 */
-#sideBar ul li.current > a,
-#sideBar ul li.active > a,
-#sideBar ul li.selected > a {
+#catalog ul li a.active {
     color: var(--accent) !important;
     background: var(--accent-light) !important;
     font-weight: 500;
@@ -264,23 +268,25 @@ a:hover { color: var(--ink-link-h); }
     border-radius: 0 4px 4px 0;
     padding-left: 6px;
 }
-
-/* 目录折叠三角 */
-#sideBar .accordion { cursor: pointer; }
-#sideBar .accordion::after {
-    content: "▾";
-    float: right;
-    font-size: 11px;
-    color: var(--ink-meta);
-}
-
-/* 目录子集 */
-#sideBar ul ul {
+#catalog ul ul {
     padding-left: 16px;
     margin-top: 6px;
     border-left: 1px dashed var(--border-card);
 }
-#sideBar ul ul li { font-size: 12.5px; margin-bottom: 8px; }
+#catalog ul ul li { font-size: 12.5px; margin-bottom: 8px; }
+
+/* 公告 */
+#blogNews {
+    background: var(--bg-card);
+    border-radius: var(--radius);
+    border: 1px solid var(--border-card);
+    box-shadow: var(--shadow-card);
+    padding: 18px;
+}
+#blogNews h3 {
+    font-size: 14px; font-weight: 600; color: var(--ink-title);
+    margin: 0 0 12px 0; padding-bottom: 10px; border-bottom: 1px solid var(--border-card);
+}
 
 /* ============================================================
    5. 中间：大封面图文章卡片
@@ -342,9 +348,6 @@ a:hover { color: var(--ink-link-h); }
     border-top: 1px solid var(--border-card) !important;
 }
 
-/* 隐藏的原始日志元信息（排名/推荐数） */
-#mainContent .post .postDesc .postervisor { display: none; }
-
 /* 底部信息条 */
 #mainContent .postinfo {
     margin: 0;
@@ -394,7 +397,7 @@ a:hover { color: var(--ink-link-h); }
 #mainContent .day .c_b_p_desc_readmore a:hover::after,
 #mainContent .post .postCommand a:hover::after { transform: translateX(3px); }
 
-/* 分类标签标签 */
+/* 分类标签 */
 #mainContent .postCategory a,
 #mainContent .postTag a {
     display: inline-flex;
@@ -751,19 +754,6 @@ a:hover { color: var(--ink-link-h); }
     display: block; font-size: 12px; color: var(--ink-meta); margin-top: 4px;
 }
 
-/* 公告 */
-#blogNews {
-    background: var(--bg-card);
-    border-radius: var(--radius);
-    border: 1px solid var(--border-card);
-    box-shadow: var(--shadow-card);
-    padding: 18px;
-}
-#blogNews h3 {
-    font-size: 14px; font-weight: 600; color: var(--ink-title);
-    margin: 0 0 12px 0; padding-bottom: 10px; border-bottom: 1px solid var(--border-card);
-}
-
 /* ============================================================
    8. 搜索框（右侧）
    ============================================================ */
@@ -779,7 +769,7 @@ a:hover { color: var(--ink-link-h); }
     box-sizing: border-box !important;
     border: 1px solid var(--border-card);
     border-radius: var(--radius-sm);
-    background: var(--bg-page);
+    Background: var(--bg-page);
     color: var(--ink-body);
     outline: none;
     transition: all .2s;

@@ -1,5 +1,5 @@
 <!-- ============================================================
-     友人主题 v5.0 · 页脚 HTML 代码模板
+     友人主题 v5.2 · 页脚 HTML 代码模板
      ============================================================
      粘贴位置：博客园 -> 管理 -> 设置 -> 博客设置 -> 页脚 HTML 代码
      注意：
@@ -25,7 +25,7 @@
             <ul class="nav-links">
                 <!-- 菜单项 ← 从这里开始增删，一行一个菜单项 -->
                 <li><a data-nav="home" href="https://www.cnblogs.com/zhangshuaiyin/">首页</a></li>
-                <li><a href="https://i.cnblogs.com/posts/edit">新随笔</a></li>
+                <li><a href="https://i.cnblogs.com/posts/edit">新随��</a></li>
                 <li><a data-nav="contact" href="mailto:your.email@example.com">联系</a></li>
                 <li><a data-nav="rss" href="https://www.cnblogs.com/zhangshuaiyin/rss/">订阅</a></li>
                 <li><a href="https://github.com/zsy0216">GitHub</a></li>
@@ -43,7 +43,6 @@
 </div>
 
 <!-- ======= 2. 博客标题（登录后会识别） ======= -->
-<!-- 注意：此 div 仅用于获取站点名称，AJAX 是用来填 RSS 链接的 -->
 <div id="blogTitle" style="display:none;visibility:hidden;position:absolute;">
     <h1 id="Header1_HeaderTitle"></h1>
 </div>
@@ -175,7 +174,68 @@
     }
 
     /* ============================================================
-       3. 搜索按钮改名
+       3. 左侧文章目录（仿 nicen.cn）
+       ============================================================ */
+    function initCatalog() {
+        var page = location.pathname;
+        var m = page.match(/^\/(\w[\w\d_\-]*)(\/|$)/);
+        var user = m ? m[1] : '';
+        var base = 'https://www.cnblogs.com/' + user;
+        var isActive = function (url) {
+            if (!url) return false;
+            if (url === base + '/' || url === base) return page === '/' || page === '/' + user + '/';
+            return url === page || url === page.replace(/\/$/, '');
+        };
+
+        var items = [
+            { text: '全部文章', url: base + '/' },
+            { text: '随笔', url: base + '/default' },
+            { text: '分类', url: base + '/CatalogTypeId' },
+            { text: '归档', url: base + '/PostArchive.aspx' },
+            { text: '联系', url: base + '/Contact' }
+        ];
+
+        // 尝试从侧边栏的默认链接获取分类
+        var ml = document.querySelector('#sideBar .mylist');
+        if (ml) {
+            var links = ml.querySelectorAll('a');
+            var custom = [];
+            for (var j = 0; j < links.length; j++) {
+                var link = links[j];
+                var href = link.getAttribute('href');
+                var text = link.textContent.trim();
+                if (!href || !text) continue;
+                if (href.indexOf('https://') === 0 || href.indexOf('http://') === 0) continue;
+                if (href === '#') continue;
+                custom.push({ text: text, url: href });
+            }
+            if (custom.length) {
+                items = [];
+                for (var c = 0; c < custom.length; c++) {
+                    items.push({ text: custom[c].text, url: custom[c].url });
+                }
+            }
+        }
+
+        var html = [];
+        for (var i = 0; i < items.length; i++) {
+            var item = items[i];
+            var cls = isActive(item.url) ? ' active' : '';
+            html.push('<li><a class="' + cls + '" href="' + item.url + '">' + item.text + '</a></li>');
+        }
+
+        // 将目录注入左侧侧边栏
+        var sideBarMain = document.getElementById('sideBarMain');
+        if (sideBarMain) {
+            var catalog = document.createElement('div');
+            catalog.id = 'catalog';
+            catalog.innerHTML = '<h3>目录</h3><ul>' + html.join('') + '</ul>';
+            sideBarMain.insertBefore(catalog, sideBarMain.firstChild);
+        }
+    }
+
+    /* ============================================================
+       4. 搜索按钮改名
        ============================================================ */
     function initSidebar() {
         var tries = 0;
@@ -187,7 +247,7 @@
     }
 
     /* ============================================================
-       4. RSS 订阅弹层
+       5. RSS 订阅弹层
        ============================================================ */
     function initSubscribe() {
         var link = document.querySelector('.nav-links a[data-nav="rss"]');
@@ -261,7 +321,7 @@
     }
 
     /* ============================================================
-       5. 推荐/关注按钮（localStorage 状态）
+       6. 推荐/关注按钮（localStorage 状态）
        ============================================================ */
     function initActions() {
         var key = location.pathname.replace(/\/$/, '');
@@ -333,11 +393,12 @@
     }
 
     /* ============================================================
-       6. 启动
+       7. 启动
        ============================================================ */
     function boot() {
         syncStats();
         initNavLinks();
+        initCatalog();
         initSubscribe();
         initSidebar();
         initActions();
