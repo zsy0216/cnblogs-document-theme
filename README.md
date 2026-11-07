@@ -13,17 +13,22 @@
 
 ### 一键粘贴（可选）
 
-打开 `copy-tool.html`，点三个按钮分别写入剪贴板，去后台 `Ctrl+A` + `Ctrl+V`。脚本写入后滚到底部点**保存**，保存成功后用下面这条命令验真：
+直接复制下面四个文件的内容到后台（` Ctrl+A ` 全选 + ` Ctrl+V ` 粘贴）：
 
-```bash
-curl -s https://www.cnblogs.com/你的博客名/custom.css | wc -c
-```
+| 文件 | 粘贴位置 |
+|------|----------|
+| `css/theme-v6.css` | 页面定制 CSS 代码 |
+| `snippets/head-nav-v6.html` | 页首 HTML 代码 |
+| `snippets/footer-script-v6.html` | 页脚 HTML 代码（需先清空） |
+| `snippets/announcement-v6.html` | 侧边栏公告 |
 
-预期 > 20000，仍为 468 说明没存上。
+粘贴完成后，页面滚到底部点**保存**，然后前台 `Ctrl+F5` 强刷。验证：F12 看 Elements 中 `<style>` 含 `theme-v6.css`，左栏出现编号目录。
+
+> 本地 `preview/home-v6.html` / `preview/post-v6.html` 是离线预览页（把线上 DOM + 主题 CSS 合成），可在本地直接打开看效果，不算服务。
 
 ## 验证生效
 
-浏览器按 `F12`，在 Elements 中看到 `<style>` 项含 `theme-v6.css`，且页面出现编号目录即成功。
+粘贴代码后，F12 打开开发者工具，在 Elements 中看页面有没有 `<style>` 项含 `theme-v6.css`，普通文章页左栏有没有编号目录——有就成功。
 
 ## 定制顶栏
 
@@ -64,8 +69,6 @@ snippets/announcement-v6.html 公告模板（内联样式，抗覆盖）
 snippets/footer-script-v6.html 左栏目录 + 右栏搬运（页脚 HTML）
 preview/home-v6.html          首页离线预览（真实 DOM 复刻）
 preview/post-v6.html          文章页离线预览
-build_preview.py              用线上 HTML 生成预览页
-copy-tool.html                一键复制工具页
 ```
 
 ## 回滚
