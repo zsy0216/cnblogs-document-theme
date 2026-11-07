@@ -51,6 +51,7 @@
 | 菜单 | 格式 | 示例 |
 |:---|:---|:---|
 | 首页 | 博客名主页 | `https://<name>/` |
+| 主页 | 管理页 | `https://home.cnblogs.com/u/<name>` |
 | 归档 | `/p/archive/` | `https://<name>/p/archive/` |
 | 分类 | `/categories` | `https://<name>/categories` |
 | 标签 | `/tag` | `https://<name>/tag` |
