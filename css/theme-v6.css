@@ -158,7 +158,33 @@ body.has-navbar { padding-top: 0 !important; margin-top: 0 !important; }
 }
 #leftcontentcontainer::-webkit-scrollbar { width: 4px; }
 #leftcontentcontainer::-webkit-scrollbar-thumb { background: #dfe3e8; border-radius: 4px; }
-/* 右：公告 */
+/* 右：公告 + 常用链接 / 随笔档案 / 搜索 / 排行（由页脚脚本搬进来） */
+#qb-right {
+    grid-column: 3;
+    grid-row: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    position: sticky;
+    top: 74px;
+    max-height: calc(100vh - 96px);
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 2px;
+    scrollbar-width: thin;
+    scrollbar-color: #dfe3e8 transparent;
+}
+#qb-right::-webkit-scrollbar { width: 4px; }
+#qb-right::-webkit-scrollbar-thumb { background: #dfe3e8; border-radius: 4px; }
+/* 搬进容器后，取消原来的网格定位，改由父容器 flex 排列 */
+#qb-right #sidebar_news,
+#qb-right #blog-sidecolumn {
+    grid-column: auto !important;
+    grid-row: auto !important;
+    flex: 0 0 auto;
+}
+
 #sidebar_news {
     grid-column: 3;
     grid-row: 1;
@@ -715,18 +741,21 @@ body.has-navbar { padding-top: 0 !important; margin-top: 0 !important; }
 
 /* ---------- 8. 响应式 ---------- */
 @media screen and (max-width: 1220px) {
+    /* 仍保持三栏，只收窄两侧，避免 1366 宽笔记本把右栏甩到页面底部 */
     #main {
-        grid-template-columns: 248px minmax(0, 1fr);
-        padding: 20px 20px 8px;
+        grid-template-columns: 216px minmax(0, 1fr) 236px;
+        gap: 16px;
+        padding: 20px 16px 8px;
+    }
+}
+@media screen and (max-width: 1024px) {
+    #main {
+        grid-template-columns: 220px minmax(0, 1fr);
+        gap: 16px;
     }
     #mainContent { grid-column: 2; }
-    #sidebar_news, #blog-calendar {
-        grid-column: 1;
-        grid-row: auto;
-    }
-    /* 右栏内容并入左栏底部 */
-    #sidebar_news { grid-row: 4; }
-    #blog-calendar { grid-row: 5; }
+    /* 两栏时右栏让位，只留左侧目录 + 正文 */
+    #qb-right, #blog-calendar { display: none !important; }
 }
 @media screen and (max-width: 860px) {
     #main {
@@ -736,13 +765,13 @@ body.has-navbar { padding-top: 0 !important; margin-top: 0 !important; }
         padding: 14px 14px 4px;
         gap: 14px;
     }
-    #mainContent, #leftcontentcontainer, #sidebar_news, #blog-calendar {
+    #mainContent, #leftcontentcontainer, #sidebar_news, #blog-calendar, #qb-right {
         grid-column: auto;
         grid-row: auto;
         width: 100%;
     }
     #sideBar, #sideBarMain { display: block !important; }
-    #leftcontentcontainer, #sidebar_news { display: none; }
+    #leftcontentcontainer, #sidebar_news, #qb-right { display: none; }
     #blog-calendar { display: none; }
     #post_detail { padding: 20px 18px; }
     #post_detail .postTitle { font-size: 21px !important; }
