@@ -68,9 +68,8 @@ body.has-navbar { padding-top: 0 !important; margin-top: 0 !important; }
     position: sticky;
     top: 0;
     z-index: 999;
-    background: rgba(255, 255, 255, .88);
-    backdrop-filter: saturate(180%) blur(12px);
-    -webkit-backdrop-filter: saturate(180%) blur(12px);
+    /* 用不透明纯色代替毛玻璃：滚动时不再每帧做模糊，低配机器更顺 */
+    background: #fff;
     border-bottom: 1px solid var(--line);
 }
 .qb-nav-inner {

@@ -122,7 +122,17 @@
     return true;
   }
 
-  /* 3. 顶栏当前项高亮 */
+  /* 3. 正文图片懒加载：前两张留在首屏，其余延后，减少首屏并发 */
+  function lazyImages() {
+    var imgs = [].slice.call(document.querySelectorAll('#cnblogs_post_body img'));
+    imgs.forEach(function (img, i) {
+      if (!(i > 1)) return;
+      if (!img.getAttribute('loading')) img.setAttribute('loading', 'lazy');
+      img.setAttribute('decoding', 'async');
+    });
+  }
+
+  /* 4. 顶栏当前项高亮 */
   function markNav() {
     var links = document.querySelectorAll('.qb-links a');
     if (!links.length) return;
@@ -144,6 +154,7 @@
       var cat = document.getElementById('sidebar_categories');
       if (cat) cat.classList.add('qb-secondary');
     }
+    lazyImages();
     markNav();
   }
 
