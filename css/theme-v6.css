@@ -37,6 +37,21 @@
     --font:          -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Segoe UI", Roboto, sans-serif;
 }
 
+/* 暗色模式（一键置入暗色变量，全部通过 var 覆盖） */
+body.qb-dark {
+    --bg:          #0d1117;
+    --card:        #161b22;
+    --line:        #30363d;
+    --ink:         #e6edf3;
+    --body:        #c9d1d9;
+    --meta:        #8b949e;
+    --accent:      #d5a832;
+    --accent-soft: rgba(213, 168, 50, .12);
+    --accent-deep: #f0c649;
+    --shadow:      0 1px 3px rgba(0, 0, 0, .3), 0 6px 18px rgba(0, 0, 0, .35);
+    --shadow-hover: 0 4px 10px rgba(0, 0, 0, .4), 0 12px 28px rgba(0, 0, 0, .45);
+}
+
 /* ---------- 1. 基础重置 ---------- */
 html, body {
     background: var(--bg) !important;
@@ -64,6 +79,17 @@ body.has-navbar { padding-top: 0 !important; margin-top: 0 !important; }
 #right_zhbs, #blog_post_info_block, #green_channel { display: none !important; }
 
 /* ---------- 2. 自建顶栏（配合页首 HTML 使用） ---------- */
+
+/* 暗色模式开关（顶栏） */
+.qb-dark {
+    display: flex; align-items: center; justify-content: center;
+    width: 36px; height: 36px; border-radius: 50%;
+    color: var(--body); font-size: 16px;
+    cursor: pointer; transition: background .2s ease, color .2s ease;
+}
+.qb-dark:hover { background: var(--accent-soft); color: var(--accent-deep); }
+body.qb-dark .qb-dark { color: var(--accent-deep); }
+body.qb-dark .qb-dark:hover { background: rgba(213, 168, 50, .18); }
 .qb-nav {
     position: sticky;
     top: 0;

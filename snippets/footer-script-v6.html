@@ -94,14 +94,14 @@
      注意：不同页面文章容器不同：
      首页 .day .postTitle a
      标签 .PostList .postTitl2 a
-     分类 .category-list-item a
-     归档 .entrylistItemTitle a
-     标签列表 .taglist a（模块标题，需区分） */
+     分类/归档 .entrylistItemTitle（a 本身，文本在子 span 里）
+     分类列表 .category-list-item a
+     标签列表 .taglist 表格（不是文章列表，不生成目录） */
   function buildPostList(left) {
     var posts = [].slice.call(document.querySelectorAll(
       '#mainContent .day .postTitle a,' +
       '#mainContent .PostList .postTitl2 a,' +
-      '#mainContent .entrylistItemTitle a,' +
+      '#mainContent .entrylistItemTitle,' +
       '#mainContent .category-list-item a'
     ));
     if (!posts.length) { return false; }
@@ -178,7 +178,25 @@
     });
   }
 
-  /* 6. 回到页首按钮（注意：不用尖括号，避免被HTML校验器拦截） */
+  /* 6. 暗黑模式开关（保存于 localStorage，刷新保持） */
+  function initDarkMode() {
+    var btn = document.getElementById('qb-dark-toggle');
+    var icon = document.getElementById('qb-dark-icon');
+    if (!btn) return;
+    var dark = localStorage && localStorage.getItem('qb-dark');
+    if (dark === '1' || (dark === null && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      document.body.classList.add('qb-dark');
+      if (icon) icon.textContent = '☀️';
+    }
+    btn.addEventListener('click', function (e) {
+      e.preventDefault();
+      document.body.classList.toggle('qb-dark');
+      var on = document.body.classList.contains('qb-dark');
+      if (on && icon) icon.textContent = '☀️';
+      if (!on && icon) icon.textContent = '🌙';
+      if (localStorage) localStorage.setItem('qb-dark', on ? '1' : '0');
+    });
+  }
   function createBackToTop() {
     var btn = document.getElementById('qb-top');
     if (!btn) {
@@ -190,7 +208,7 @@
     var isHidden = true;
     window.addEventListener('scroll', function () {
       var show = window.pageYOffset > 300;
-      if (show !== isHidden) {
+      if (show === isHidden) {
         isHidden = !show;
         if (show) { btn.classList.add('show'); } else { btn.classList.remove('show'); }
       }
@@ -218,6 +236,7 @@
     moveSideWidgets();
     lazyImages();
     markNav();
+    initDarkMode();
     createBackToTop();
 
     /* 博客园侧栏是异步加载的，加载完可能重排节点，这里兜底复位一次 */
