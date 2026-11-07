@@ -1,0 +1,1179 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />            
+    <meta http-equiv="Cache-Control" content="no-transform" />
+    <meta http-equiv="Cache-Control" content="no-siteapp" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="referrer" content="origin-when-cross-origin" />
+    <title>Ep流苏 - 博客园</title>
+    
+        
+    
+    
+    
+    
+    <link rel="stylesheet" href="https://www.cnblogs.com/css/blog-common.min.css?v=6O_Ku8w_jYd3yw2BX9ElmxGv25AYbAQ-F6ZeOeZfxYc" />
+    
+    
+    
+    
+    <link id="mobile-style" media="only screen and (max-width: 767px)" type="text/css" rel="stylesheet" href="https://www.cnblogs.com/css/mobile-common.min.css?v=a5tjm35tHR3Bq88JZf8V-jiXDhgs5wg823qWgRI6uRY" />
+    
+    <link id="favicon" rel="icon" type="image/x-icon" sizes="32x32" href="https://assets.cnblogs.com/favicon_v3_3.ico" />
+    <link id="favicon_svg" rel="icon" type="image/svg+xml" href="https://assets.cnblogs.com/favicon_v3_3.svg" />
+    <link rel="apple-touch-icon" href="https://assets.cnblogs.com/apple-touch-icon.png?v=2" />
+    <link rel="canonical" href="https://www.cnblogs.com/zhangshuaiyin" />
+    <link type="application/rss+xml" rel="alternate" href="https://www.cnblogs.com/zhangshuaiyin/rss" />
+    <link type="application/rsd+xml" rel="EditURI" href="https://www.cnblogs.com/zhangshuaiyin/rsd.xml" />
+    <link type="application/wlwmanifest+xml" rel="wlwmanifest" href="https://www.cnblogs.com/zhangshuaiyin/wlwmanifest.xml" />
+    
+
+    <script>
+        var currentBlogId = 477677;
+        var currentBlogApp = 'zhangshuaiyin';
+        var isLogined = false;
+        var isBlogOwner = false;
+        window.isCorp = false;
+        window.skinName = 'Custom';
+        var visitorUserId = '';
+        window.hasCustomScript = true;
+        window.cb_enable_mathjax = true;
+        window.mathEngine = 0;
+        window.codeHighlightEngine = 2;
+        window.enableCodeLineNumber = false;
+        window.codeHighlightTheme = 'prism-tomorrow';
+        window.darkModeCodeHighlightTheme = 'prism-vsc-dark-plus';
+        window.isDarkCodeHighlightTheme = true;
+        window.isDarkModeCodeHighlightThemeDark = true;
+        window.isDisableCodeHighlighter = false;
+        window.enableCodeThemeTypeFollowSystem = false;
+        window.enableMacStyleCodeBlock = false;        
+    </script>
+    <script src="https://assets.cnblogs.com/scripts/jquery-3.3.1.min.js"></script>
+    <script src="https://cdn-www.cnblogs.com/js/blog-common.min.js?v=hR-lIKyiNnMONMoRnGahxbmGj8Nc0vI6JpCBb_gCDfs"></script>
+        <script>updateCustomBlogReferrer();</script>
+    
+</head>
+<body class="skin-custom has-navbar mathjax2">
+    <a name="top"></a>
+    <div id="top_nav" class="navbar forpc">
+        <nav id="nav_main" class="navbar-main">
+            <ul id="nav_left" class="navbar-list navbar-left">
+                <li class="navbar-branding">
+                    <a href="https://www.cnblogs.com/" title="开发者的网上家园" role="banner">
+                        <img src="https://www.cnblogs.com//assets.cnblogs.com/logo.svg" alt="博客园logo" />
+                    </a>
+                </li>
+                <li><a href="https://cnblogs.vip/">会员</a></li>
+                <li><a href="https://cnblogs.vip/store">周边</a></li>
+                <li><a href="https://news.cnblogs.com/" onclick="countClicks('nav', 'skin-navbar-news')">新闻</a></li>
+                <li><a href="https://q.cnblogs.com/" onclick="countClicks('nav', 'skin-navbar-q')">博问</a></li>
+                <li><a href="https://ing.cnblogs.com/" onclick="countClicks('nav', 'skin-navbar-ing')">闪存</a></li>                
+                <li><a href="https://www.cnblogs.com/cmt/p/19316348">赞助商</a></li>
+                <li><a href="https://chat2db-ai.com/" target="_blank">Chat2DB</a></li>
+            </ul>
+            <ul id="nav_right" class="navbar-list navbar-right">
+                <li>
+                    <form id="zzk_search" class="navbar-search dropdown" action="https://zzk.cnblogs.com/s" method="get" role="search">
+                        <input name="w" id="zzk_search_input" placeholder="代码改变世界" type="search" tabindex="3" autocomplete="off" />
+                        <button id="zzk_search_button" onclick="window.navbarSearchManager.triggerActiveOption()">
+                            <img id="search_icon" class="focus-hidden" src="https://www.cnblogs.com//assets.cnblogs.com/icons/search.svg" alt="搜索" />
+                            <img class="hidden focus-visible" src="https://www.cnblogs.com//assets.cnblogs.com/icons/enter.svg" alt="搜索" />
+                        </button>
+                        <ul id="navbar_search_options" class="dropdown-menu quick-search-menu">
+                            <li tabindex="0" class="active" onclick="zzkSearch(event, document.getElementById('zzk_search_input').value)">
+                                <div class="keyword-wrapper">
+                                    <img src="https://www.cnblogs.com//assets.cnblogs.com/icons/search.svg" alt="搜索" />
+                                    <div class="keyword"></div>
+                                </div>
+                                <span class="search-area">所有博客</span>
+                            </li>
+                                    <li tabindex="1" onclick="zzkBlogSearch(event, 'zhangshuaiyin', document.getElementById('zzk_search_input').value)">
+                                        <div class="keyword-wrapper">
+                                            <img src="https://www.cnblogs.com//assets.cnblogs.com/icons/search.svg" alt="搜索" />
+                                            <div class="keyword"></div>
+                                        </div>
+                                        <span class="search-area">当前博客</span>
+                                    </li>
+                        </ul>
+                    </form>
+                </li>
+                <li id="navbar_login_status" class="navbar-list">
+                    <a class="navbar-user-info navbar-blog" href="https://i.cnblogs.com/EditPosts.aspx?opt=1" alt="写随笔" title="写随笔">
+                        <img id="new_post_icon" class="navbar-icon" src="https://www.cnblogs.com//assets.cnblogs.com/icons/newpost.svg" alt="写随笔" />
+                    </a>
+                    <a id="navblog-myblog-icon" class="navbar-user-info navbar-blog" href="https://www.cnblogs.com/my" alt="我的博客" title="我的博客">
+                        <img id="myblog_icon" class="navbar-icon" src="https://www.cnblogs.com//assets.cnblogs.com/icons/myblog.svg" alt="我的博客" />
+                    </a>
+                    <a class="navbar-user-info navbar-message navbar-icon-wrapper" href="https://msg.cnblogs.com/" alt="短消息" title="短消息">
+                        <img id="msg_icon" class="navbar-icon" src="https://www.cnblogs.com//assets.cnblogs.com/icons/message.svg" alt="短消息" />
+                        <span id="msg_count" style="display: none"></span>
+                    </a>
+                    <a id="navbar_lite_mode_indicator" data-current-page="blog" style="display: none" href="javascript:void(0)" alt="简洁模式" title="简洁模式启用，您在访问他人博客时会使用简洁款皮肤展示">
+                        <img class="navbar-icon" src="https://www.cnblogs.com//assets.cnblogs.com/icons/lite-mode-on.svg" alt="简洁模式" />
+                    </a>
+                    <div id="user_info" class="navbar-user-info dropdown">
+                        <a class="dropdown-button" href="https://home.cnblogs.com/">
+                            <img id="user_icon" class="navbar-avatar" src="https://www.cnblogs.com//assets.cnblogs.com/icons/avatar-default.svg" alt="用户头像" />
+                        </a>
+                        <div class="dropdown-menu">
+                            <a id="navblog-myblog-text" href="https://www.cnblogs.com/my">我的博客</a>
+                            <a href="https://home.cnblogs.com/">我的园子</a>
+                            <a href="https://account.cnblogs.com/settings/account">账号设置</a>
+                            <a href="https://vip.cnblogs.com/my">会员中心</a>
+                            <a href="javascript:void(0)" id="navbar_lite_mode_toggle" title="简洁模式会使用简洁款皮肤显示所有博客">
+    简洁模式 <span id="navbar_lite_mode_spinner" class="hide">...</span>
+</a>
+
+                            <a href="javascript:void(0)" onclick="account.logout();">退出登录</a>
+                        </div>
+                    </div>
+                    <a class="navbar-anonymous" href="https://account.cnblogs.com/signup">注册</a>
+                    <a class="navbar-anonymous" href="javascript:void(0);" onclick="account.login()">登录</a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+
+    <div id="page_begin_html"><link rel="stylesheet" href="../css/theme-v6.css">
+<style>
+.qb-nav{position:sticky;top:0;z-index:999;background:rgba(255,255,255,.86);
+  backdrop-filter:saturate(180%) blur(12px);border-bottom:1px solid #ecedf0}
+.qb-nav-inner{max-width:1320px;margin:0 auto;height:58px;padding:0 24px;
+  display:flex;align-items:center;justify-content:space-between;box-sizing:border-box}
+.qb-brand{font-size:17px;font-weight:700;color:#1f2329;letter-spacing:.01em}
+.qb-links{display:flex;align-items:center;gap:4px}
+.qb-links a{font-size:14px;color:#4b5563;padding:6px 12px;border-radius:8px;font-weight:500}
+.qb-links a:hover{background:rgba(208,92,232,.10);color:#b843d0}
+.qb-links a.on{color:#b843d0;background:rgba(208,92,232,.10);font-weight:600}
+@media(max-width:860px){.qb-brand{font-size:16px}.qb-links a{padding:6px 8px;font-size:13px}
+  .qb-links a:nth-child(n+5){display:none}}
+</style>
+<!-- ============================================================
+     友人主题 v6.0 · 页首 HTML
+     粘贴位置：博客园后台 → 设置 → 博客设置 → 页首 HTML 代码
+     ------------------------------------------------------------
+     说明：
+     1. 这里只有结构，样式全部在「页面定制 CSS 代码」里（theme-v6.css），
+        因为博客园对页首 HTML 中的 <style> 可能过滤，CSS 走定制字段最稳。
+     2. 增删菜单：复制/删除一行 <a>…</a> 即可。
+     3. 当前页高亮：给对应 <a> 加 class="on"。
+        多页面高亮可用下面的 data-page 方案（需 JS 权限）：
+           <a href="..." data-page="/">首页</a>
+     4. 不需要顶栏就把整段删掉，CSS 里的 .qb-nav 规则不影响其它部分。
+     ============================================================ -->
+
+<div class="qb-nav">
+  <div class="qb-nav-inner">
+    <a class="qb-brand" href="https://www.cnblogs.com/zhangshuaiyin/">Ep流苏</a>
+
+    <nav class="qb-links">
+      <!-- 菜单项 ← 从这里开始增删，一行一个 -->
+      <a class="on" href="https://www.cnblogs.com/zhangshuaiyin/">首页</a>
+      <a href="https://www.cnblogs.com/zhangshuaiyin/p/archive/2021/07">归档</a>
+      <a href="https://www.cnblogs.com/zhangshuaiyin/category/1.html">分类</a>
+      <a href="https://www.cnblogs.com/zhangshuaiyin/tag/1.html">标签</a>
+      <a href="https://msg.cnblogs.com/send/Ep%E6%B5%81%E8%8B%8F">留言</a>
+      <a href="https://github.com/zsy0216" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://www.cnblogs.com/zhangshuaiyin/rss" target="_blank" rel="noopener">RSS</a>
+      <!-- 加菜单项：复制上面任意一行，改 href 与文字 -->
+    </nav>
+  </div>
+</div>
+<div style="position:fixed;left:8px;bottom:8px;z-index:99999;background:#111;color:#0f0;font:22px monospace;padding:8px 14px;border-radius:6px" id="vpbadge">?</div><script>document.getElementById('vpbadge').textContent='vp '+innerWidth+'x'+innerHeight;</script></div><div id="home">
+<div id="header">
+	<div id="blogTitle">
+        <a id="lnkBlogLogo" href="https://www.cnblogs.com/zhangshuaiyin/"><img id="blogLogo" src="https://www.cnblogs.com/skins/custom/images/logo.gif" alt="返回主页" /></a>		
+		
+
+<h1><a id="Header1_HeaderTitle" class="headermaintitle HeaderMainTitle" href="https://www.cnblogs.com/zhangshuaiyin">Ep流苏</a>
+</h1>
+<h2>不会的东西只有怀着一颗狂妄的心，假装能把它看穿吧。</h2>
+
+
+
+
+		
+	</div>
+	<div id="navigator">
+		
+<ul id="navList">
+<li><a id="blog_nav_sitehome" class="menu" href="https://www.cnblogs.com/">
+博客园</a>
+</li>
+<li>
+<a id="blog_nav_myhome" class="menu" href="https://www.cnblogs.com/zhangshuaiyin/">
+首页</a>
+</li>
+<li>
+
+<a id="blog_nav_newpost" class="menu" href="https://i.cnblogs.com/EditPosts.aspx?opt=1">
+新随笔</a>
+</li>
+<li>
+<a id="blog_nav_contact" class="menu" href="https://msg.cnblogs.com/send/Ep%E6%B5%81%E8%8B%8F">
+联系</a></li>
+<li>
+<a id="blog_nav_rss" class="menu" href="javascript:void(0)" data-rss="https://www.cnblogs.com/zhangshuaiyin/rss/">
+订阅</a>
+<!--<partial name="./Shared/_XmlLink.cshtml" model="Model" /></li>--></li>
+<li>
+<a id="blog_nav_admin" class="menu" href="https://i.cnblogs.com/">
+管理</a>
+</li>
+</ul>
+
+
+		<div class="blogStats">
+			<div id="blog_stats_place_holder"></div>
+		</div>
+	</div>
+</div>
+<div id="main">
+	<div id="mainContent">
+	<div class="forFlow">
+		
+
+
+
+
+
+		
+<div class="day pinned" role="article" aria-describedby="postlist_description_14559198">
+    <div class="dayTitle">
+        <a href="https://www.cnblogs.com/zhangshuaiyin/p/archive/2021/07/20"></a>
+    </div>
+
+        <div class="postTitle" role="heading" aria-level="2">
+            <a class="postTitle2 vertical-middle pinned-post" href="https://www.cnblogs.com/zhangshuaiyin/p/14559198.html">
+    <span>
+            <span class="pinned-post-mark">[置顶]</span>
+        【重构】Bilibili UWP 客户端下载视频文件重命名 2.0
+    </span>
+    
+
+</a>
+
+        </div>
+        <div class="postCon">
+
+<div class="c_b_p_desc" id="postlist_description_14559198">
+摘要：        
+代码已上传Github：https://github.com/zsy0216/BatchModifyBilibiliName 较 master 分支的改变： - 优化了重命名的代码，覆盖更全面，更准确； - 重命名过程中删除多余文件，文件更简洁； - 重构为 maven 更有利于二次开发； - 使用    <a href="https://www.cnblogs.com/zhangshuaiyin/p/14559198.html" class="c_b_p_desc_readmore">阅读全文</a>
+</div>
+
+</div>
+        <div class="clear"></div>
+        <div class="postDesc">posted @ 2021-07-20 16:44
+Ep流苏
+<span data-post-id="14559198" class="post-view-count">阅读(258)</span>
+<span data-post-id="14559198" class="post-comment-count">评论(0)</span>
+<span data-post-id="14559198" class="post-digg-count">推荐(0)</span>
+
+</div>
+        <div class="clear"></div>
+</div>
+
+
+		
+<div class="day pinned" role="article" aria-describedby="postlist_description_12038131">
+    <div class="dayTitle">
+        <a href="https://www.cnblogs.com/zhangshuaiyin/p/archive/2019/12/14"></a>
+    </div>
+
+        <div class="postTitle" role="heading" aria-level="2">
+            <a class="postTitle2 vertical-middle pinned-post" href="https://www.cnblogs.com/zhangshuaiyin/p/12038131.html">
+    <span>
+            <span class="pinned-post-mark">[置顶]</span>
+        批量修改bilibili客户端下载视频文件名
+    </span>
+    
+
+</a>
+
+        </div>
+        <div class="postCon">
+
+<div class="c_b_p_desc" id="postlist_description_12038131">
+摘要：        
+代码已上传：Github 版本已更新，最新请查看2.0版本：【重构】Bilibili UWP 客户端下载视频文件重命名 2.0 起因 昨天晚上从B站电脑客户端下了一个分集视频 但是下载后的视频是这样的： 视频名是这样的： 这样既不直观又不美观，就算把视频文件放到一个文件夹内，连续看视频时也不容易记住    <a href="https://www.cnblogs.com/zhangshuaiyin/p/12038131.html" class="c_b_p_desc_readmore">阅读全文</a>
+</div>
+
+</div>
+        <div class="clear"></div>
+        <div class="postDesc">posted @ 2019-12-14 09:02
+Ep流苏
+<span data-post-id="12038131" class="post-view-count">阅读(1722)</span>
+<span data-post-id="12038131" class="post-comment-count">评论(6)</span>
+<span data-post-id="12038131" class="post-digg-count">推荐(6)</span>
+
+</div>
+        <div class="clear"></div>
+</div>
+
+
+		
+<div class="day pinned" role="article" aria-describedby="postlist_description_11623974">
+    <div class="dayTitle">
+        <a href="https://www.cnblogs.com/zhangshuaiyin/p/archive/2019/10/05"></a>
+    </div>
+
+        <div class="postTitle" role="heading" aria-level="2">
+            <a class="postTitle2 vertical-middle pinned-post" href="https://www.cnblogs.com/zhangshuaiyin/p/11623974.html">
+    <span>
+            <span class="pinned-post-mark">[置顶]</span>
+        SSM框架手动实现分页逻辑（非PageHelper）
+    </span>
+    
+
+</a>
+
+        </div>
+        <div class="postCon">
+
+<div class="c_b_p_desc" id="postlist_description_11623974">
+摘要：        
+第一种方法：查询出所有数据再分页 分析： 1. 分页时，需要获得前台传来的两个参数，分别为 (第几页数据)， (每页的条数); 2. 根据这两个参数来计算出前端需要的数据是查出数据list中的开始索引和结束索引； 3. 利用List 的subList方法来分割查询出来的所有数据并返回； 实现过程 1    <a href="https://www.cnblogs.com/zhangshuaiyin/p/11623974.html" class="c_b_p_desc_readmore">阅读全文</a>
+</div>
+
+</div>
+        <div class="clear"></div>
+        <div class="postDesc">posted @ 2019-10-05 09:37
+Ep流苏
+<span data-post-id="11623974" class="post-view-count">阅读(864)</span>
+<span data-post-id="11623974" class="post-comment-count">评论(0)</span>
+<span data-post-id="11623974" class="post-digg-count">推荐(0)</span>
+
+</div>
+        <div class="clear"></div>
+</div>
+
+
+		
+<div class="day pinned" role="article" aria-describedby="postlist_description_10979084">
+    <div class="dayTitle">
+        <a href="https://www.cnblogs.com/zhangshuaiyin/p/archive/2019/06/05"></a>
+    </div>
+
+        <div class="postTitle" role="heading" aria-level="2">
+            <a class="postTitle2 vertical-middle pinned-post" href="https://www.cnblogs.com/zhangshuaiyin/p/10979084.html">
+    <span>
+            <span class="pinned-post-mark">[置顶]</span>
+        Python网络爬虫与信息提取
+    </span>
+    
+
+</a>
+
+        </div>
+        <div class="postCon">
+
+<div class="c_b_p_desc" id="postlist_description_10979084">
+摘要：        
+1.Requests库入门 Requests安装 用管理员身份打开命令提示符： 测试：打开IDLE： HTTP协议 超文本传输协议,Hypertext Transfer Protocol. HTTP是一个基于“请求与响应”模式的、无状态的应用层协议。 HTTP协议采用URL作为定位网络资源的标识。     <a href="https://www.cnblogs.com/zhangshuaiyin/p/10979084.html" class="c_b_p_desc_readmore">阅读全文</a>
+</div>
+
+</div>
+        <div class="clear"></div>
+        <div class="postDesc">posted @ 2019-06-05 13:33
+Ep流苏
+<span data-post-id="10979084" class="post-view-count">阅读(6194)</span>
+<span data-post-id="10979084" class="post-comment-count">评论(1)</span>
+<span data-post-id="10979084" class="post-digg-count">推荐(0)</span>
+
+</div>
+        <div class="clear"></div>
+</div>
+
+
+		
+<div class="day" role="article" aria-describedby="postlist_description_15049767">
+    <div class="dayTitle">
+        <a href="https://www.cnblogs.com/zhangshuaiyin/p/archive/2021/07/23">2021年7月23日
+</a>
+    </div>
+
+        <div class="postTitle" role="heading" aria-level="2">
+            <a class="postTitle2 vertical-middle" href="https://www.cnblogs.com/zhangshuaiyin/p/15049767.html">
+    <span>
+        ArrayList 深入浅出
+    </span>
+    
+
+</a>
+
+        </div>
+        <div class="postCon">
+
+<div class="c_b_p_desc" id="postlist_description_15049767">
+摘要：        
+ArrayList 特点：按添加顺序排列、可重复、非线程安全； 底层实现：数组 扩容原理：初始化集合时，默认容量为 0，第一次添加元素时扩容为 10，容量不够时扩容为原来容量的 1.5 倍。 这里扩容指的是无参构造初始化时的场景。对于指定集合长度的构造函数初始化时，初始容量为指定长度，容量不够时再扩    <a href="https://www.cnblogs.com/zhangshuaiyin/p/15049767.html" class="c_b_p_desc_readmore">阅读全文</a>
+</div>
+
+</div>
+        <div class="clear"></div>
+        <div class="postDesc">posted @ 2021-07-23 17:15
+Ep流苏
+<span data-post-id="15049767" class="post-view-count">阅读(370)</span>
+<span data-post-id="15049767" class="post-comment-count">评论(0)</span>
+<span data-post-id="15049767" class="post-digg-count">推荐(0)</span>
+
+</div>
+        <div class="clear"></div>
+</div>
+
+
+		
+<div class="day" role="article" aria-describedby="postlist_description_15035819">
+    <div class="dayTitle">
+        <a href="https://www.cnblogs.com/zhangshuaiyin/p/archive/2021/07/20">2021年7月20日
+</a>
+    </div>
+
+        <div class="postTitle" role="heading" aria-level="2">
+            <a class="postTitle2 vertical-middle" href="https://www.cnblogs.com/zhangshuaiyin/p/15035887.html">
+    <span>
+        SpringBoot 构造器注入、Setter方法注入和Field注入对比
+    </span>
+    
+
+</a>
+
+        </div>
+        <div class="postCon">
+
+<div class="c_b_p_desc" id="postlist_description_15035887">
+摘要：        
+0. 引入 今天在看项目代码的时候发现在依赖注入的时候使用了构造器注入，之前使用过 Field 注入和 Setter 方法注入，对构造器注入不是很了解。经过查阅资料看到，Spring 推荐使用构造器注入的方式，下面介绍构造器注入到底有什么玄机。 1. 常见的三种注解注入方式对比 Field 注入 @    <a href="https://www.cnblogs.com/zhangshuaiyin/p/15035887.html" class="c_b_p_desc_readmore">阅读全文</a>
+</div>
+
+</div>
+        <div class="clear"></div>
+        <div class="postDesc">posted @ 2021-07-20 17:06
+Ep流苏
+<span data-post-id="15035887" class="post-view-count">阅读(15938)</span>
+<span data-post-id="15035887" class="post-comment-count">评论(1)</span>
+<span data-post-id="15035887" class="post-digg-count">推荐(6)</span>
+
+</div>
+        <div class="clear"></div>
+            <div class="postSeparator"></div>
+        <div class="postTitle" role="heading" aria-level="2">
+            <a class="postTitle2 vertical-middle" href="https://www.cnblogs.com/zhangshuaiyin/p/15035819.html">
+    <span>
+        Maven多模块开发SpringBoot项目自定义第三方依赖版本
+    </span>
+    
+
+</a>
+
+        </div>
+        <div class="postCon">
+
+<div class="c_b_p_desc" id="postlist_description_15035819">
+摘要：        
+参考：官方文档 - Build System of Maven https://blog.didispace.com/books/spring-boot-reference/IX.%20%E2%80%98How-to%E2%80%99%20guides/80.3%20Customize%20depe    <a href="https://www.cnblogs.com/zhangshuaiyin/p/15035819.html" class="c_b_p_desc_readmore">阅读全文</a>
+</div>
+
+</div>
+        <div class="clear"></div>
+        <div class="postDesc">posted @ 2021-07-20 16:56
+Ep流苏
+<span data-post-id="15035819" class="post-view-count">阅读(1610)</span>
+<span data-post-id="15035819" class="post-comment-count">评论(0)</span>
+<span data-post-id="15035819" class="post-digg-count">推荐(0)</span>
+
+</div>
+        <div class="clear"></div>
+</div>
+
+
+		
+<div class="day" role="article" aria-describedby="postlist_description_12038099">
+    <div class="dayTitle">
+        <a href="https://www.cnblogs.com/zhangshuaiyin/p/archive/2019/12/14">2019年12月14日
+</a>
+    </div>
+
+        <div class="postTitle" role="heading" aria-level="2">
+            <a class="postTitle2 vertical-middle" href="https://www.cnblogs.com/zhangshuaiyin/p/12038084.html">
+    <span>
+        flex布局和边框阴影
+    </span>
+    
+
+</a>
+
+        </div>
+        <div class="postCon">
+
+<div class="c_b_p_desc" id="postlist_description_12038084">
+摘要：        
+“妄”眼欲穿-CSS之flex布局和边框阴影 妄：狂妄； 不会的东西只有怀着一颗狂妄的心，假装能把它看穿吧。 flex布局 main axis：主轴；cross axis：交叉轴 容器的子元素自动成为容器成员，成为flex 项目（item） flex容器属性 flex-direction ​	该属性    <a href="https://www.cnblogs.com/zhangshuaiyin/p/12038084.html" class="c_b_p_desc_readmore">阅读全文</a>
+</div>
+
+</div>
+        <div class="clear"></div>
+        <div class="postDesc">posted @ 2019-12-14 08:54
+Ep流苏
+<span data-post-id="12038084" class="post-view-count">阅读(678)</span>
+<span data-post-id="12038084" class="post-comment-count">评论(0)</span>
+<span data-post-id="12038084" class="post-digg-count">推荐(0)</span>
+
+</div>
+        <div class="clear"></div>
+            <div class="postSeparator"></div>
+        <div class="postTitle" role="heading" aria-level="2">
+            <a class="postTitle2 vertical-middle" href="https://www.cnblogs.com/zhangshuaiyin/p/12038087.html">
+    <span>
+        PageHelper使用以及PageInfo中分页对象的转化
+    </span>
+    
+
+</a>
+
+        </div>
+        <div class="postCon">
+
+<div class="c_b_p_desc" id="postlist_description_12038087">
+摘要：        
+在使用Mybatis查询数据库展示到前端的过程中不可避免的要考虑到分页问题，这时就引入了Mybatis的PageHelper插件，这个插件对分页功能进行了强有力的封装，只需要将查询出来的数据List集合放入到它指定的对象中，就完成了分页，下面简单的对分页过程介绍一下。 分页代码 public Pag    <a href="https://www.cnblogs.com/zhangshuaiyin/p/12038087.html" class="c_b_p_desc_readmore">阅读全文</a>
+</div>
+
+</div>
+        <div class="clear"></div>
+        <div class="postDesc">posted @ 2019-12-14 08:54
+Ep流苏
+<span data-post-id="12038087" class="post-view-count">阅读(12616)</span>
+<span data-post-id="12038087" class="post-comment-count">评论(1)</span>
+<span data-post-id="12038087" class="post-digg-count">推荐(0)</span>
+
+</div>
+        <div class="clear"></div>
+            <div class="postSeparator"></div>
+        <div class="postTitle" role="heading" aria-level="2">
+            <a class="postTitle2 vertical-middle" href="https://www.cnblogs.com/zhangshuaiyin/p/12038104.html">
+    <span>
+        Webpack 4 : ERROR in Entry module not found: Error: Can&#39;t resolve &#39;./src&#39;
+    </span>
+    
+
+</a>
+
+        </div>
+        <div class="postCon">
+
+<div class="c_b_p_desc" id="postlist_description_12038104">
+摘要：        
+ERROR in Entry module not found: Error: Can’t resolve ‘./src’ in ‘E:\ASUS\Documents\VSCode files\WebPackProject’ 通过配置文件指定入口出口 webpack.config.js(必须在项目根    <a href="https://www.cnblogs.com/zhangshuaiyin/p/12038104.html" class="c_b_p_desc_readmore">阅读全文</a>
+</div>
+
+</div>
+        <div class="clear"></div>
+        <div class="postDesc">posted @ 2019-12-14 08:54
+Ep流苏
+<span data-post-id="12038104" class="post-view-count">阅读(14171)</span>
+<span data-post-id="12038104" class="post-comment-count">评论(0)</span>
+<span data-post-id="12038104" class="post-digg-count">推荐(1)</span>
+
+</div>
+        <div class="clear"></div>
+            <div class="postSeparator"></div>
+        <div class="postTitle" role="heading" aria-level="2">
+            <a class="postTitle2 vertical-middle" href="https://www.cnblogs.com/zhangshuaiyin/p/12038082.html">
+    <span>
+        Java常用类介绍
+    </span>
+    
+
+</a>
+
+        </div>
+        <div class="postCon">
+
+<div class="c_b_p_desc" id="postlist_description_12038082">
+摘要：        
+文章目录常用类包装类基本介绍自动装箱和拆箱String常用方法StringBuilder和StringBuffer常用方法时间处理相关类DateDateFormatCalendarMathRandomFile常用方法：枚举 常用类 包装类 基本介绍 包装类位于java.lang包，用法类似； 基本数    <a href="https://www.cnblogs.com/zhangshuaiyin/p/12038082.html" class="c_b_p_desc_readmore">阅读全文</a>
+</div>
+
+</div>
+        <div class="clear"></div>
+        <div class="postDesc">posted @ 2019-12-14 08:54
+Ep流苏
+<span data-post-id="12038082" class="post-view-count">阅读(310)</span>
+<span data-post-id="12038082" class="post-comment-count">评论(0)</span>
+<span data-post-id="12038082" class="post-digg-count">推荐(0)</span>
+
+</div>
+        <div class="clear"></div>
+            <div class="postSeparator"></div>
+        <div class="postTitle" role="heading" aria-level="2">
+            <a class="postTitle2 vertical-middle" href="https://www.cnblogs.com/zhangshuaiyin/p/12038105.html">
+    <span>
+        PyCharm创建Django项目并连接mysql数据库
+    </span>
+    
+
+</a>
+
+        </div>
+        <div class="postCon">
+
+<div class="c_b_p_desc" id="postlist_description_12038105">
+摘要：        
+0. 安装Django pip install django 1. 新建项目 注：我的Pycharm为社区版，创建项目时，File-&gt;New Project… 显示为： ​	注意勾选内容。 如果你的Pycharm版本为其他版本，可以直接创建Django项目，下面的内容是在社区版的基础上完成的。 1.    <a href="https://www.cnblogs.com/zhangshuaiyin/p/12038105.html" class="c_b_p_desc_readmore">阅读全文</a>
+</div>
+
+</div>
+        <div class="clear"></div>
+        <div class="postDesc">posted @ 2019-12-14 08:54
+Ep流苏
+<span data-post-id="12038105" class="post-view-count">阅读(5733)</span>
+<span data-post-id="12038105" class="post-comment-count">评论(1)</span>
+<span data-post-id="12038105" class="post-digg-count">推荐(2)</span>
+
+</div>
+        <div class="clear"></div>
+            <div class="postSeparator"></div>
+        <div class="postTitle" role="heading" aria-level="2">
+            <a class="postTitle2 vertical-middle" href="https://www.cnblogs.com/zhangshuaiyin/p/12038096.html">
+    <span>
+        Mybatis中的Mapper.xml映射文件sql查询接收多个参数
+    </span>
+    
+
+</a>
+
+        </div>
+        <div class="postCon">
+
+<div class="c_b_p_desc" id="postlist_description_12038096">
+摘要：        
+​	我们都知道，在Mybatis中的Mapper.xml映射文件可以定制动态SQL，在dao层定义的接口中定义的参数传到xml文件中之后，在查询之前mybatis会对其进行动态解析,通常使用#{}接收，下面介绍几种比较常用的用法。 接收多个参数 ​	遇到这个问题是在昨天实现分页的时候接收参数时遇到了    <a href="https://www.cnblogs.com/zhangshuaiyin/p/12038096.html" class="c_b_p_desc_readmore">阅读全文</a>
+</div>
+
+</div>
+        <div class="clear"></div>
+        <div class="postDesc">posted @ 2019-12-14 08:54
+Ep流苏
+<span data-post-id="12038096" class="post-view-count">阅读(2597)</span>
+<span data-post-id="12038096" class="post-comment-count">评论(0)</span>
+<span data-post-id="12038096" class="post-digg-count">推荐(0)</span>
+
+</div>
+        <div class="clear"></div>
+            <div class="postSeparator"></div>
+        <div class="postTitle" role="heading" aria-level="2">
+            <a class="postTitle2 vertical-middle" href="https://www.cnblogs.com/zhangshuaiyin/p/12038083.html">
+    <span>
+        常用regex正则表达式
+    </span>
+    
+
+</a>
+
+        </div>
+        <div class="postCon">
+
+<div class="c_b_p_desc" id="postlist_description_12038083">
+摘要：        
+【单个】字符匹配任意字符：表示由任意字符组成...    <a href="https://www.cnblogs.com/zhangshuaiyin/p/12038083.html" class="c_b_p_desc_readmore">阅读全文</a>
+</div>
+
+</div>
+        <div class="clear"></div>
+        <div class="postDesc">posted @ 2019-12-14 08:54
+Ep流苏
+<span data-post-id="12038083" class="post-view-count">阅读(391)</span>
+<span data-post-id="12038083" class="post-comment-count">评论(0)</span>
+<span data-post-id="12038083" class="post-digg-count">推荐(0)</span>
+
+</div>
+        <div class="clear"></div>
+            <div class="postSeparator"></div>
+        <div class="postTitle" role="heading" aria-level="2">
+            <a class="postTitle2 vertical-middle" href="https://www.cnblogs.com/zhangshuaiyin/p/12038085.html">
+    <span>
+        centos7下mysql5.7的安装与配置
+    </span>
+    
+
+</a>
+
+        </div>
+        <div class="postCon">
+
+<div class="c_b_p_desc" id="postlist_description_12038085">
+摘要：        
+centos7下MySQL5.7的安装与配置...    <a href="https://www.cnblogs.com/zhangshuaiyin/p/12038085.html" class="c_b_p_desc_readmore">阅读全文</a>
+</div>
+
+</div>
+        <div class="clear"></div>
+        <div class="postDesc">posted @ 2019-12-14 08:54
+Ep流苏
+<span data-post-id="12038085" class="post-view-count">阅读(422)</span>
+<span data-post-id="12038085" class="post-comment-count">评论(0)</span>
+<span data-post-id="12038085" class="post-digg-count">推荐(0)</span>
+
+</div>
+        <div class="clear"></div>
+            <div class="postSeparator"></div>
+        <div class="postTitle" role="heading" aria-level="2">
+            <a class="postTitle2 vertical-middle" href="https://www.cnblogs.com/zhangshuaiyin/p/12038086.html">
+    <span>
+        win10下mysql5.7的安装与配置
+    </span>
+    
+
+</a>
+
+        </div>
+        <div class="postCon">
+
+<div class="c_b_p_desc" id="postlist_description_12038086">
+摘要：        
+Win10下MySql5.7的安装与配置下载...    <a href="https://www.cnblogs.com/zhangshuaiyin/p/12038086.html" class="c_b_p_desc_readmore">阅读全文</a>
+</div>
+
+</div>
+        <div class="clear"></div>
+        <div class="postDesc">posted @ 2019-12-14 08:54
+Ep流苏
+<span data-post-id="12038086" class="post-view-count">阅读(2576)</span>
+<span data-post-id="12038086" class="post-comment-count">评论(0)</span>
+<span data-post-id="12038086" class="post-digg-count">推荐(1)</span>
+
+</div>
+        <div class="clear"></div>
+            <div class="postSeparator"></div>
+        <div class="postTitle" role="heading" aria-level="2">
+            <a class="postTitle2 vertical-middle" href="https://www.cnblogs.com/zhangshuaiyin/p/12038088.html">
+    <span>
+        mysql安装依赖perl(Data::Dumper)
+    </span>
+    
+
+</a>
+
+        </div>
+        <div class="postCon">
+
+<div class="c_b_p_desc" id="postlist_description_12038088">
+摘要：        
+安装MySQL-server-5.5.62-1.el7.x86_64的时候出现依赖包错误[root@localhost upload]# rpm -ivh MySQL-server-5.5.62-1.el7.x8...    <a href="https://www.cnblogs.com/zhangshuaiyin/p/12038088.html" class="c_b_p_desc_readmore">阅读全文</a>
+</div>
+
+</div>
+        <div class="clear"></div>
+        <div class="postDesc">posted @ 2019-12-14 08:54
+Ep流苏
+<span data-post-id="12038088" class="post-view-count">阅读(3019)</span>
+<span data-post-id="12038088" class="post-comment-count">评论(0)</span>
+<span data-post-id="12038088" class="post-digg-count">推荐(0)</span>
+
+</div>
+        <div class="clear"></div>
+            <div class="postSeparator"></div>
+        <div class="postTitle" role="heading" aria-level="2">
+            <a class="postTitle2 vertical-middle" href="https://www.cnblogs.com/zhangshuaiyin/p/12038089.html">
+    <span>
+        Dubbo+Zookeeper实现简单的远程方法调用示例
+    </span>
+    
+
+</a>
+
+        </div>
+        <div class="postCon">
+
+<div class="c_b_p_desc" id="postlist_description_12038089">
+摘要：        
+1. Dubbo介绍示例代码：Github1...    <a href="https://www.cnblogs.com/zhangshuaiyin/p/12038089.html" class="c_b_p_desc_readmore">阅读全文</a>
+</div>
+
+</div>
+        <div class="clear"></div>
+        <div class="postDesc">posted @ 2019-12-14 08:54
+Ep流苏
+<span data-post-id="12038089" class="post-view-count">阅读(1955)</span>
+<span data-post-id="12038089" class="post-comment-count">评论(0)</span>
+<span data-post-id="12038089" class="post-digg-count">推荐(0)</span>
+
+</div>
+        <div class="clear"></div>
+            <div class="postSeparator"></div>
+        <div class="postTitle" role="heading" aria-level="2">
+            <a class="postTitle2 vertical-middle" href="https://www.cnblogs.com/zhangshuaiyin/p/12038090.html">
+    <span>
+        Zookeeper学习记录及Java客户端连接示例
+    </span>
+    
+
+</a>
+
+        </div>
+        <div class="postCon">
+
+<div class="c_b_p_desc" id="postlist_description_12038090">
+摘要：        
+1. Zookeeper1.1 简介Z...    <a href="https://www.cnblogs.com/zhangshuaiyin/p/12038090.html" class="c_b_p_desc_readmore">阅读全文</a>
+</div>
+
+</div>
+        <div class="clear"></div>
+        <div class="postDesc">posted @ 2019-12-14 08:54
+Ep流苏
+<span data-post-id="12038090" class="post-view-count">阅读(7503)</span>
+<span data-post-id="12038090" class="post-comment-count">评论(0)</span>
+<span data-post-id="12038090" class="post-digg-count">推荐(0)</span>
+
+</div>
+        <div class="clear"></div>
+            <div class="postSeparator"></div>
+        <div class="postTitle" role="heading" aria-level="2">
+            <a class="postTitle2 vertical-middle" href="https://www.cnblogs.com/zhangshuaiyin/p/12038091.html">
+    <span>
+        Redis学习记录及Jedis代码示例
+    </span>
+    
+
+</a>
+
+        </div>
+        <div class="postCon">
+
+<div class="c_b_p_desc" id="postlist_description_12038091">
+摘要：        
+文章目录二、Redis简介三、Redis安装...    <a href="https://www.cnblogs.com/zhangshuaiyin/p/12038091.html" class="c_b_p_desc_readmore">阅读全文</a>
+</div>
+
+</div>
+        <div class="clear"></div>
+        <div class="postDesc">posted @ 2019-12-14 08:54
+Ep流苏
+<span data-post-id="12038091" class="post-view-count">阅读(466)</span>
+<span data-post-id="12038091" class="post-comment-count">评论(0)</span>
+<span data-post-id="12038091" class="post-digg-count">推荐(0)</span>
+
+</div>
+        <div class="clear"></div>
+            <div class="postSeparator"></div>
+        <div class="postTitle" role="heading" aria-level="2">
+            <a class="postTitle2 vertical-middle" href="https://www.cnblogs.com/zhangshuaiyin/p/12038092.html">
+    <span>
+        【Java面试题】short s1 = 1; s1 = s1 + 1;有错吗?short s1 = 1; s1 += 1;有错吗？
+    </span>
+    
+
+</a>
+
+        </div>
+        <div class="postCon">
+
+<div class="c_b_p_desc" id="postlist_description_12038092">
+摘要：        
+昨天去面试，虽然体验不是很好， 但是看到了这...    <a href="https://www.cnblogs.com/zhangshuaiyin/p/12038092.html" class="c_b_p_desc_readmore">阅读全文</a>
+</div>
+
+</div>
+        <div class="clear"></div>
+        <div class="postDesc">posted @ 2019-12-14 08:54
+Ep流苏
+<span data-post-id="12038092" class="post-view-count">阅读(1296)</span>
+<span data-post-id="12038092" class="post-comment-count">评论(0)</span>
+<span data-post-id="12038092" class="post-digg-count">推荐(0)</span>
+
+</div>
+        <div class="clear"></div>
+            <div class="postSeparator"></div>
+        <div class="postTitle" role="heading" aria-level="2">
+            <a class="postTitle2 vertical-middle" href="https://www.cnblogs.com/zhangshuaiyin/p/12038093.html">
+    <span>
+        关于vue-cli3中配置请求跨域的问题
+    </span>
+    
+
+</a>
+
+        </div>
+        <div class="postCon">
+
+<div class="c_b_p_desc" id="postlist_description_12038093">
+摘要：        
+关于vue-cli3中配置请求跨域的问题根据...    <a href="https://www.cnblogs.com/zhangshuaiyin/p/12038093.html" class="c_b_p_desc_readmore">阅读全文</a>
+</div>
+
+</div>
+        <div class="clear"></div>
+        <div class="postDesc">posted @ 2019-12-14 08:54
+Ep流苏
+<span data-post-id="12038093" class="post-view-count">阅读(354)</span>
+<span data-post-id="12038093" class="post-comment-count">评论(0)</span>
+<span data-post-id="12038093" class="post-digg-count">推荐(0)</span>
+
+</div>
+        <div class="clear"></div>
+            <div class="postSeparator"></div>
+        <div class="postTitle" role="heading" aria-level="2">
+            <a class="postTitle2 vertical-middle" href="https://www.cnblogs.com/zhangshuaiyin/p/12038094.html">
+    <span>
+        JavaScript ES6新特性介绍
+    </span>
+    
+
+</a>
+
+        </div>
+        <div class="postCon">
+
+<div class="c_b_p_desc" id="postlist_description_12038094">
+摘要：        
+介绍ES6：ECMScript6首先，一个常...    <a href="https://www.cnblogs.com/zhangshuaiyin/p/12038094.html" class="c_b_p_desc_readmore">阅读全文</a>
+</div>
+
+</div>
+        <div class="clear"></div>
+        <div class="postDesc">posted @ 2019-12-14 08:54
+Ep流苏
+<span data-post-id="12038094" class="post-view-count">阅读(447)</span>
+<span data-post-id="12038094" class="post-comment-count">评论(0)</span>
+<span data-post-id="12038094" class="post-digg-count">推荐(0)</span>
+
+</div>
+        <div class="clear"></div>
+            <div class="postSeparator"></div>
+        <div class="postTitle" role="heading" aria-level="2">
+            <a class="postTitle2 vertical-middle" href="https://www.cnblogs.com/zhangshuaiyin/p/12038095.html">
+    <span>
+        SSM手动实现分页逻辑---非PageHelper方式
+    </span>
+    
+
+</a>
+
+        </div>
+        <div class="postCon">
+
+<div class="c_b_p_desc" id="postlist_description_12038095">
+摘要：        
+第一种方法：查询出所有数据再分页分析：分页时...    <a href="https://www.cnblogs.com/zhangshuaiyin/p/12038095.html" class="c_b_p_desc_readmore">阅读全文</a>
+</div>
+
+</div>
+        <div class="clear"></div>
+        <div class="postDesc">posted @ 2019-12-14 08:54
+Ep流苏
+<span data-post-id="12038095" class="post-view-count">阅读(537)</span>
+<span data-post-id="12038095" class="post-comment-count">评论(1)</span>
+<span data-post-id="12038095" class="post-digg-count">推荐(0)</span>
+
+</div>
+        <div class="clear"></div>
+            <div class="postSeparator"></div>
+        <div class="postTitle" role="heading" aria-level="2">
+            <a class="postTitle2 vertical-middle" href="https://www.cnblogs.com/zhangshuaiyin/p/12038097.html">
+    <span>
+        【MySQL】完整性约束条件与设计范式
+    </span>
+    
+
+</a>
+
+        </div>
+        <div class="postCon">
+
+<div class="c_b_p_desc" id="postlist_description_12038097">
+摘要：        
+完整性约束条件概念：对表中的数据进行限定，保...    <a href="https://www.cnblogs.com/zhangshuaiyin/p/12038097.html" class="c_b_p_desc_readmore">阅读全文</a>
+</div>
+
+</div>
+        <div class="clear"></div>
+        <div class="postDesc">posted @ 2019-12-14 08:54
+Ep流苏
+<span data-post-id="12038097" class="post-view-count">阅读(319)</span>
+<span data-post-id="12038097" class="post-comment-count">评论(0)</span>
+<span data-post-id="12038097" class="post-digg-count">推荐(0)</span>
+
+</div>
+        <div class="clear"></div>
+            <div class="postSeparator"></div>
+        <div class="postTitle" role="heading" aria-level="2">
+            <a class="postTitle2 vertical-middle" href="https://www.cnblogs.com/zhangshuaiyin/p/12038098.html">
+    <span>
+        【MySQL】多表查询&事务&权限管理
+    </span>
+    
+
+</a>
+
+        </div>
+        <div class="postCon">
+
+<div class="c_b_p_desc" id="postlist_description_12038098">
+摘要：        
+多表查询：查询语法：select	列名列表f...    <a href="https://www.cnblogs.com/zhangshuaiyin/p/12038098.html" class="c_b_p_desc_readmore">阅读全文</a>
+</div>
+
+</div>
+        <div class="clear"></div>
+        <div class="postDesc">posted @ 2019-12-14 08:54
+Ep流苏
+<span data-post-id="12038098" class="post-view-count">阅读(936)</span>
+<span data-post-id="12038098" class="post-comment-count">评论(0)</span>
+<span data-post-id="12038098" class="post-digg-count">推荐(0)</span>
+
+</div>
+        <div class="clear"></div>
+            <div class="postSeparator"></div>
+        <div class="postTitle" role="heading" aria-level="2">
+            <a class="postTitle2 vertical-middle" href="https://www.cnblogs.com/zhangshuaiyin/p/12038099.html">
+    <span>
+        【MySQL】条件查询之排序聚合分组分页查询
+    </span>
+    
+
+</a>
+
+        </div>
+        <div class="postCon">
+
+<div class="c_b_p_desc" id="postlist_description_12038099">
+摘要：        
+排序查询语法：order by 子句orde...    <a href="https://www.cnblogs.com/zhangshuaiyin/p/12038099.html" class="c_b_p_desc_readmore">阅读全文</a>
+</div>
+
+</div>
+        <div class="clear"></div>
+        <div class="postDesc">posted @ 2019-12-14 08:54
+Ep流苏
+<span data-post-id="12038099" class="post-view-count">阅读(1547)</span>
+<span data-post-id="12038099" class="post-comment-count">评论(0)</span>
+<span data-post-id="12038099" class="post-digg-count">推荐(0)</span>
+
+</div>
+        <div class="clear"></div>
+</div>
+
+
+
+<div class="topicListFooter">
+    <div id="nav_next_page">
+        
+    <a href="https://www.cnblogs.com/zhangshuaiyin?page=2">
+        下一页
+    </a>
+
+    </div>    
+</div>
+
+
+
+
+
+
+<script>
+    updatePostStats(
+        $(".post-view-count").map(function () { return this.dataset.postId }).get(),
+        function(id, count) { $(".post-view-count[data-post-id=" + id + "]").text("阅读(" + count + ")") },
+        function(id, count) { $(".post-comment-count[data-post-id=" + id + "]").text("评论(" + count + ")") },
+        function(id, count) { $(".post-digg-count[data-post-id=" + id + "]").text("推荐(" + count + ")") });
+</script>
+	</div>
+	</div>
+	<div id="sideBar">
+		<div id="sideBarMain">
+			<div id="sidebar_news" class="newsItem">
+    <h3 class="catListTitle">公告</h3>
+<div id="blog-news" class="sidebar-news">
+    <div id="sidebar_news_container">
+<p>👋 你好，我是 Ep流苏。</p>
+<p>这里记录 Java 后端、中间件与工具排错的笔记。<br>文章多为实践中踩坑后的整理，欢迎交流。</p>
+<p style="color:#9aa5b1">GitHub：<a href="https://github.com/zsy0216">zsy0216</a></p>
+</div>
+</div>
+
+
+
+</div>
+			<div id="blog-calendar">
+<h3 class="catListTitle">日历</h3>
+<table>
+<tr><th>日</th><th>一</th><th>二</th><th>三</th><th>四</th><th>五</th><th>六</th></tr>
+<tr><td>1</td><td>2</td><td>3</td><td>4</td><td>5</td><td>6</td><td>7</td></tr>
+<tr><td>8</td><td>9</td><td>10</td><td>11</td><td><a href="#">12</a></td><td>13</td><td>14</td></tr>
+<tr><td>15</td><td>16</td><td>17</td><td>18</td><td>19</td><td>20</td><td><a href="#">21</a></td></tr>
+</table>
+</div>			
+			<div id="leftcontentcontainer">
+				<div id="blog-sidecolumn">
+<div id="sidebar_categories">
+  <h3 class="catListTitle">分类</h3>
+  <ul>
+    <li><a href="#">Java <span>(18)</span></a></li>
+    <li><a href="#">Spring / SpringBoot <span>(7)</span></a></li>
+    <li><a href="#">MySQL <span>(6)</span></a></li>
+    <li><a href="#">中间件 <span>(5)</span></a></li>
+    <li><a href="#">前端 <span>(4)</span></a></li>
+    <li><a href="#">Python <span>(3)</span></a></li>
+    <li><a href="#">工具与排错 <span>(9)</span></a></li>
+  </ul>
+</div>
+<div id="sidebar_postarchive">
+  <h3 class="catListTitle">归档</h3>
+  <ul>
+    <li><a href="#">2021年7月 <span>(3)</span></a></li>
+    <li><a href="#">2019年12月 <span>(21)</span></a></li>
+    <li><a href="#">2019年10月 <span>(1)</span></a></li>
+    <li><a href="#">2019年6月 <span>(1)</span></a></li>
+  </ul>
+</div>
+<div id="sidebar_search">
+  <h3 class="catListTitle">搜索</h3>
+  <div class="mySearch">
+    <input id="q" type="text" placeholder="搜索文章…">
+    <input id="btnZzk" type="button" value="搜索">
+  </div>
+</div>
+<div id="sidebar_topviewedposts">
+  <h3 class="catListTitle">阅读排行</h3>
+  <ul>
+    <li><a href="#">SpringBoot 构造器注入、Setter 注入和 Field 注入对比</a></li>
+    <li><a href="#">Webpack 4 : Entry module not found</a></li>
+    <li><a href="#">PageHelper 使用以及 PageInfo 转化</a></li>
+    <li><a href="#">Zookeeper 学习记录及 Java 客户端示例</a></li>
+  </ul>
+</div>
+</div>
+					
+			</div>			
+		</div>
+	</div>
+	<div class="clear"></div>
+	</div>
+	<div class="clear"></div>
+	<div id="footer">
+		<a href="https://www.cnblogs.com/" id="footer_site_link" class="footer-brand">博客园</a>
+<span class="footer-copyright"> &nbsp;&copy;&nbsp; 2004-2026</span>
+<br /><span class="footer-icp">
+    <a target="_blank" href="http://www.beian.gov.cn/portal/registerSystemInfo?recordcode=33010602011771"><img src="https://www.cnblogs.com//assets.cnblogs.com/images/ghs.png" />浙公网安备 33010602011771号</a>
+    <a href="https://beian.miit.gov.cn" target="_blank">浙ICP备2021040463号-3</a>
+</span>
+
+
+
+	</div>
+</div>
+
+
+
+    <div id="page_end_html"></div>
+
+    <input type="hidden" id="antiforgery_token" value="CfDJ8Pn9bUKjiU5Il6bOWcQWpk0AIWJjeX7Vm-oe3J5dFt_wTDRxZwfg5mcoCkdMUw2dNBQA-IMPxbCPm0tFFiQD1eCXqaG4aPZcC1JBJ74urddi1xqGttmlxNvtgFqOnG7N-BYbPhrx_cKxhzfDtvm2tHw" />
+    <script defer src="https://hm.baidu.com/hm.js?866c9be12d4a814454792b1fd0fed295"></script>
+<script defer src="https://lf1-cdn-tos.bytegoofy.com/goofy/ttzz/push.js?32d945448dd797af605da9156763de3dc11c9886368d0f917d6388e4fcf5542030632485602430134f60bc55ca391050b680e2741bf7233a8f1da9902314a3fa" id="ttzz"></script>
+</body>
+</html>

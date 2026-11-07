@@ -1,107 +1,82 @@
-# 友人主题 · 博客园个人皮肤
+# 友人主题 v6.0 · 博客园自定义皮肤
 
-> 一套参考 nicen.cn 风格的博客园定制皮肤，核心视觉：纯白卡片 / 大封面图 / 左中右三栏 / 粉紫强调色。
+> 参考 nicen.cn 的博客园定制皮肤：纯白卡片、左中右三栏、粉紫强调色、可定制顶栏。
+> **本版基于 2026-11 实测的博客园真实 DOM 重写**，不再假设 `#rightColumn` 等不存在的节点。
 
-## 用途
+## 一、为什么之前一直"没变化"
 
-博客园「页面定制 CSS 代码」+「页脚 HTML 代码」，一次粘贴即可生效。
+| 根因 | 实测证据 |
+|---|---|
+| 定制 CSS 没保存成功 | 线上 `custom.css` 仅 **468 字节**（默认 loading 模板），本地主题 24,056 字节 |
+| 页脚 HTML 被第三方框架占用 | `#page_end_html` 内是 `cdn.cnblogs.com/awescnb/index.js`，`theme:'element'`，会重构 DOM |
+| 选择器指向不存在的节点 | 真实 DOM 无 `#rightColumn`；`#main` 内顺序是"正文 → 侧栏" |
 
-## 安装
+皮肤选择本身**没有问题**：`body` 的 class 已含 `skin-custom`。
 
-1. 博客园 → 设置 → 博客设置
-2. 皮肤选择 **Custom**（必须）
-3. 申请 **JS 权限**（页面最下方「申请 JS 权限」）
-4. 把 `style.css` 全部代码粘贴到 **页面定制 CSS 代码**
-5. 把 `footer-nav-template.html` 全部代码粘贴到 **页脚 HTML 代码**
-6. 保存，** Ctrl+F5 ** 强制刷新
+## 二、安装（5 步，务必按顺序）
 
-## 定制导航条
+1. **清空页脚 HTML** —— 设置 → 页脚 HTML 代码 → 全选删除（停用 awescnb，不做这步后面全白费）
+2. **页面定制 CSS 代码** → 全选替换为 `css/theme-v6.css` → 保存
+3. **页首 HTML 代码** → 粘贴 `snippets/head-nav-v6.html` → 保存
+4. **公告** → 粘贴 `snippets/announcement-v6.html` → 保存
+5. 前台 `Ctrl+F5` 强刷
 
-`footer-nav-template.html` 第 1 部分：
+## 三、验证是否真的生效
+
+```bash
+curl -s https://www.cnblogs.com/zhangshuaiyin/custom.css | wc -c
+```
+
+- 预期 **> 20000**
+- 若仍是 **468**，说明 CSS 又没保存成功，重做第 2 步
+
+## 四、定制顶栏
+
+只需改 `snippets/head-nav-v6.html` 里的 `.qb-links`：
 
 ```html
-<div class="custom-top-nav">
-    <div class="nav-inner">
-        <div class="nav-left">
-            <div class="site-name" id="siteName">Ep流苏</div>
-            <ul class="nav-links">
-                <li><a data-nav="home" href="https://www.cnblogs.com/zhangshuaiyin/">首页</a></li>
-                <li><a href="https://i.cnblogs.com/posts/edit">新随笔</a></li>
-                <li><a data-nav="contact" href="mailto:you@example.com">联系</a></li>
-                <li><a data-nav="rss" href="https://www.cnblogs.com/zhangshuaiyin/rss/">订阅</a></li>
-                <li><a href="https://i.cnblogs.com/">管理</a></li>
-            </ul>
-        </div>
-        <div class="nav-right" id="navStats">
-            <span id="navPost">随笔 - -</span>
-            <span id="navArticle">文章 - -</span>
-            <span id="navComment">评论 - -</span>
-            <span id="navView">阅读 - -</span>
-        </div>
-    </div>
-</div>
+<nav class="qb-links">
+  <a class="on" href="https://www.cnblogs.com/zhangshuaiyin/">首页</a>
+  <a href="https://www.cnblogs.com/zhangshuaiyin/p/archive/2021/07">归档</a>
+  <!-- 加一项：复制一行改 href 与文字；删一项：删整行 -->
+</nav>
 ```
 
-- 加菜单项：复制一行 `<li><a href="地址">文字</a></li>`
-- 删菜单项：删除整行
-- 带 `data-nav` 的三项（首页/联系/订阅）由脚本自动补全真实地址
-  - data-nav="home"   → 博客首页
-  - data-nav="contact" → 私信
-  - data-nav="rss"     → RSS 地址
-- 隐藏统计：删掉 `nav-stats` 整块
-- 隐藏导航条：删掉整个 `custom-top-nav` div 即可变回纯默认页
+- 当前页高亮：给对应 `<a>` 加 `class="on"`
+- 不要顶栏：删掉整段 `<div class="qb-nav">…</div>`
+- 顶栏样式在 `theme-v6.css` 的「2. 自建顶栏」段，改 `.qb-nav` 即可
 
-## 配色方案
-
-全局颜色在 `style.css` 顶部的 `:root` 中定义，修改变量即可换肤：
-
-| 变量 | 说明 | 默认值 |
-| ---- | ---- | ------ |
-| `--bg-page` | 页面背景 | `#f5f6f8` |
-| `--bg-card` | 卡片背景 | `#ffffff` |
-| `--accent` | 品牌主色（链接/按钮/高亮） | `#d05ce8` |
-| `--accent_hover` | 悬停色 | `#c05ce0` |
-| `--ink-title` | 标题色 | `#1f2329` |
-| `--ink-body` | 正文色 | `#4a5568` |
-| `--ink-meta` | 次要/元数据色 | `#a0aec0` |
-| `--ink-link` | 链接色 | `#2b6cb0` |
-| `--ink-link-h` | 链接悬停色 | `#2c5282` |
-| `--tag-bg` | 标签背景 | `#edf2f7` |
-| `--tag-text` | 标签文字 | `#718096` |
-| `--border-card` | 卡片边框 | `#eef0f2` |
-| `--radius` | 圆角 | `12px` |
-| `--radius-sm` | 小圆角 | `8px` |
-
-示例：把主色改成蓝色，只需两行：
+## 五、布局原理
 
 ```css
---accent: #2b6cb0;
---accent_hover: #2c5282;
+#main { display:grid; grid-template-columns:224px minmax(0,1fr) 288px; }
+#sideBar, #sideBarMain { display:contents; }   /* 侧栏子节点提升为网格项 */
+#leftcontentcontainer { grid-column:1; }        /* 左：分类/归档/搜索/排行 */
+#mainContent        { grid-column:2; }          /* 中：文章列表/正文 */
+#sidebar_news       { grid-column:3; }          /* 右：公告 */
 ```
 
-## 效果（仿 nicen.cn 三栏白卡）
+纯 CSS，不依赖 JS 权限。断点：≤1180px 收两栏，≤860px 单栏。
 
-- 页面背景：纯色浅灰（`#f5f6f8`），非渐变
-- **顶部导航条**：固定顶栏，左侧站点名 + 菜单（可增删），右侧统计数字；js 启动后自动同步数据
-- **左侧文章目录**：白卡片，含全部文章 + 随笔 + 分类 + 归档 + 联系，当前页高亮粉紫左条
-- **左中右三栏布局**：左侧文章目录 / 中间文章列表 / 右侧个人信息 + 最新评论
-- 文章列表：**大封面图白卡**，图片圆角隐藏，底部摘要 + 元数据行
-- 文章内页：整张白卡包裹标题 + 正文，标签粉紫胶囊，推荐/关注按钮
-- 左侧目录：白卡片模块，展开项粉紫左条高亮，折叠三角
-- 右侧面板：个人资料（圆头像 + 统计格）+ 最新评论列表，白卡片
-- 推荐/关注：白卡按钮，状态存储在 localStorage
-- 公告模块：白卡卡片
+## 六、文件
 
-## 已知限制
+```
+css/theme-v6.css              全部样式（唯一需要粘贴的 CSS）
+snippets/head-nav-v6.html     顶栏结构（页首 HTML）
+snippets/announcement-v6.html 公告模板（内联样式，抗覆盖）
+preview/home-v6.html          首页离线预览（真实 DOM 复刻）
+preview/post-v6.html          文章页离线预览
+build_preview.py              用线上 HTML 生成预览页
+可行性评估-v6.md               完整评估报告（含证据与风险）
+```
 
-- 博客园默认「本色」主题的 DOM 结构固定， flexGrow 在默认主题下不可用
-- 侧边栏模块需用默认主题的 DOM 节点类名（#sideBarMain / #blog-sidecolumn 等）
-- 文章列表使用 `.day` 容器（本色主题默认结构）
+## 七、已知限制
 
-## 隐私
+- **无大封面图**：博客园文章没有封面图字段，nicen.cn 的大图卡片无法复刻
+- **文章页 TOC**：需要「JS 权限」才能做滚动高亮，未开通时只能用静态链接
+- **日历默认隐藏**：单行网格下跨行会有空档；需要就把 `#blog-calendar{display:none}` 改回 `block`
+- **平台改版即失效**：选择器绑定平台 DOM，改版后需按新结构调
 
-所有状态（推荐/关注按钮）仅保存在浏览器的 localStorage，不会上传到服务器。导航条的统计数字通过 AJAX 同步博客园后台数据。
+## 八、回滚
 
-## 许可
-
-MIT License — 可自由修改、分发、用于个人博客。
+清空「页面定制 CSS」「页首 HTML」「页脚 HTML」三个字段即恢复默认外观。

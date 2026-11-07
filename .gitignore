@@ -12,3 +12,8 @@ Thumbs.db
 # Build output
 *.pyc
 __pycache__/
+node_modules/
+preview/_src/
+preview/shot-*.png
+preview/crop-*.png
+*.js

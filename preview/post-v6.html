@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />            
+    <meta http-equiv="Cache-Control" content="no-transform" />
+    <meta http-equiv="Cache-Control" content="no-siteapp" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="referrer" content="never" />
+    <title>flex布局和边框阴影 - Ep流苏 - 博客园</title>
+    <meta name="keywords" content="Web前端 / CSS" />
+    <meta name="description" content="“妄”眼欲穿-CSS之flex布局和边框阴影 妄：狂妄； 不会的东西只有怀着一颗狂妄的心，假装能把它看穿吧。 flex布局 main axis：主轴；cross axis：交叉轴 容器的子元素自动成为容器成员，成为flex 项目（item） flex容器属性 flex-direction ​&#x9;该属性" />    
+    <meta property="og:description" content="“妄”眼欲穿-CSS之flex布局和边框阴影 妄：狂妄； 不会的东西只有怀着一颗狂妄的心，假装能把它看穿吧。 flex布局 main axis：主轴；cross axis：交叉轴 容器的子元素自动成为容器成员，成为flex 项目（item） flex容器属性 flex-direction ​&#x9;该属性" />
+    <meta property="og:image" content="https://assets.cnblogs.com/images/wechat-share.jpg" />
+    <meta property="bytedance:published_time" content="2019-12-14T08:54:00+08:00" />
+    
+    <link rel="stylesheet" href="https://www.cnblogs.com/css/blog-common.min.css?v=6O_Ku8w_jYd3yw2BX9ElmxGv25AYbAQ-F6ZeOeZfxYc" />
+    
+    <link id="highlighter-theme-prism-tomorrow" type="text/css" rel="stylesheet" href="https://www.cnblogs.com/css/prismjs/prism-tomorrow.css?v=0dkohC9ZEupqWbq0hS5cVR4QQXJ-mp6N2oJyuks6gt0" />
+    
+    
+    <link id="mobile-style" media="only screen and (max-width: 767px)" type="text/css" rel="stylesheet" href="https://www.cnblogs.com/css/mobile-common.min.css?v=a5tjm35tHR3Bq88JZf8V-jiXDhgs5wg823qWgRI6uRY" />
+    
+    <link id="favicon" rel="icon" type="image/x-icon" sizes="32x32" href="https://assets.cnblogs.com/favicon_v3_3.ico" />
+    <link id="favicon_svg" rel="icon" type="image/svg+xml" href="https://assets.cnblogs.com/favicon_v3_3.svg" />
+    <link rel="apple-touch-icon" href="https://assets.cnblogs.com/apple-touch-icon.png?v=2" />
+    <link rel="canonical" href="https://www.cnblogs.com/zhangshuaiyin/p/12038084.html" />
+    <link type="application/rss+xml" rel="alternate" href="https://www.cnblogs.com/zhangshuaiyin/rss" />
+    <link type="application/rsd+xml" rel="EditURI" href="https://www.cnblogs.com/zhangshuaiyin/rsd.xml" />
+    <link type="application/wlwmanifest+xml" rel="wlwmanifest" href="https://www.cnblogs.com/zhangshuaiyin/wlwmanifest.xml" />
+    
+    <script type="application/ld&#x2B;json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BlogPosting",
+      "@id": "https://www.cnblogs.com/zhangshuaiyin/p/12038084.html",
+      "headline": "flex布局和边框阴影",
+      "description": "“妄”眼欲穿-CSS之flex布局和边框阴影 妄：狂妄； 不会的东西只有怀着一颗狂妄的心，假装能把它看穿吧。 flex布局 main axis：主轴；cross axis：交叉轴 容器的子元素自动成为容器成员，成为flex 项目（item） flex容器属性 flex-direction ​\t该属性",
+      "image": [
+        
+      ],
+      "author": {
+        "@type": "Person",
+        "@id": "https://www.cnblogs.com/zhangshuaiyin/",
+        "name": "Ep流苏",
+        "url": "https://www.cnblogs.com/zhangshuaiyin/"
+      },
+      "publisher": {
+        "@type": "Organization",
+        "@id": "https://www.cnblogs.com/",
+        "name": "博客园",
+        "url": "https://www.cnblogs.com/"
+      },
+      "datePublished": "2019-12-14T08:54:00.0000000&#x2B;08:00",
+      "dateModified": "2021-10-26T14:30:00.0000000&#x2B;08:00",
+      "wordCount": "4801",
+      "isPartOf": {
+        "@type": "Blog",
+        "@id": "https://www.cnblogs.com/zhangshuaiyin/",
+        "name": "Ep流苏",
+        "publisher": {
+          "@type": "Organization",
+          "@id": "https://www.cnblogs.com/",
+          "name": "博客园"
+        }
+      }
+    }
+    </script>
+
+    <script>
+        var currentBlogId = 477677;
+        var currentBlogApp = 'zhangshuaiyin';
+        var isLogined = false;
+        var isBlogOwner = false;
+        window.isCorp = false;
+        window.skinName = 'Custom';
+        var visitorUserId = '';
+        window.hasCustomScript = true;
+        window.cb_enable_mathjax = true;
+        window.mathEngine = 0;
+        window.codeHighlightEngine = 2;
+        window.enableCodeLineNumber = false;
+        window.codeHighlightTheme = 'prism-tomorrow';
+        window.darkModeCodeHighlightTheme = 'prism-vsc-dark-plus';
+        window.isDarkCodeHighlightTheme = true;
+        window.isDarkModeCodeHighlightThemeDark = true;
+        window.isDisableCodeHighlighter = false;
+        window.enableCodeThemeTypeFollowSystem = false;
+        window.enableMacStyleCodeBlock = false;        
+    </script>
+        <script>
+            window.currentPostId = 12038084;
+            window.currentPostDateAdded = '2019-12-14 08:54';
+        </script>
+    <script src="https://assets.cnblogs.com/scripts/jquery-3.3.1.min.js"></script>
+    <script src="https://cdn-www.cnblogs.com/js/blog-common.min.js?v=hR-lIKyiNnMONMoRnGahxbmGj8Nc0vI6JpCBb_gCDfs"></script>
+        <script>updateCustomBlogReferrer();</script>
+    
+</head>
+<body class="skin-custom has-navbar mathjax2">
+    <a name="top"></a>
+    <div id="top_nav" class="navbar forpc">
+        <nav id="nav_main" class="navbar-main">
+            <ul id="nav_left" class="navbar-list navbar-left">
+                <li class="navbar-branding">
+                    <a href="https://www.cnblogs.com/" title="开发者的网上家园" role="banner">
+                        <img src="https://www.cnblogs.com//assets.cnblogs.com/logo.svg" alt="博客园logo" />
+                    </a>
+                </li>
+                <li><a href="https://cnblogs.vip/">会员</a></li>
+                <li><a href="https://cnblogs.vip/store">周边</a></li>
+                <li><a href="https://news.cnblogs.com/" onclick="countClicks('nav', 'skin-navbar-news')">新闻</a></li>
+                <li><a href="https://q.cnblogs.com/" onclick="countClicks('nav', 'skin-navbar-q')">博问</a></li>
+                <li><a href="https://ing.cnblogs.com/" onclick="countClicks('nav', 'skin-navbar-ing')">闪存</a></li>                
+                <li><a href="https://www.cnblogs.com/cmt/p/19316348">赞助商</a></li>
+                <li><a href="https://chat2db-ai.com/" target="_blank">Chat2DB</a></li>
+            </ul>
+            <ul id="nav_right" class="navbar-list navbar-right">
+                <li>
+                    <form id="zzk_search" class="navbar-search dropdown" action="https://zzk.cnblogs.com/s" method="get" role="search">
+                        <input name="w" id="zzk_search_input" placeholder="代码改变世界" type="search" tabindex="3" autocomplete="off" />
+                        <button id="zzk_search_button" onclick="window.navbarSearchManager.triggerActiveOption()">
+                            <img id="search_icon" class="focus-hidden" src="https://www.cnblogs.com//assets.cnblogs.com/icons/search.svg" alt="搜索" />
+                            <img class="hidden focus-visible" src="https://www.cnblogs.com//assets.cnblogs.com/icons/enter.svg" alt="搜索" />
+                        </button>
+                        <ul id="navbar_search_options" class="dropdown-menu quick-search-menu">
+                            <li tabindex="0" class="active" onclick="zzkSearch(event, document.getElementById('zzk_search_input').value)">
+                                <div class="keyword-wrapper">
+                                    <img src="https://www.cnblogs.com//assets.cnblogs.com/icons/search.svg" alt="搜索" />
+                                    <div class="keyword"></div>
+                                </div>
+                                <span class="search-area">所有博客</span>
+                            </li>
+                                    <li tabindex="1" onclick="zzkBlogSearch(event, 'zhangshuaiyin', document.getElementById('zzk_search_input').value)">
+                                        <div class="keyword-wrapper">
+                                            <img src="https://www.cnblogs.com//assets.cnblogs.com/icons/search.svg" alt="搜索" />
+                                            <div class="keyword"></div>
+                                        </div>
+                                        <span class="search-area">当前博客</span>
+                                    </li>
+                        </ul>
+                    </form>
+                </li>
+                <li id="navbar_login_status" class="navbar-list">
+                    <a class="navbar-user-info navbar-blog" href="https://i.cnblogs.com/EditPosts.aspx?opt=1" alt="写随笔" title="写随笔">
+                        <img id="new_post_icon" class="navbar-icon" src="https://www.cnblogs.com//assets.cnblogs.com/icons/newpost.svg" alt="写随笔" />
+                    </a>
+                    <a id="navblog-myblog-icon" class="navbar-user-info navbar-blog" href="https://www.cnblogs.com/my" alt="我的博客" title="我的博客">
+                        <img id="myblog_icon" class="navbar-icon" src="https://www.cnblogs.com//assets.cnblogs.com/icons/myblog.svg" alt="我的博客" />
+                    </a>
+                    <a class="navbar-user-info navbar-message navbar-icon-wrapper" href="https://msg.cnblogs.com/" alt="短消息" title="短消息">
+                        <img id="msg_icon" class="navbar-icon" src="https://www.cnblogs.com//assets.cnblogs.com/icons/message.svg" alt="短消息" />
+                        <span id="msg_count" style="display: none"></span>
+                    </a>
+                    <a id="navbar_lite_mode_indicator" data-current-page="blog" style="display: none" href="javascript:void(0)" alt="简洁模式" title="简洁模式启用，您在访问他人博客时会使用简洁款皮肤展示">
+                        <img class="navbar-icon" src="https://www.cnblogs.com//assets.cnblogs.com/icons/lite-mode-on.svg" alt="简洁模式" />
+                    </a>
+                    <div id="user_info" class="navbar-user-info dropdown">
+                        <a class="dropdown-button" href="https://home.cnblogs.com/">
+                            <img id="user_icon" class="navbar-avatar" src="https://www.cnblogs.com//assets.cnblogs.com/icons/avatar-default.svg" alt="用户头像" />
+                        </a>
+                        <div class="dropdown-menu">
+                            <a id="navblog-myblog-text" href="https://www.cnblogs.com/my">我的博客</a>
+                            <a href="https://home.cnblogs.com/">我的园子</a>
+                            <a href="https://account.cnblogs.com/settings/account">账号设置</a>
+                            <a href="https://vip.cnblogs.com/my">会员中心</a>
+                            <a href="javascript:void(0)" id="navbar_lite_mode_toggle" title="简洁模式会使用简洁款皮肤显示所有博客">
+    简洁模式 <span id="navbar_lite_mode_spinner" class="hide">...</span>
+</a>
+
+                            <a href="javascript:void(0)" onclick="account.logout();">退出登录</a>
+                        </div>
+                    </div>
+                    <a class="navbar-anonymous" href="https://account.cnblogs.com/signup">注册</a>
+                    <a class="navbar-anonymous" href="javascript:void(0);" onclick="account.login()">登录</a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+
+    <div id="page_begin_html"><link rel="stylesheet" href="../css/theme-v6.css">
+<style>
+.qb-nav{position:sticky;top:0;z-index:999;background:rgba(255,255,255,.86);
+  backdrop-filter:saturate(180%) blur(12px);border-bottom:1px solid #ecedf0}
+.qb-nav-inner{max-width:1320px;margin:0 auto;height:58px;padding:0 24px;
+  display:flex;align-items:center;justify-content:space-between;box-sizing:border-box}
+.qb-brand{font-size:17px;font-weight:700;color:#1f2329;letter-spacing:.01em}
+.qb-links{display:flex;align-items:center;gap:4px}
+.qb-links a{font-size:14px;color:#4b5563;padding:6px 12px;border-radius:8px;font-weight:500}
+.qb-links a:hover{background:rgba(208,92,232,.10);color:#b843d0}
+.qb-links a.on{color:#b843d0;background:rgba(208,92,232,.10);font-weight:600}
+@media(max-width:860px){.qb-brand{font-size:16px}.qb-links a{padding:6px 8px;font-size:13px}
+  .qb-links a:nth-child(n+5){display:none}}
+</style>
+<!-- ============================================================
+     友人主题 v6.0 · 页首 HTML
+     粘贴位置：博客园后台 → 设置 → 博客设置 → 页首 HTML 代码
+     ------------------------------------------------------------
+     说明：
+     1. 这里只有结构，样式全部在「页面定制 CSS 代码」里（theme-v6.css），
+        因为博客园对页首 HTML 中的 <style> 可能过滤，CSS 走定制字段最稳。
+     2. 增删菜单：复制/删除一行 <a>…</a> 即可。
+     3. 当前页高亮：给对应 <a> 加 class="on"。
+        多页面高亮可用下面的 data-page 方案（需 JS 权限）：
+           <a href="..." data-page="/">首页</a>
+     4. 不需要顶栏就把整段删掉，CSS 里的 .qb-nav 规则不影响其它部分。
+     ============================================================ -->
+
+<div class="qb-nav">
+  <div class="qb-nav-inner">
+    <a class="qb-brand" href="https://www.cnblogs.com/zhangshuaiyin/">Ep流苏</a>
+
+    <nav class="qb-links">
+      <!-- 菜单项 ← 从这里开始增删，一行一个 -->
+      <a class="on" href="https://www.cnblogs.com/zhangshuaiyin/">首页</a>
+      <a href="https://www.cnblogs.com/zhangshuaiyin/p/archive/2021/07">归档</a>
+      <a href="https://www.cnblogs.com/zhangshuaiyin/category/1.html">分类</a>
+      <a href="https://www.cnblogs.com/zhangshuaiyin/tag/1.html">标签</a>
+      <a href="https://msg.cnblogs.com/send/Ep%E6%B5%81%E8%8B%8F">留言</a>
+      <a href="https://github.com/zsy0216" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://www.cnblogs.com/zhangshuaiyin/rss" target="_blank" rel="noopener">RSS</a>
+      <!-- 加菜单项：复制上面任意一行，改 href 与文字 -->
+    </nav>
+  </div>
+</div>
+<div style="position:fixed;left:8px;bottom:8px;z-index:99999;background:#111;color:#0f0;font:22px monospace;padding:8px 14px;border-radius:6px" id="vpbadge">?</div><script>document.getElementById('vpbadge').textContent='vp '+innerWidth+'x'+innerHeight;</script></div><div id="home">
+<div id="header">
+	<div id="blogTitle">
+        <a id="lnkBlogLogo" href="https://www.cnblogs.com/zhangshuaiyin/"><img id="blogLogo" src="https://www.cnblogs.com/skins/custom/images/logo.gif" alt="返回主页" /></a>		
+		
+
+<h1><a id="Header1_HeaderTitle" class="headermaintitle HeaderMainTitle" href="https://www.cnblogs.com/zhangshuaiyin">Ep流苏</a>
+</h1>
+<h2>不会的东西只有怀着一颗狂妄的心，假装能把它看穿吧。</h2>
+
+
+
+
+		
+	</div>
+	<div id="navigator">
+		
+<ul id="navList">
+<li><a id="blog_nav_sitehome" class="menu" href="https://www.cnblogs.com/">
+博客园</a>
+</li>
+<li>
+<a id="blog_nav_myhome" class="menu" href="https://www.cnblogs.com/zhangshuaiyin/">
+首页</a>
+</li>
+<li>
+
+<a id="blog_nav_newpost" class="menu" href="https://i.cnblogs.com/EditPosts.aspx?opt=1">
+新随笔</a>
+</li>
+<li>
+<a id="blog_nav_contact" class="menu" href="https://msg.cnblogs.com/send/Ep%E6%B5%81%E8%8B%8F">
+联系</a></li>
+<li>
+<a id="blog_nav_rss" class="menu" href="javascript:void(0)" data-rss="https://www.cnblogs.com/zhangshuaiyin/rss/">
+订阅</a>
+<!--<partial name="./Shared/_XmlLink.cshtml" model="Model" /></li>--></li>
+<li>
+<a id="blog_nav_admin" class="menu" href="https://i.cnblogs.com/">
+管理</a>
+</li>
+</ul>
+
+
+		<div class="blogStats">
+			<div id="blog_stats_place_holder"></div>
+		</div>
+	</div>
+</div>
+<div id="main">
+	<div id="mainContent">
+	<div class="forFlow">
+		<div id="post_detail">
+    
+    <div id="topics">
+        <div class="post">
+            <h1 class = "postTitle">
+                <a id="cb_post_title_url" class="postTitle2 vertical-middle" href="https://www.cnblogs.com/zhangshuaiyin/p/12038084.html" title="发布于 2019-12-14 08:54">
+    
+
+    <span role="heading" aria-level="2">flex布局和边框阴影</span>
+    
+
+</a>
+
+            </h1>
+            <div class="clear"></div>
+            <div class="postBody">
+                <div id="cnblogs_post_body" class="blogpost-body blogpost-body-html">
+
+                    
+                    <svg xmlns="http://www.w3.org/2000/svg" style="display: none">
+                        <path stroke-linecap="round" d="M5,0 0,2.5 5,5z" id="raphael-marker-block" style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0)"></path>
+                    </svg>
+                                            <blockquote>
+<p>“妄”眼欲穿-CSS之flex布局和边框阴影<br>
+妄：狂妄；</p>
+<p>不会的东西只有怀着一颗狂妄的心，假装能把它看穿吧。</p>
+</blockquote>
+<h2><a id="flex_5"></a>flex布局</h2>
+<p><img src="https://img-blog.csdnimg.cn/20181123181016437.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0VwX0xpdHRsZV9wcmluY2U=,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"></p>
+<p>main axis：主轴；cross axis：交叉轴</p>
+<p>容器的子元素自动成为容器成员，成为flex 项目（item）</p>
+<hr>
+<h3><a id="flex_14"></a>flex容器属性</h3>
+<h4><a id="flexdirection_16"></a>flex-direction</h4>
+<p>​	该属性决定主轴的方向，即各flex item 的排列方向。</p>
+<ul>
+<li>
+<p>row（默认值）：水平方向，起点在左端；</p>
+</li>
+<li>
+<p>row-reverse：水平方向，起点在右端；</p>
+</li>
+<li>
+<p>column：垂直方向，起点在上沿；</p>
+</li>
+<li>
+<p>column-reverse：垂直方向，起点在下沿。</p>
+</li>
+</ul>
+<h4><a id="flexwrap_26"></a>flex-wrap</h4>
+<p>​	该属性决定在轴线方向排不下所有的item时的换行规则。</p>
+<ul>
+<li>nowrap（默认值）：不换行；</li>
+<li>wrap：换行，第一行在上方；</li>
+<li>wrap-reverse：换行，第一行在下方。</li>
+</ul>
+<h4><a id="flexflow_34"></a><mark>flex-flow</mark></h4>
+<p>​	该属性是flex-direction属性和flex-wrap属性的简写形式。</p>
+<ul>
+<li>默认值：<code>row nowrap</code>；</li>
+<li>属性格式：<code>.box { flex-flow：&lt;flex-direction&gt;||&lt;flex-wrap&gt;；}</code></li>
+</ul>
+<h4><a id="justifycontent_41"></a>justify-content</h4>
+<p>​	该属性定义了item在主轴上的对齐方式。</p>
+<ul>
+<li>flex-start（默认值）：左对齐；</li>
+<li>flex-end：右对齐；</li>
+<li>center：居中；</li>
+<li>space-between：两端对齐，item之间的间隔都相等；</li>
+<li>space-around：item两侧的间隔都相等，所以，项目之间的间隔比项目与边框的间隔大一倍。</li>
+</ul>
+<h4><a id="alignitems_51"></a>align-items</h4>
+<p>​	该属性定义项目在交叉轴（cross axis）方向上如何对齐。</p>
+<ul>
+<li>flex-start：item的上边框与交叉轴的起点对齐；</li>
+<li>flex-end：item的下边框与交叉轴的终点对齐；</li>
+<li>center：item的中线与交叉轴的中点对齐；</li>
+<li>baseline：item的第一行文字的基线对齐（文字的底线）；</li>
+<li>stretch（默认值）：如果item未设置高度或设为auto，将占满整个容器的高度。</li>
+</ul>
+<h4><a id="aligncontent_61"></a>align-content</h4>
+<p>​	该属性定义了多条轴线的对齐方式。如果item中只有一条轴线，该属性不起作用。</p>
+<ul>
+<li>flex-start：与交叉轴的起点对齐；</li>
+<li>flex-end：与交叉轴的终点对齐</li>
+<li>center：与交叉轴的中点对齐。</li>
+<li>space-between：与交叉轴两端对齐，轴线之间的间隔平均分布。</li>
+<li>space-around：每根轴线两侧的间隔都相等。所以，轴线之间的间隔比轴线与边框的间隔大一倍。</li>
+<li>stretch（默认值）：轴线占满整个交叉轴。</li>
+</ul>
+<p>​</p>
+<h3><a id="item_74"></a>item项目属性</h3>
+<h4><a id="order_76"></a>order</h4>
+<p>​	该属性决定item的排列顺序，数值越小，排列越靠前，默认为<code>0</code>。</p>
+<h4><a id="flexgrow_80"></a>flex-grow</h4>
+<p>​	该属性决定item的放大比例，默认为<code>0</code>，即如果存在剩余空间，也不放大。类似Android权重（weight）</p>
+<h4><a id="flexshrink_84"></a>flex-shrink</h4>
+<p>​	该属性决定了item的缩小比例，默认为<code>1</code>，即如果空间不足，item将缩小。<code>负值对该属性无效</code></p>
+<h4><a id="flexbasis_88"></a>flex-basis</h4>
+<p>​	该属性决定了在分配多余空间之前，item占据的主轴空间（main size）。浏览器根据这个属性，计算主轴是否有多余空间。默认值<code>auto</code>，即item的原本大小。</p>
+<p>​	该属性可以设为<code>width</code>或<code>height</code>属性一样的值（如：35px），则item将占据固定空间。</p>
+<h4><a id="flex_94"></a>flex</h4>
+<p>​	该属性是<code>flex-grow</code>，<code>flex-shrink</code>，<code>flex-basis</code>的简写。默认值为<code>0 1 auto</code>。后两个属性可选。</p>
+<p>​	该属性有两个快捷值：<code>auto</code>：1 1 auto；<code>none</code>：0 0 auto；建议优先使用这个属性，而不是单独写三个分离的属性，因为浏览器会推算相关值。</p>
+<h4><a id="alignself_100"></a>align-self</h4>
+<p>​	该属性允许单个item有与其他item不一样的对齐方式，可覆盖<code>align-items</code>属性。默认值为<code>auto</code>，表示继承父元素的<code>align-items</code>属性，如果没有父元素，则等同与<code>stretch</code>。</p>
+<p>​	该属性可能取6个值，除了auto，其他都和align-items属性完全一致。</p>
+<h2><a id="_106"></a>边框阴影</h2>
+<h3><a id="boxshadow_108"></a>box-shadow</h3>
+<p><code>box-shadow: &lt;length&gt; &lt;length&gt; &lt;length&gt;?&lt;length&gt;?||&lt;color&gt;</code></p>
+<p>也就是</p>
+<p><code>box-shadow:inset x-offset y-offset blur-radius spread-radius color</code></p>
+<p>换句说:<code>box-shadow:投影方式 X轴偏移量 Y轴偏移量 阴影模糊半径 阴影扩展半径 阴影颜色</code></p>
+<ul>
+<li>投影方式：该参数为可选值，不设值时表示默认的投影方式为外阴影，如果取其唯一值<code>insert</code>，则表示投影方式为内阴影。</li>
+<li>x-offset（x轴偏移量）：指阴影水平偏移量，可以取正值或负值，若值为正，则阴影在对象的右边，反之在对象的左边。</li>
+<li>y-offset（y轴偏移量）：指阴影的垂直偏移量，可取正值或负值，若为正值，则阴影在对象的底部，反之在对象的顶部。</li>
+<li>blur-radius（阴影模糊半径）：可选，但取值只能为正值，值取0时，表示阴影不具有模糊效果。值越大，阴影的边缘就越模糊。</li>
+<li>spread-radius（阴影拓展半径）：可选，取值可以为正值或负值。若为正值，则整个阴影都延展扩大，反之缩小。</li>
+<li>color（阴影颜色）：可选，当不设定颜色时，浏览器会取默认色，但各浏览器的默认色不一样，特别是在webkit内核下的safari和chrome浏览器将无色，也就是透明，建议不要省略此参数。</li>
+</ul>
+<h2><a id="_125"></a>圆角边框</h2>
+<h3><a id="borderradiuscss3_127"></a>border-radius（css3)</h3>
+<p>​	border是一个简写属性，用于设置四个border-*-radius属性。</p>
+<p>​	语法：<code>border-radius: 1-4 length|% / 1-4 length|%;</code></p>
+<p>​	按此顺序设置每个 radii 的四个值。如果省略 bottom-left，则与 top-right 相同。如果省略 bottom-right，则与 top-left 相同。如果省略 top-right，则与 top-left 相同。</p>
+<blockquote></blockquote>
+
+                                    
+
+</div>
+<div id="MySignature" role="contentinfo">
+    不会的东西只有怀着一颗狂妄的心，假装能把它看穿吧。
+</div>
+<div class="clear"></div>
+<div id="blog_post_info_block" role="contentinfo" class="post-meta-container">
+    <div id="blog_post_info"></div>
+    <div class="clear"></div>
+    <div id="post_next_prev"></div>
+</div>
+            </div>
+            <div class="postDesc">posted @ 
+<span id="post-date" data-last-update-days="682.2333333333333" data-date-updated="2021-10-26 14:30">2019-12-14 08:54</span>&nbsp;
+<a href="https://www.cnblogs.com/zhangshuaiyin">Ep流苏</a>&nbsp;
+阅读(<span id="post_view_count">678</span>)&nbsp;
+评论(<span id="post_comment_count">0</span>)&nbsp;
+&nbsp;
+<a href="javascript:void(0)" onclick="AddToWz(12038084);return false;">收藏</a>&nbsp;
+<a href="https://report.cnblogs.com?targetLink=https%3A%2F%2Fwww.cnblogs.com%2Fzhangshuaiyin%2Fp%2F12038084.html&targetId=12038084&targetType=0" target="_blank">举报</a>
+</div>
+        </div>
+	    
+	    
+    </div><!--end: topics 文章、评论容器-->
+</div>
+<script>
+    var cb_entryId = 12038084, cb_entryCreatedDate = '2019-12-14 08:54', cb_postType = 1, cb_postTitle = 'flex布局和边框阴影';
+    var allowComments = true, cb_blogId = 477677, cb_blogApp = 'zhangshuaiyin', cb_blogUserGuid = '3fab99ac-cf9b-4e12-d107-08d61c4fe3c9';
+    mermaidRender.render()
+    markdown_highlight()
+    zoomManager.apply("#cnblogs_post_body img:not(.code_img_closed):not(.code_img_opened)");    
+</script>
+<a id="!comments"></a>
+<div id="blog-comments-placeholder"></div>
+<div id="comment_form" class="commentform">
+    <a name="commentform"></a>
+    <div id="divCommentShow"></div>
+    <div id="comment_nav">
+        <div class="comment-nav-right">
+            <span id="span_refresh_tips"></span><a href="#" onclick="return RefreshPage();">刷新页面</a><a href="#top">返回顶部</a>
+        </div>
+    </div>
+    <div id="comment_form_container"></div>
+    <div class="ad_text_commentbox" id="ad_text_under_commentbox"></div>
+        <div id="cnblogs_ch"></div>
+    <div id="opt_under_post"></div>
+        <div id="blog_c1" class="under-post-card below-post-card">
+            <a href="https://ais.cn/u/3Qf22e" rel="nofollow" target="_blank" onclick="countCreativeClicks('C1-艾思科蓝')">
+                <img src="https://img2024.cnblogs.com/blog/35695/202610/35695-20261011145556115-1699157507.webp" onload="countCreativeImpressions('C1-艾思科蓝')" alt="" style="width:300px!important;height:250px!important;min-width:300px!important;max-width:300px!important;" />
+                <span id="c1_impression" style="display:none"></span>
+            </a>
+        </div>
+    <div id="under_post_card1"></div>
+    <div id="related_posts_card"></div>
+    <div id="under_post_card2"></div>
+    <div id="HistoryToday" class="under-post-card below-post-card"></div>
+    <script type="text/javascript">
+        var commentManager = new blogCommentManager();
+        commentManager.renderComments(0);
+        fixPostBody();
+        window.footnoteTipManager.generateFootnoteTips();
+
+            window.tocManager.displayDisableTocTips = false;
+            window.tocManager.generateToc();
+            
+            setTimeout(function() { countViews(cb_blogId, cb_entryId); }, 50);
+            
+            deliverT2();
+            deliverC1C2();
+            loadNewsAndKb();
+            
+            LoadPostCategoriesTags(cb_blogId, cb_entryId);
+            
+            LoadPostInfoBlock(cb_blogId, cb_entryId, cb_blogApp, cb_blogUserGuid);
+            GetPrevNextPost(cb_entryId, cb_blogId, cb_entryCreatedDate, cb_postType);
+            loadOptUnderPost();
+            GetHistoryToday(cb_blogId, cb_blogApp, cb_entryCreatedDate);
+                </script>
+</div>
+
+	</div>
+	</div>
+	<div id="sideBar">
+		<div id="sideBarMain">
+			<div id="sidebar_news" class="newsItem">
+    <h3 class="catListTitle">公告</h3>
+<div id="blog-news" class="sidebar-news">
+    <div id="sidebar_news_container">
+<p>👋 你好，我是 Ep流苏。</p>
+<p>这里记录 Java 后端、中间件与工具排错的笔记。<br>文章多为实践中踩坑后的整理，欢迎交流。</p>
+<p style="color:#9aa5b1">GitHub：<a href="https://github.com/zsy0216">zsy0216</a></p>
+</div>
+</div>
+
+
+
+</div>
+			<div id="blog-calendar">
+<h3 class="catListTitle">日历</h3>
+<table>
+<tr><th>日</th><th>一</th><th>二</th><th>三</th><th>四</th><th>五</th><th>六</th></tr>
+<tr><td>1</td><td>2</td><td>3</td><td>4</td><td>5</td><td>6</td><td>7</td></tr>
+<tr><td>8</td><td>9</td><td>10</td><td>11</td><td><a href="#">12</a></td><td>13</td><td>14</td></tr>
+<tr><td>15</td><td>16</td><td>17</td><td>18</td><td>19</td><td>20</td><td><a href="#">21</a></td></tr>
+</table>
+</div>			
+			<div id="leftcontentcontainer">
+				<div id="blog-sidecolumn">
+<div id="sidebar_categories">
+  <h3 class="catListTitle">分类</h3>
+  <ul>
+    <li><a href="#">Java <span>(18)</span></a></li>
+    <li><a href="#">Spring / SpringBoot <span>(7)</span></a></li>
+    <li><a href="#">MySQL <span>(6)</span></a></li>
+    <li><a href="#">中间件 <span>(5)</span></a></li>
+    <li><a href="#">前端 <span>(4)</span></a></li>
+    <li><a href="#">Python <span>(3)</span></a></li>
+    <li><a href="#">工具与排错 <span>(9)</span></a></li>
+  </ul>
+</div>
+<div id="sidebar_postarchive">
+  <h3 class="catListTitle">归档</h3>
+  <ul>
+    <li><a href="#">2021年7月 <span>(3)</span></a></li>
+    <li><a href="#">2019年12月 <span>(21)</span></a></li>
+    <li><a href="#">2019年10月 <span>(1)</span></a></li>
+    <li><a href="#">2019年6月 <span>(1)</span></a></li>
+  </ul>
+</div>
+<div id="sidebar_search">
+  <h3 class="catListTitle">搜索</h3>
+  <div class="mySearch">
+    <input id="q" type="text" placeholder="搜索文章…">
+    <input id="btnZzk" type="button" value="搜索">
+  </div>
+</div>
+<div id="sidebar_topviewedposts">
+  <h3 class="catListTitle">阅读排行</h3>
+  <ul>
+    <li><a href="#">SpringBoot 构造器注入、Setter 注入和 Field 注入对比</a></li>
+    <li><a href="#">Webpack 4 : Entry module not found</a></li>
+    <li><a href="#">PageHelper 使用以及 PageInfo 转化</a></li>
+    <li><a href="#">Zookeeper 学习记录及 Java 客户端示例</a></li>
+  </ul>
+</div>
+</div>
+					
+			</div>			
+		</div>
+	</div>
+	<div class="clear"></div>
+	</div>
+	<div class="clear"></div>
+	<div id="footer">
+		<a href="https://www.cnblogs.com/" id="footer_site_link" class="footer-brand">博客园</a>
+<span class="footer-copyright"> &nbsp;&copy;&nbsp; 2004-2026</span>
+<br /><span class="footer-icp">
+    <a target="_blank" href="http://www.beian.gov.cn/portal/registerSystemInfo?recordcode=33010602011771"><img src="https://www.cnblogs.com//assets.cnblogs.com/images/ghs.png" />浙公网安备 33010602011771号</a>
+    <a href="https://beian.miit.gov.cn" target="_blank">浙ICP备2021040463号-3</a>
+</span>
+
+
+
+	</div>
+</div>
+
+
+
+    <div id="page_end_html"></div>
+
+    <input type="hidden" id="antiforgery_token" value="CfDJ8Pn9bUKjiU5Il6bOWcQWpk3I9SdVjz7RZhHQr9op-jcuO1DrfhFpUmvQTgwOuoZ3jg5S_FirZLscgtEZxG9waAgUvTfpwT936O0QYUIBUGESxUULA1dBegnKAXVWnA9fEF-T5O_49amt_uFIyIpx-p0" />
+    <script defer src="https://hm.baidu.com/hm.js?866c9be12d4a814454792b1fd0fed295"></script>
+<script defer src="https://lf1-cdn-tos.bytegoofy.com/goofy/ttzz/push.js?32d945448dd797af605da9156763de3dc11c9886368d0f917d6388e4fcf5542030632485602430134f60bc55ca391050b680e2741bf7233a8f1da9902314a3fa" id="ttzz"></script>
+</body>
+</html>

@@ -1,0 +1,31 @@
+<!-- ============================================================
+     友人主题 v6.0 · 页首 HTML
+     粘贴位置：博客园后台 → 设置 → 博客设置 → 页首 HTML 代码
+     ------------------------------------------------------------
+     说明：
+     1. 这里只有结构，样式全部在「页面定制 CSS 代码」里（theme-v6.css），
+        因为博客园对页首 HTML 中的 <style> 可能过滤，CSS 走定制字段最稳。
+     2. 增删菜单：复制/删除一行 <a>…</a> 即可。
+     3. 当前页高亮：给对应 <a> 加 class="on"。
+        多页面高亮可用下面的 data-page 方案（需 JS 权限）：
+           <a href="..." data-page="/">首页</a>
+     4. 不需要顶栏就把整段删掉，CSS 里的 .qb-nav 规则不影响其它部分。
+     ============================================================ -->
+
+<div class="qb-nav">
+  <div class="qb-nav-inner">
+    <a class="qb-brand" href="https://www.cnblogs.com/zhangshuaiyin/">Ep流苏</a>
+
+    <nav class="qb-links">
+      <!-- 菜单项 ← 从这里开始增删，一行一个 -->
+      <a class="on" href="https://www.cnblogs.com/zhangshuaiyin/">首页</a>
+      <a href="https://www.cnblogs.com/zhangshuaiyin/p/archive/2021/07">归档</a>
+      <a href="https://www.cnblogs.com/zhangshuaiyin/category/1.html">分类</a>
+      <a href="https://www.cnblogs.com/zhangshuaiyin/tag/1.html">标签</a>
+      <a href="https://msg.cnblogs.com/send/Ep%E6%B5%81%E8%8B%8F">留言</a>
+      <a href="https://github.com/zsy0216" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://www.cnblogs.com/zhangshuaiyin/rss" target="_blank" rel="noopener">RSS</a>
+      <!-- 加菜单项：复制上面任意一行，改 href 与文字 -->
+    </nav>
+  </div>
+</div>
