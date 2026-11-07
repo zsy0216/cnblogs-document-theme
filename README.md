@@ -6,7 +6,7 @@
 ## 安装（5 步）
 
 1. **清空页脚 HTML**：设置 → 页脚 HTML 代码 → 全选删除（停用 awescnb，不做这步后面全废）
-2. **页面定制 CSS 代码** → 全选替换为 `css/theme-v6.css`（23.6KB）→ 保存
+2. **页面定制 CSS 代码** → 全选**替换为 `css/theme-v6.min.css`（15.7KB，比全版 -34%）** → 保存
 3. **页首 HTML 代码** → 粘贴 `snippets/head-nav-v6.html`（1.99KB）→ 保存
 4. **公告** → 粘贴 `snippets/announcement-v6.html`（1.5KB）→ 保存
 5. 前台 `Ctrl+F5` 强刷
@@ -61,8 +61,8 @@
 ## 文件说明
 
 ```
-css/theme-v6.css              全部样式（唯一需要粘贴的 CSS）
-css/theme-v6.min.css          压缩验证（同策略）
+css/theme-v6.css              源文件（开发版，全注释，正式环境粘贴 min）
+css/theme-v6.min.css          发布版（已压缩，效果与全版等同，大小 -34%）
 css/变量说明.md               主题变量表（--accent 等）
 snippets/head-nav-v6.html     顶栏结构（页首 HTML）
 snippets/announcement-v6.html 公告模板（内联样式，抗覆盖）
@@ -70,6 +70,8 @@ snippets/footer-script-v6.html 左栏目录 + 右栏搬运（页脚 HTML）
 preview/home-v6.html          首页离线预览（真实 DOM 复刻）
 preview/post-v6.html          文章页离线预览
 ```
+
+> **开发工作流**：本机只改 `theme-v6.css`，确定效果后再生成 `theme-v6.min.css`；发布时粘贴 `min` 版，正式环境立即生效。
 
 ## 回滚
 
