@@ -42,6 +42,8 @@
   <a href="https://www.cnblogs.com/zhangshuaiyin/p/archive/2021/07">归档</a>
   <a href="https://www.cnblogs.com/zhangshuaiyin/categories">分类</a>
   <a href="https://www.cnblogs.com/zhangshuaiyin/tag">标签</a>
+  <a href="https://msg.cnblogs.com/send/Ep%E6%B5%81%E8%8B%8F">留言</a>
+  <a href="https://home.cnblogs.com/u/zhangshuaiyin">主页</a>
   <!-- 加一项：复制一行改 href 与文字；删一项：删整行 -->
 </nav>
 ```
@@ -51,11 +53,12 @@
 | 菜单 | 格式 | 示例 |
 |:---|:---|:---|
 | 首页 | 博客名主页 | `https://<name>/` |
-| 主页 | 管理页 | `https://home.cnblogs.com/u/<name>` |
 | 归档 | `/p/archive/` | `https://<name>/p/archive/` |
 | 分类 | `/categories` | `https://<name>/categories` |
 | 标签 | `/tag` | `https://<name>/tag` |
 | 留言 | `https://msg.cnblogs.com/send/<名>` | 站内信 |
+| 主页 | 管理页 | `https://home.cnblogs.com/u/<name>` |
+| 管理 | 后台设置 | `https://i.cnblogs.com/settings/` |
 
 - 当前页高亮：给对应 `<a>` 加 `class="on"`
 - 不要顶栏：删掉整段 `<div class="qb-nav">…</div>`
