@@ -17,3 +17,6 @@ preview/_src/
 preview/shot-*.png
 preview/crop-*.png
 *.js
+# Offline validation
+_dev-tools/
+preview/ref-*.png
