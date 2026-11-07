@@ -828,6 +828,46 @@ body.has-navbar { padding-top: 0 !important; margin-top: 0 !important; }
 #footer a:hover { color: var(--accent-deep) !important; }
 #footer img { vertical-align: -3px; height: 14px; }
 
+/* ---------- 8. 回到页首按钮 ---------- */
+#qb-top {
+    position: fixed;
+    right: 24px;
+    bottom: 32px;
+    z-index: 1000;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--card);
+    border: 1px solid var(--line);
+    box-shadow: var(--shadow);
+    cursor: pointer;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(12px);
+    transition: opacity .2s ease, transform .2s ease, visibility .2s ease, box-shadow .2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+#qb-top.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+#qb-top:hover { box-shadow: var(--shadow-hover); }
+#qb-top:hover .qb-top-arrow { border-top-color: var(--accent-deep); }
+#qb-top:active { transform: scale(0.96); }
+#qb-top .qb-top-arrow {
+    width: 10px;
+    height: 10px;
+    border-right: 2px solid var(--ink);
+    border-bottom: 2px solid var(--ink);
+    border-top: 0;
+    border-left: 0;
+    transform: rotate(-45deg);
+    margin-top: 4px;
+}
+
 /* ---------- 8. 响应式 ---------- */
 @media screen and (max-width: 1220px) {
     /* 仍保持三栏，只收窄两侧，避免 1366 宽笔记本把右栏甩到页面底部 */

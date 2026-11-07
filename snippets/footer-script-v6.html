@@ -173,6 +173,32 @@
     });
   }
 
+  /* 6. 回到页首按钮 */
+  function createBackToTop() {
+    var btn = document.getElementById('qb-top');
+    if (!btn) {
+      btn = mk('div', 'qb-top');
+      btn.id = 'qb-top';
+      btn.innerHTML = '<div class="qb-top-arrow"></div>';
+      document.body.appendChild(btn);
+    }
+    var isHidden = true;
+    window.addEventListener('scroll', function () {
+      var show = window.pageYOffset > 300;
+      if (show !== isHidden) {
+        isHidden = !show;
+        if (show) { btn.classList.add('show'); } else { btn.classList.remove('show'); }
+      }
+    }, { passive: true });
+    var lock = false;
+    btn.addEventListener('click', function () {
+      if (lock) return;
+      lock = true;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      setTimeout(function () { lock = false; }, 800);
+    });
+  }
+
   function boot() {
     var left = document.getElementById('leftcontentcontainer');
     var body = document.getElementById('cnblogs_post_body');
@@ -187,6 +213,7 @@
     moveSideWidgets();
     lazyImages();
     markNav();
+    createBackToTop();
 
     /* 博客园侧栏是异步加载的，加载完可能重排节点，这里兜底复位一次 */
     var tries = 0;
