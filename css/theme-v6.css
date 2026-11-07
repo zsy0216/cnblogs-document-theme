@@ -501,17 +501,106 @@ body.has-navbar { padding-top: 0 !important; margin-top: 0 !important; }
 /* ---------- 5. 文章列表卡片 ---------- */
 #mainContent .forFlow { padding: 0 !important; }
 
-.day {
+/* 标签页/分类页/归档页：统一卡片化 */
+.day,
+.post,
+#taglist_main,
+#taglist,
+.category-block {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    box-sizing: border-box;
     padding: 20px 22px 16px;
     margin: 0 0 16px;
-    position: relative;
-    transition: box-shadow .22s ease, transform .22s ease;
 }
 .day:hover {
     box-shadow: var(--shadow-hover);
     transform: translateY(-1px);
 }
 .dayTitle { display: none; }
+
+/* ---------- 5.1 归档页（entrylist） ---------- */
+.entrylistItem {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    box-sizing: border-box;
+    padding: 20px 22px 16px;
+    margin: 0 0 16px;
+}
+.entrylistTitle {
+    font-size: 20px !important;
+    font-weight: 600 !important;
+    color: var(--ink) !important;
+    margin: 0 0 16px !important;
+}
+.entrylistItemTitle {
+    font-size: 16px !important;
+    font-weight: 600 !important;
+    color: var(--ink) !important;
+    line-height: 1.5;
+}
+.entrylistItemTitle:hover { color: var(--accent-deep) !important; }
+.entrylistPostSummary { margin: 10px 0 !important; }
+.entrylistItemPostDesc {
+    font-size: 12.5px !important;
+    color: var(--meta) !important;
+}
+.entrylistItemPostDesc a { color: var(--meta) !important; }
+.entrylistItemPostDesc a:hover { color: var(--accent-deep) !important; }
+
+/* ---------- 5.2 标签页（taglist） ---------- */
+#taglist_main table { width: 100% !important; }
+#MyTag1_dtTagList a,
+#taglist a {
+    display: inline-block;
+    padding: 5px 10px;
+    margin: 4px;
+    border-radius: 20px;
+    background: var(--bg);
+    color: var(--body) !important;
+    font-size: 13px;
+    transition: background .16s ease, color .16s ease;
+}
+#MyTag1_dtTagList a:hover,
+#taglist a:hover { background: var(--accent-soft); color: var(--accent-deep) !important; }
+
+/* ---------- 5.3 分类页（category-block） ---------- */
+.category-block-title {
+    font-size: 15px !important;
+    font-weight: 600 !important;
+    color: var(--ink) !important;
+    letter-spacing: .02em;
+    margin: 0 0 12px !important;
+    padding: 0 0 10px;
+    border-bottom: 1px solid var(--line);
+}
+.category-block-list { padding: 0 !important; }
+.category-list-item a {
+    display: block;
+    padding: 8px 10px;
+    margin: 6px 0;
+    border-radius: var(--radius-sm);
+    background: var(--bg);
+    color: var(--body) !important;
+    font-size: 13.5px;
+    line-height: 1.5;
+    transition: background .16s ease, color .16s ease;
+}
+.category-list-item a:hover {
+    background: var(--accent-soft);
+    color: var(--accent-deep) !important;
+}
+.category-list-item a span /* the count " (3) " */,
+.category-list-item .small {
+    color: var(--meta) !important;
+    font-size: 11.5px;
+    float: right;
+}
+
 
 .day .postTitle {
     margin: 0 0 8px !important;

@@ -39,7 +39,7 @@
 ```html
 <nav class="qb-links">
   <a class="on" href="https://www.cnblogs.com/zhangshuaiyin/">首页</a>
-  <a href="https://www.cnblogs.com/zhangshuaiyin/p/archive/">归档</a>
+  <a href="https://www.cnblogs.com/zhangshuaiyin/p/archive/2021/07">归档</a>
   <a href="https://www.cnblogs.com/zhangshuaiyin/categories">分类</a>
   <a href="https://www.cnblogs.com/zhangshuaiyin/tag">标签</a>
   <!-- 加一项：复制一行改 href 与文字；删一项：删整行 -->

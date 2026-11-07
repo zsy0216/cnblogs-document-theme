@@ -92,9 +92,14 @@
 
   /* 2. 列表页：逐篇文章 -> 文章列表目录
      注意：一个 .day 是「一天」的分组，里面可能有多篇文章，
-     所以要遍历 .postTitle a，而不是 .day。 */
+     所以要遍历 .postTitle a，而不是 .day。
+     （首页、Tag 页、分类页、归档页几乎没有全部文章） */
   function buildPostList(left) {
     var posts = [].slice.call(document.querySelectorAll('#mainContent .day .postTitle a'));
+    if (!posts.length) {
+      /* 归档页：.entrylistItemTitle a，如 .day .postTitle a */
+      posts = [].slice.call(document.querySelectorAll('#mainContent .entrylistItemTitle a'));
+    }
     if (!posts.length) return false;
 
     var panel = makePanel('文章列表', '');
