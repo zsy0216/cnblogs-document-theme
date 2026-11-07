@@ -3,7 +3,9 @@
 > 纯白卡片、左中右三栏、粉紫强调色、可定制顶栏。
 > 基于 2026-11 实测的博客园真实 DOM 重写，不再假设不存在的节点。
 
-## 安装（5 步）
+## 安装（6 步）
+
+> ⚠️ **第 0 步（最重要）**：设置 → 皮肤 → 选择 **`Custom`（自定义）**，否则后续全部不生效！
 
 1. **清空页脚 HTML**：设置 → 页脚 HTML 代码 → 全选删除（停用 awescnb，不做这步后面全废）
 2. **页面定制 CSS 代码** → 全选**替换为 `css/theme-v6.min.css`（15.7KB，比全版 -34%）** → 保存
@@ -37,10 +39,22 @@
 ```html
 <nav class="qb-links">
   <a class="on" href="https://www.cnblogs.com/zhangshuaiyin/">首页</a>
-  <a href="https://www.cnblogs.com/zhangshuaiyin/p/archive/2021/07">归档</a>
+  <a href="https://www.cnblogs.com/zhangshuaiyin/p/archive/">归档</a>
+  <a href="https://www.cnblogs.com/zhangshuaiyin/categories">分类</a>
+  <a href="https://www.cnblogs.com/zhangshuaiyin/tag">标签</a>
   <!-- 加一项：复制一行改 href 与文字；删一项：删整行 -->
 </nav>
 ```
+
+博客园有效页面 URL（实测 200）：
+
+| 菜单 | 格式 | 示例 |
+|:---|:---|:---|
+| 首页 | 博客名主页 | `https://<name>/` |
+| 归档 | `/p/archive/` | `https://<name>/p/archive/` |
+| 分类 | `/categories` | `https://<name>/categories` |
+| 标签 | `/tag` | `https://<name>/tag` |
+| 留言 | `https://msg.cnblogs.com/send/<名>` | 站内信 |
 
 - 当前页高亮：给对应 `<a>` 加 `class="on"`
 - 不要顶栏：删掉整段 `<div class="qb-nav">…</div>`
