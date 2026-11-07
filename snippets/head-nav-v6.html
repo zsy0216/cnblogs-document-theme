@@ -24,7 +24,23 @@
 
 <div class="qb-nav">
   <div class="qb-nav-inner">
-    <a class="qb-brand" href="https://www.cnblogs.com/zhangshuaiyin/">Ep流苏</a>
+    <!-- 品牌区：logo + 文字
+         内置 logo 是矢量 SVG，颜色跟随明暗模式自动变，不占额外请求。
+         想换成自己的图片，把下面整个 <span class="qb-logo">…</span> 换成：
+         <span class="qb-logo"><img src="https://你的图床/logo.png" alt="Ep流苏" /></span>
+         尺寸由 CSS 的 .qb-logo 控制（默认 26px），图片建议正方形、带透明通道的 PNG/SVG。 -->
+    <a class="qb-brand" href="https://www.cnblogs.com/zhangshuaiyin/">
+      <span class="qb-logo" aria-hidden="true">
+        <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+          <g fill="none" stroke="currentColor" stroke-width="7.4" stroke-linecap="round">
+            <path d="M9.8 9.8 L22.2 22.2" />
+            <path d="M22.2 9.8 L9.8 22.2" />
+          </g>
+          <circle class="qb-logo-dot" cx="4.9" cy="27.1" r="3.1" />
+        </svg>
+      </span>
+      <span class="qb-brand-text">Ep流苏</span>
+    </a>
 
     <nav class="qb-links">
       <!-- 菜单项：从这里开始增删，一行一个 -->

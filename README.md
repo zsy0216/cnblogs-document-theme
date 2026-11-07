@@ -19,7 +19,7 @@
 > ⚠️ **第 0 步（最重要）**：设置 → 皮肤 → 选择 **`Custom`（自定义）**，否则后续全部不生效！
 
 1. **页面定制 CSS 代码** → 全选**替换为 `css/theme-v6.min.css`（15.7KB，比全版 -34%）** → 保存
-2. **页首 HTML 代码** → 粘贴 `snippets/head-nav-v6.html`（1.99KB）→ 保存
+2. **页首 HTML 代码** → 粘贴 `snippets/head-nav-v6.html`（3.5KB）→ 保存
 3. **页脚 HTML 代码** → 粘贴 `snippets/footer-script-v6.html`（需先清空）→ 保存
 4. **公告** → 粘贴 `snippets/announcement-v6.html`（1.5KB）→ 保存
 5. 前台 `Ctrl+F5` 强刷
@@ -59,6 +59,25 @@
 - 顶栏样式在 `theme-v6.css` 的「2. 自建顶栏」段，改 `.qb-nav` 即可
 - 顶栏右侧增加 **暗黑模式开关**（🌙/☀️），点击切换，设置保存在 `localStorage`，刷新保持
 - 暗色配色对齐 **GitHub Dark**（底色 `#0d1117`、卡片 `#161b22`、描边 `#30363d`、正文 `#c9d1d9`、强调色 `#58a6ff`）
+
+### 品牌区 logo
+
+博客名前面默认带一个内联 SVG logo（交叉笔画 + 橙点），不额外发请求，颜色跟随明暗自动切换：
+
+```html
+<a class="qb-brand" href="https://www.cnblogs.com/zhangshuaiyin/">
+  <span class="qb-logo" aria-hidden="true">
+    <svg viewBox="0 0 32 32"><!-- 见 head-nav-v6.html 完整代码 --></svg>
+  </span>
+  <span class="qb-brand-text">Ep流苏</span>
+</a>
+```
+
+- **换成自己的图片**：把 `<span class="qb-logo">…</span>` 里的 `<svg>` 换成 `<img src="https://你的图床/logo.png" alt="博客名" />`，CSS 已对 `.qb-logo img` 做好 `object-fit: contain` 与圆角
+- **改大小**：`.qb-logo` 的 `width` / `height` / `flex-basis` 三个值保持一致（默认 26px，小屏 22px）
+- **改点缀色**：`.qb-logo .qb-logo-dot` 的 `fill`（暗色单独一档在 `body.qb-dark` 下）
+- 笔画用 `stroke="currentColor"`，所以 hover 变强调色时会跟着变，不用额外写规则
+- 小屏（≤860px）顶栏菜单改为**横向滑动**，logo 与暗黑开关固定不动；不要在 `.qb-links` 上加 `flex-wrap`，会把顶栏撑成两行
 
 ### 自定义浏览器标签图标（favicon）
 

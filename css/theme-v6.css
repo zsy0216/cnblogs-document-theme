@@ -130,6 +130,10 @@ body.qb-dark .qb-dark-btn:hover { background: var(--accent-soft); }
     box-sizing: border-box;
 }
 .qb-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    flex: 0 0 auto;
     font-size: 17px;
     font-weight: 700;
     color: var(--ink);
@@ -137,6 +141,21 @@ body.qb-dark .qb-dark-btn:hover { background: var(--accent-soft); }
     white-space: nowrap;
 }
 .qb-brand:hover { color: var(--accent-deep); }
+
+/* 品牌 logo：想改大小只动这三处 width/height/flex-basis 即可 */
+.qb-logo {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    flex: 0 0 26px;
+}
+.qb-logo svg { width: 100%; height: 100%; display: block; }
+.qb-logo img { width: 100%; height: 100%; object-fit: contain; display: block; border-radius: 6px; }
+/* logo 上的橙色点缀：浅色下一个值就够，暗色下提亮一档，免得在 #161b22 上发闷 */
+.qb-logo .qb-logo-dot { fill: #ff5f3d; }
+body.qb-dark .qb-logo .qb-logo-dot { fill: #ff7a5c; }
 .qb-links { display: flex; align-items: center; gap: 4px; }
 .qb-links a {
     font-size: 14px;
@@ -1135,4 +1154,17 @@ body.qb-dark #cnblogs_post_body img:hover {
     #post_detail { padding: 20px 18px; }
     #post_detail .postTitle { font-size: 21px !important; }
     .day { padding: 16px 16px 12px; }
+    /* 小屏顶栏：logo 与字号同步收一档，菜单改为横向滑动，避免挤出行外把暗色按钮顶没 */
+    .qb-nav-inner { padding: 0 14px; height: 52px; gap: 10px; }
+    .qb-brand { gap: 7px; font-size: 15px; }
+    .qb-logo { width: 22px; height: 22px; flex: 0 0 22px; }
+    .qb-links {
+        flex: 1 1 auto;
+        min-width: 0;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+    }
+    .qb-links::-webkit-scrollbar { display: none; }
+    #qb-dark-toggle { flex: 0 0 36px; }
 }
