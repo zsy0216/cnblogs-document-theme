@@ -35,21 +35,35 @@
     --shadow:        0 1px 3px rgba(16, 24, 40, .04), 0 6px 18px rgba(16, 24, 40, .05);
     --shadow-hover:  0 4px 10px rgba(16, 24, 40, .08), 0 12px 28px rgba(16, 24, 40, .08);
     --font:          -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Segoe UI", Roboto, sans-serif;
+    --code-bg:       #f3f4f6;
+    --code-ink:      #cf222e;
+    --pre-bg:        #161b22;
+    --pre-ink:       #e6edf3;
+    --pre-line:      #30363d;
+    --num:           #c3c9d2;
 }
 
-/* 暗色模式（一键置入暗色变量，全部通过 var 覆盖） */
+/* 暗色模式（GitHub Dark 配色；class 同时挂在 html 与 body 上，避免 html 底仍为浅色） */
+html.qb-dark,
 body.qb-dark {
-    --bg:          #0d1117;
-    --card:        #161b22;
-    --line:        #30363d;
-    --ink:         #e6edf3;
-    --body:        #c9d1d9;
-    --meta:        #8b949e;
-    --accent:      #d5a832;
-    --accent-soft: rgba(213, 168, 50, .12);
-    --accent-deep: #f0c649;
-    --shadow:      0 1px 3px rgba(0, 0, 0, .3), 0 6px 18px rgba(0, 0, 0, .35);
-    --shadow-hover: 0 4px 10px rgba(0, 0, 0, .4), 0 12px 28px rgba(0, 0, 0, .45);
+    --bg:            #0d1117;
+    --card:          #161b22;
+    --line:          #30363d;
+    --ink:           #e6edf3;
+    --body:          #c9d1d9;
+    --meta:          #8b949e;
+    --accent:        #58a6ff;
+    --accent-soft:   rgba(56, 139, 253, .15);
+    --accent-deep:   #79c0ff;
+    --shadow:        0 1px 3px rgba(1, 4, 9, .6), 0 6px 18px rgba(1, 4, 9, .45);
+    --shadow-hover:  0 4px 10px rgba(1, 4, 9, .7), 0 12px 28px rgba(1, 4, 9, .55);
+    --code-bg:       rgba(110, 118, 129, .4);
+    --code-ink:      #e6edf3;
+    --pre-bg:        #161b22;
+    --pre-ink:       #e6edf3;
+    --pre-line:      #30363d;
+    --num:           #6e7681;
+    color-scheme:    dark;
 }
 
 /* ---------- 1. 基础重置 ---------- */
@@ -80,22 +94,29 @@ body.has-navbar { padding-top: 0 !important; margin-top: 0 !important; }
 
 /* ---------- 2. 自建顶栏（配合页首 HTML 使用） ---------- */
 
-/* 暗色模式开关（顶栏） */
-.qb-dark {
+/* 暗色模式开关（顶栏）
+   注意：这里只能用 #qb-dark-toggle / .qb-dark-btn，绝对不能再写裸 .qb-dark。
+   暗色状态本身叫 qb-dark，若按钮也用同名类，body 会被这条 width:36px/height:36px
+   的规则压扁，整页布局直接塌陷（历史事故）。 */
+#qb-dark-toggle,
+.qb-dark-btn {
     display: flex; align-items: center; justify-content: center;
     width: 36px; height: 36px; border-radius: 50%;
     color: var(--body); font-size: 16px;
     cursor: pointer; transition: background .2s ease, color .2s ease;
 }
-.qb-dark:hover { background: var(--accent-soft); color: var(--accent-deep); }
-body.qb-dark .qb-dark { color: var(--accent-deep); }
-body.qb-dark .qb-dark:hover { background: rgba(213, 168, 50, .18); }
+#qb-dark-toggle:hover,
+.qb-dark-btn:hover { background: var(--accent-soft); color: var(--accent-deep); }
+body.qb-dark #qb-dark-toggle,
+body.qb-dark .qb-dark-btn { color: var(--accent-deep); }
+body.qb-dark #qb-dark-toggle:hover,
+body.qb-dark .qb-dark-btn:hover { background: var(--accent-soft); }
 .qb-nav {
     position: sticky;
     top: 0;
     z-index: 999;
     /* 用不透明纯色代替毛玻璃：滚动时不再每帧做模糊，低配机器更顺 */
-    background: #fff;
+    background: var(--card);
     border-bottom: 1px solid var(--line);
 }
 .qb-nav-inner {
@@ -180,10 +201,10 @@ body.qb-dark .qb-dark:hover { background: rgba(213, 168, 50, .18); }
     overflow-x: hidden;
     padding-right: 2px;
     scrollbar-width: thin;
-    scrollbar-color: #dfe3e8 transparent;
+    scrollbar-color: var(--line) transparent;
 }
 #leftcontentcontainer::-webkit-scrollbar { width: 4px; }
-#leftcontentcontainer::-webkit-scrollbar-thumb { background: #dfe3e8; border-radius: 4px; }
+#leftcontentcontainer::-webkit-scrollbar-thumb { background: var(--line); border-radius: 4px; }
 /* 右：公告 + 常用链接 / 随笔档案 / 搜索 / 排行（由页脚脚本搬进来） */
 #qb-right {
     grid-column: 3;
@@ -199,10 +220,10 @@ body.qb-dark .qb-dark:hover { background: rgba(213, 168, 50, .18); }
     overflow-x: hidden;
     padding-right: 2px;
     scrollbar-width: thin;
-    scrollbar-color: #dfe3e8 transparent;
+    scrollbar-color: var(--line) transparent;
 }
 #qb-right::-webkit-scrollbar { width: 4px; }
-#qb-right::-webkit-scrollbar-thumb { background: #dfe3e8; border-radius: 4px; }
+#qb-right::-webkit-scrollbar-thumb { background: var(--line); border-radius: 4px; }
 /* 搬进容器后，取消原来的网格定位，改由父容器 flex 排列 */
 #qb-right #sidebar_news,
 #qb-right #blog-sidecolumn {
@@ -333,7 +354,7 @@ body.qb-dark .qb-dark:hover { background: rgba(213, 168, 50, .18); }
     left: 4px;
     top: 5px;
     width: 16px;
-    color: #c3c9d2;
+    color: var(--num);
     font-weight: 600;
     font-size: 12px;
     font-variant-numeric: tabular-nums;
@@ -350,8 +371,8 @@ body.qb-dark .qb-dark:hover { background: rgba(213, 168, 50, .18); }
 /* 二级及以下标题：缩进 + 降字号，层级一眼可辨 */
 .qb-toc-list .qb-lv3 a { padding-left: 34px; font-size: 12.5px; }
 .qb-toc-list .qb-lv4 a { padding-left: 44px; font-size: 12.5px; color: var(--meta) !important; }
-.qb-toc-list .qb-lv3 a::before { left: 18px; width: 14px; font-size: 11.5px; color: #cdd3da; }
-.qb-toc-list .qb-lv4 a::before { left: 28px; width: 14px; font-size: 11px; color: #d7dce2; }
+.qb-toc-list .qb-lv3 a::before { left: 18px; width: 14px; font-size: 11.5px; color: var(--num); }
+.qb-toc-list .qb-lv4 a::before { left: 28px; width: 14px; font-size: 11px; color: var(--num); }
 
 /* 一级条目（列表页文章 / H1、H2）：层级基线 */
 .qb-toc-list .qb-lv2 a { padding-left: 24px; }
@@ -402,7 +423,7 @@ body.qb-dark .qb-dark:hover { background: rgba(213, 168, 50, .18); }
     padding-right: 0;
 }
 #sidebar_categories ul::-webkit-scrollbar { width: 4px; }
-#sidebar_categories ul::-webkit-scrollbar-thumb { background: #dfe3e8; border-radius: 4px; }
+#sidebar_categories ul::-webkit-scrollbar-thumb { background: var(--line); border-radius: 4px; }
 #sidebar_categories ul li { counter-increment: navitem; margin: 0; }
 #sideBar #sidebar_categories ul li a {
     position: relative;
@@ -422,7 +443,7 @@ body.qb-dark .qb-dark:hover { background: rgba(213, 168, 50, .18); }
     left: 5px;
     top: 7px;
     width: 17px;
-    color: #c3c9d2;
+    color: var(--num);
     font-weight: 600;
     font-size: 12.5px;
     font-variant-numeric: tabular-nums;
@@ -469,7 +490,15 @@ body.qb-dark .qb-dark:hover { background: rgba(213, 168, 50, .18); }
 }
 
 /* 左栏搜索框 */
-#blog-sidecolumn .mySearch { display: flex; gap: 8px; }
+#blog-sidecolumn .mySearch { display: flex; flex-wrap: wrap; gap: 8px; }
+/* 搜索标题（h3）在博客园结构里是 .mySearch 的子节点，
+   flex 布局会把它压成一根 22px 的竖条，必须占满整行 */
+#blog-sidecolumn .mySearch .catListTitle,
+#blog-sidecolumn .mySearch h3 {
+    flex: 0 0 100%;
+    width: 100% !important;
+    margin: 0 0 8px !important;
+}
 #blog-sidecolumn #q,
 #blog-sidecolumn input[type="text"] {
     flex: 1 1 auto;
@@ -791,19 +820,19 @@ body.qb-dark .qb-dark:hover { background: rgba(213, 168, 50, .18); }
     background: var(--bg);
     border-left: 3px solid var(--line);
     border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-    color: #6b7280;
+    color: var(--meta);
 }
 #cnblogs_post_body code {
-    background: #f3f4f6;
+    background: var(--code-bg);
     padding: 2px 6px;
     border-radius: 4px;
     font-size: .9em;
-    color: #b843d0;
+    color: var(--code-ink);
     font-family: "JetBrains Mono", Consolas, Monaco, monospace;
 }
 #cnblogs_post_body pre {
-    background: #1f2329 !important;
-    color: #e6e8eb !important;
+    background: var(--pre-bg) !important;
+    color: var(--pre-ink) !important;
     padding: 16px 18px !important;
     border: 0 !important;
     border-radius: 10px !important;
@@ -931,7 +960,145 @@ body.qb-dark .qb-dark:hover { background: rgba(213, 168, 50, .18); }
     margin-top: 4px;
 }
 
-/* ---------- 8. 响应式 ---------- */
+/* ============================================================
+   9. 暗色模式细节修正（GitHub Dark 观感）
+   ------------------------------------------------------------
+   变量只能管住主题自己写的样式，管不住两类：
+   1) 博客园原生组件（评论框、代码块、表格）自带白底；
+   2) 公告/正文里用户手写的内联 style（会盖过变量）。
+   这里统一兜底。
+   ============================================================ */
+body.qb-dark,
+body.qb-dark #home,
+body.qb-dark #main {
+    background: var(--bg) !important;
+}
+
+/* 兜底：旧版页脚只在 body 上挂 qb-dark，html 底色会露白，用 :has 补一层 */
+html:has(> body.qb-dark) {
+    background: #0d1117 !important;
+}
+
+/* 博客园默认链接色（#0000ff 之类）在暗底上过暗 */
+body.qb-dark #cnblogs_post_body a,
+body.qb-dark #sidebar_news a,
+body.qb-dark #blog-comments-placeholder a,
+body.qb-dark .commentform a {
+    color: var(--accent) !important;
+}
+body.qb-dark #cnblogs_post_body a:hover,
+body.qb-dark #sidebar_news a:hover { color: var(--accent-deep) !important; }
+
+/* 正文：引用、行内代码、代码块、表格 —— 按 GitHub Dark 取色 */
+body.qb-dark #cnblogs_post_body blockquote {
+    background: #161b22;
+    border-left-color: #3b434b;
+    color: var(--meta);
+}
+body.qb-dark #cnblogs_post_body code {
+    background: rgba(110, 118, 129, .4);
+    color: #e6edf3;
+    border: 0;
+}
+body.qb-dark #cnblogs_post_body pre,
+body.qb-dark .cnblogs_code,
+body.qb-dark .cnblogs_code pre {
+    background: #161b22 !important;
+    color: #e6edf3 !important;
+    border: 1px solid var(--line) !important;
+    border-radius: 10px !important;
+}
+body.qb-dark .cnblogs_code_toolbar,
+body.qb-dark .cnblogs_code_collapse {
+    background: transparent !important;
+    border-color: var(--line) !important;
+}
+body.qb-dark .cnblogs_code_toolbar a,
+body.qb-dark .cnblogs_code_collapse { color: var(--meta) !important; }
+body.qb-dark #cnblogs_post_body table {
+    border-color: var(--line);
+}
+body.qb-dark #cnblogs_post_body th {
+    background: #161b22;
+    color: var(--ink);
+    border-color: var(--line);
+}
+body.qb-dark #cnblogs_post_body td { border-color: var(--line); }
+body.qb-dark #cnblogs_post_body hr { border-color: var(--line); }
+body.qb-dark #cnblogs_post_body img { background: transparent; }
+
+/* 评论区原生控件 */
+body.qb-dark .commentform textarea,
+body.qb-dark #tbCommentBody,
+body.qb-dark .comment_textarea {
+    background: #0d1117 !important;
+    color: var(--body) !important;
+    border-color: var(--line) !important;
+}
+body.qb-dark .comment_btn,
+body.qb-dark #btn_comment_submit {
+    background: #21262d !important;
+    color: var(--ink) !important;
+    border: 1px solid var(--line) !important;
+    border-radius: 6px !important;
+}
+body.qb-dark .feedbackItem,
+body.qb-dark .blog_comment_body,
+body.qb-dark #blog-comments-placeholder .comment_item {
+    background: transparent !important;
+    color: var(--body) !important;
+    border-color: var(--line) !important;
+}
+body.qb-dark .feedbackCon,
+body.qb-dark .comment_vote { background: transparent !important; }
+
+/* 公告/侧栏里用户手写的浅底内联样式：统一压成低亮面板 */
+body.qb-dark #sidebar_news_container [style*="background"],
+body.qb-dark #blog-news [style*="background"] {
+    background: rgba(255, 255, 255, .04) !important;
+    color: var(--body) !important;
+}
+body.qb-dark #sidebar_news_container [style*="color"],
+body.qb-dark #blog-news [style*="color"] {
+    color: var(--body) !important;
+}
+body.qb-dark #sidebar_news_container [style*="border-top"],
+body.qb-dark #blog-news [style*="border-top"] {
+    border-top-color: var(--line) !important;
+}
+
+/* 分页、日历、搜索框、回到顶部 */
+body.qb-dark #nav_next_page a,
+body.qb-dark .topicListFooter a,
+body.qb-dark #qb-top {
+    background: var(--card);
+    border-color: var(--line);
+}
+body.qb-dark #blog-sidecolumn #q,
+body.qb-dark #blog-sidecolumn input[type="text"],
+body.qb-dark #blog-sidecolumn input[type="button"] {
+    color: var(--body);
+}
+body.qb-dark #blog-calendar td,
+body.qb-dark #blog-calendar th { color: var(--body); }
+body.qb-dark #qb-top .qb-top-arrow {
+    border-right-color: var(--ink);
+    border-bottom-color: var(--ink);
+}
+
+/* 图片在暗底上过亮时稍微压一点（GitHub 也这么做） */
+body.qb-dark #post_detail img,
+body.qb-dark #cnblogs_post_body img,
+body.qb-dark #sidebar_news_container img {
+    filter: brightness(.9);
+}
+body.qb-dark #post_detail img:hover,
+body.qb-dark #cnblogs_post_body img:hover {
+    filter: none;
+}
+
+
+/* ---------- 10. 响应式 ---------- */
 @media screen and (max-width: 1220px) {
     /* 仍保持三栏，只收窄两侧，避免 1366 宽笔记本把右栏甩到页面底部 */
     #main {

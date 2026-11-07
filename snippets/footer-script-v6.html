@@ -178,91 +178,155 @@
     });
   }
 
-  /* 6. 博客 Icon（favicon）：页首 HTML 里贴的 <link rel=icon> 在 body 里不生效，必须移进 <head> */
+  /* 6. 博客 Icon（favicon）
+     要点：
+     1) 页首 HTML 里的 <link rel=icon> 会被放在 body 的 #page_begin_html 容器里，
+        浏览器只认 <head> 里的，必须搬进 head；
+     2) 只从 #page_begin_html 取用户地址，绝不能扫全文档——博客园 head 里本来就有
+        favicon_v3_3.ico / .svg 两个默认图标，一起扫进来就等于把默认图标也当"用户的"保留了；
+     3) type 必须按扩展名给对。用户的图标是 .jpeg，写死 image/x-icon 会让浏览器跳过；
+     4) 园方脚本随时可能把默认图标再塞回来，用 MutationObserver + 定时兜底持续清理。 */
   function initFavicon() {
     var head = document.head || document.querySelector('head');
     if (!head) return;
-    // 页首里用户贴的地址（支持 png / ico / svg）
+    var src = document.getElementById('page_begin_html');
+    if (!src) return;
+
+    function iconType(href) {
+      var p = href.split('?')[0].split('#')[0].toLowerCase();
+      if (p.slice(-4) === '.png') return 'image/png';
+      if (p.slice(-4) === '.svg') return 'image/svg+xml';
+      if (p.slice(-5) === '.jpeg') return 'image/jpeg';
+      if (p.slice(-4) === '.jpg') return 'image/jpeg';
+      if (p.slice(-4) === '.gif') return 'image/gif';
+      if (p.slice(-4) === '.webp') return 'image/webp';
+      if (p.slice(-4) === '.ico') return 'image/x-icon';
+      return ''; // 未知就交给浏览器嗅探，别乱写
+    }
+
+    // 只认页首 HTML 容器里用户自己贴的地址
     var userHrefs = [];
-    var allLinks = [].slice.call(
-      document.querySelectorAll('link[rel="shortcut icon"], link[rel="icon"]')
-    );
-    allLinks.forEach(function (el) {
-      if (!el.href) return;
-      if (userHrefs.indexOf(el.href) === -1) userHrefs.push(el.href);
+    [].forEach.call(src.querySelectorAll('link[rel="shortcut icon"], link[rel="icon"]'), function (el) {
+      var h = el.getAttribute('href') || el.href;
+      if (h && userHrefs.indexOf(h) === -1) userHrefs.push(h);
     });
-    if (!userHrefs.length) { return; } // 没贴地址，不改动
+    if (!userHrefs.length) return; // 没贴地址，不动园方图标
+
+    function isIconLink(el) {
+      if (!el || el.nodeName !== 'LINK') return false;
+      var rel = (el.getAttribute('rel') || '').toLowerCase();
+      return rel === 'icon' || rel === 'shortcut icon';
+    }
+
+    // 图标地址加一个版本号，绕开浏览器 favicon 缓存；
+    // 换图后把 FAV_VER 改一下（或忽略，多数浏览器换 URL 就会重取）
+    var FAV_VER = '6.20';
+    function bust(href) {
+      if (/[?&]v=/.test(href)) return href;
+      return href + (href.indexOf('?') === -1 ? '?' : '&') + 'v=' + FAV_VER;
+    }
+
+    var desired = [];
+    userHrefs.forEach(function (h) {
+      var b = bust(h);
+      if (desired.indexOf(b) === -1) desired.push(b);
+    });
+
+    // 判断 head 是否已经是"只有用户图标"的状态，是就不动，避免每秒重复增删触发重复请求
+    function alreadyOK() {
+      var cur = [].slice.call(head.querySelectorAll('link[rel="shortcut icon"], link[rel="icon"]'));
+      if (cur.length !== desired.length) return false;
+      for (var i = 0; i < cur.length; i++) {
+        if (desired.indexOf(cur[i].getAttribute('href')) === -1) return false;
+      }
+      // body 里也不能残留
+      return document.querySelectorAll('body link[rel="shortcut icon"], body link[rel="icon"]').length === 0;
+    }
+
     function apply() {
-      // 清掉 head 里所有 icon
-      var h = [].slice.call(head.querySelectorAll('link[rel="shortcut icon"], link[rel="icon"]'));
-      h.forEach(function (el) { if (el.parentNode) el.parentNode.removeChild(el); });
-      // 清掉 body 里所有 icon
-      var b = [].slice.call(document.querySelectorAll('link[rel="shortcut icon"], link[rel="icon"]'));
-      b.forEach(function (el) {
-        var p = el.parentNode;
-        if (p) p.removeChild(el);
+      if (alreadyOK()) return;
+      // 1) 清 body 里所有 icon（页首贴的不能留在 body）
+      [].forEach.call(document.querySelectorAll('body link[rel="shortcut icon"], body link[rel="icon"]'), function (el) {
+        if (el.parentNode) el.parentNode.removeChild(el);
       });
-      // 往 head 里一头贴用户的
-      var seen = {};
-      userHrefs.forEach(function (href) {
-        if (seen[href]) return;
-        seen[href] = true;
+      // 2) 清 head 里所有 icon，然后只贴用户地址（先清后贴，保证唯一）
+      [].forEach.call(head.querySelectorAll('link[rel="shortcut icon"], link[rel="icon"]'), function (el) {
+        if (el.parentNode) el.parentNode.removeChild(el);
+      });
+      desired.forEach(function (href) {
         var link = document.createElement('link');
         link.setAttribute('rel', 'icon');
-        link.setAttribute('type', 'image/x-icon');
+        var t = iconType(href);
+        if (t) link.setAttribute('type', t);
         link.setAttribute('href', href);
         head.appendChild(link);
       });
+      // 3) iOS 主屏图标也换成用户的
+      var touch = head.querySelector('link[rel="apple-touch-icon"]');
+      if (touch) touch.setAttribute('href', desired[0]);
     }
     apply();
-    // 园方/插件脚本可能随时在 head 里重新塞 icon，loop 每 100ms 修正一次，共 40 轮，再加上 MutationObserver 实时拦截
-    var round = 0;
-    var timer = setInterval(function () {
-      round++;
-      var current = [].slice.call(head.querySelectorAll('link[rel="icon"], link[rel="shortcut icon"]'));
-      var changed = false;
-      current.forEach(function (el) {
-        if (userHrefs.indexOf(el.href) === -1) {
-          if (el.parentNode) el.parentNode.removeChild(el);
-          changed = true;
-        }
-      });
-      if (changed) apply();
-      if (round >= 40) { clearInterval(timer); timer = null; }
-    }, 100);
-    // MutationObserver 实时拦截
+
+    // 园方脚本重新塞默认图标时立刻清掉
     try {
-      var observer = new MutationObserver(function (mutations) {
-        mutations.forEach(function (m) {
-          m.addedNodes.forEach(function (node) {
-            if (!node || node.nodeType !== 1 || node.tagName !== 'LINK') return;
-            var rel = (node.getAttribute('rel') || '').toLowerCase();
-            if (rel.indexOf('icon') === -1) return;
-            if (userHrefs.indexOf(node.href) !== -1) return; // 用户地址，不碰
-            if (node.parentNode) node.parentNode.removeChild(node);
-          });
+      new MutationObserver(function (ms) {
+        var dirty = false;
+        ms.forEach(function (m) {
+          if (m.type === 'childList') {
+            [].forEach.call(m.addedNodes, function (n) {
+              if (!isIconLink(n)) return;
+              var h = n.getAttribute('href');
+              if (!h || desired.indexOf(h) === -1) {
+                if (n.parentNode) n.parentNode.removeChild(n);
+                dirty = true;
+              }
+            });
+          } else if (m.type === 'attributes' && m.attributeName === 'href') {
+            var n2 = m.target;
+            if (!isIconLink(n2) || !head.contains(n2)) return;
+            if (desired.indexOf(n2.getAttribute('href')) === -1) dirty = true;
+          }
         });
-      });
-      observer.observe(head, { childList: true, subtree: true });
-    } catch (e) { /* 不支持时静默 */ }
+        if (dirty) apply();
+      }).observe(head, { childList: true, attributes: true });
+    } catch (e) { /* 老浏览器没有 MutationObserver，靠下面定时兜底 */ }
+
+    // 兜底：前 10 秒每秒纠一次（alreadyOK 已做短路，不会重复请求）
+    var n = 0;
+    var t = setInterval(function () {
+      n++;
+      apply();
+      if (n >= 10) clearInterval(t);
+    }, 1000);
   }
 
-  /* 6. 暗黑模式开关（保存于 localStorage，刷新保持） */
+  /* 6. 暗黑模式开关（保存于 localStorage，刷新保持）
+     注意：暗色 class 必须同时挂在 <html> 和 <body> 上。
+     只挂 body 的话，html 的背景仍是 :root 的浅色，页面底部/两侧会露出白边。 */
+  function syncDarkClass(on) {
+    var root = document.documentElement;
+    var body = document.body;
+    if (on) {
+      root.classList.add('qb-dark');
+      if (body) body.classList.add('qb-dark');
+    } else {
+      root.classList.remove('qb-dark');
+      if (body) body.classList.remove('qb-dark');
+    }
+  }
   function initDarkMode() {
     var btn = document.getElementById('qb-dark-toggle');
     var icon = document.getElementById('qb-dark-icon');
     if (!btn) return;
     var dark = localStorage && localStorage.getItem('qb-dark');
-    if (dark === '1' || (dark === null && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-      document.body.classList.add('qb-dark');
-      if (icon) icon.textContent = '☀️';
-    }
+    var on = (dark === '1') || (dark === null && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    syncDarkClass(on);
+    if (icon) icon.textContent = on ? '☀️' : '🌙';
     btn.addEventListener('click', function (e) {
       e.preventDefault();
-      document.body.classList.toggle('qb-dark');
-      var on = document.body.classList.contains('qb-dark');
-      if (on && icon) icon.textContent = '☀️';
-      if (!on && icon) icon.textContent = '🌙';
+      on = !on;
+      syncDarkClass(on);
+      if (icon) icon.textContent = on ? '☀️' : '🌙';
       if (localStorage) localStorage.setItem('qb-dark', on ? '1' : '0');
     });
   }

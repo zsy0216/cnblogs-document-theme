@@ -47,7 +47,29 @@
 - 不要顶栏：删掉整段 `<div class="qb-nav">…</div>`
 - 顶栏样式在 `theme-v6.css` 的「2. 自建顶栏」段，改 `.qb-nav` 即可
 - 顶栏右侧增加 **暗黑模式开关**（🌙/☀️），点击切换，设置保存在 `localStorage`，刷新保持
-- 页面顶部 **浏览器标签的图标（favicon）**：在 `head-nav-v6.html` 里把 `link[rel="shortcut icon"]` / `link[rel="icon"]` 的 `href` 换成你自己的图标地址，页脚会自动把它移进 `<head>` 里
+- 暗色配色对齐 **GitHub Dark**（底色 `#0d1117`、卡片 `#161b22`、描边 `#30363d`、正文 `#c9d1d9`、强调色 `#58a6ff`）
+
+### 自定义浏览器标签图标（favicon）
+
+在 `snippets/head-nav-v6.html` 里改这一行即可：
+
+```html
+<link rel="icon" href="https://你的图床/图标.png" />
+```
+
+支持 `png / ico / svg / jpeg`。**只需要一行**，不要重复贴 `shortcut icon` + `icon` 两行。
+
+原理与注意事项：
+
+1. 博客园会把页首 HTML 塞在 **body 里的 `#page_begin_html`**，浏览器只认 `<head>` 里的 `<link rel=icon>`，
+   所以页脚脚本会自动把它搬进 `<head>`。
+2. 博客园自己会往 `<head>` 写 `favicon_v3_3.ico` / `.svg` 两个默认图标，脚本会把它们清掉，
+   并用 MutationObserver 持续拦截（园方脚本可能在页面加载后几秒再塞回来）。
+3. 脚本会给图标地址追加 `?v=6.20` 绕过浏览器 favicon 缓存。**换图后如果没变化，把页脚脚本里的
+   `FAV_VER` 改成 `6.21` 再保存，或 Ctrl+F5 强刷。**
+4. 建议用 **正方形 PNG（32×32 或 64×64）**。JPEG 没有透明通道，深色标签栏上会出现白底方块，
+   而且小尺寸下边缘会糊。
+
 
 ## 适配页面
 
