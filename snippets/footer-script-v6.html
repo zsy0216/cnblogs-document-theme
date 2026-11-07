@@ -1,3 +1,6 @@
+<!-- 主题 v6.0 页脚 HTML 重要脚本
+     位置：博客园后台 -> 设置 -> 页脚 HTML 代码
+     说明：1. 这里的 script 包含全部 DOM 操作逻辑（目录生成、滚动高亮、部件搬运）。2. 粘贴前务必备份原有内容。3. 博客园 HTML 校验器：确保没有未配对的尖括号，所有符号合法。 -->
 <script>
 /* 主题 v6.1 页脚：列表页生成文章列表目录 / 详情页生成文章目录 / 滚动高亮 */
 (function () {
@@ -145,7 +148,7 @@
     if (side && side.parentNode !== right) right.appendChild(side);
   }
 
-  /* 3. 正文图片懒加载：前两张留在首屏，其余延后，减少首屏并发 */
+  /* 4. 正文图片懒加载：前两张留在首屏，其余延后，减少首屏并发 */
   function lazyImages() {
     var imgs = [].slice.call(document.querySelectorAll('#cnblogs_post_body img'));
     imgs.forEach(function (img, i) {
@@ -155,7 +158,7 @@
     });
   }
 
-  /* 4. 顶栏当前项高亮 */
+  /* 5. 顶栏当前项高亮 */
   function markNav() {
     var links = document.querySelectorAll('.qb-links a');
     if (!links.length) return;
