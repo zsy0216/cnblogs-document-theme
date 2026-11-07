@@ -47,6 +47,7 @@
 - 不要顶栏：删掉整段 `<div class="qb-nav">…</div>`
 - 顶栏样式在 `theme-v6.css` 的「2. 自建顶栏」段，改 `.qb-nav` 即可
 - 顶栏右侧增加 **暗黑模式开关**（🌙/☀️），点击切换，设置保存在 `localStorage`，刷新保持
+- 页面顶部的 **浏览器标签 بسم（favicon）**：在 `head-nav-v6.html` 里找到 `rel="shortcut icon"` 那两行，把 `href` 换成你自己的图标地址
 
 ## 适配页面
 
