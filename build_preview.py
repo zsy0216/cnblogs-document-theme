@@ -107,10 +107,11 @@ def convert(src, dst):
     s = s.replace('src="/', 'src="https://www.cnblogs.com/')
     s = s.replace('href="/', 'href="https://www.cnblogs.com/')
 
-    # 2) 干掉页面定制 CSS（线上是空模板）与 awescnb
+    # 2) 干掉页面定制 CSS（线上是空模板）与 awescnb；页脚换成主题脚本
     s = re.sub(r'<link[^>]*custom\.css[^>]*>', '', s)
+    foot = open(os.path.join(ROOT, 'snippets', 'footer-script-v6.html'), encoding='utf-8').read()
     s = re.sub(r'<div id="page_end_html">.*?</div>',
-               '<div id="page_end_html"></div>', s, flags=re.S)
+               lambda m: '<div id="page_end_html">' + foot + '</div>', s, flags=re.S)
     # 3) 清掉页首默认 loading
     s = re.sub(r'<div id="page_begin_html">.*?</div>\s*(<div id="home")',
                r'<div id="page_begin_html"></div>\g<1>', s, flags=re.S)

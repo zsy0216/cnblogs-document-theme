@@ -573,7 +573,183 @@
 
 
 
-    <div id="page_end_html"></div>
+    <div id="page_end_html"><!-- ============================================================
+     友人主题 v6.1 · 页脚 HTML
+     粘贴位置：博客园后台 → 设置 → 博客设置 → 页脚 HTML 代码
+     ------------------------------------------------------------
+     职责（纯前端，不需要任何权限）：
+       1. 列表页（首页/分类/归档/标签）→ 左栏生成「文章列表」编号目录
+       2. 文章详情页            → 左栏生成「文章目录」（正文 h2/h3/h4）
+       3. 目录随滚动高亮当前条目（scroll spy）
+       4. 顶栏菜单按当前地址自动高亮
+     原「页脚 HTML」里的 awescnb 皮肤脚本必须删掉，否则会重构页面。
+     ============================================================ -->
+<script>
+(function () {
+  'use strict';
+
+  /* ---------- 小工具 ---------- */
+  function mk(tag, cls, text) {
+    var d = document.createElement(tag);
+    if (cls) d.className = cls;
+    if (text != null) d.textContent = text;
+    return d;
+  }
+
+  /* ---------- 建一个左栏卡片 ---------- */
+  function makePanel(title, extra) {
+    var panel = mk('div', 'qb-panel');
+    var hd = mk('div', 'qb-panel-hd');
+    hd.appendChild(mk('span', 'qb-panel-title', title));
+    if (extra) hd.appendChild(mk('span', 'qb-count', extra));
+    panel.appendChild(hd);
+    return panel;
+  }
+
+  /* ---------- 1. 详情页：正文标题 → 文章目录 ---------- */
+  function buildToc(body, left) {
+    var heads = [].slice.call(body.querySelectorAll('h1, h2, h3, h4')).filter(function (h) {
+      var t = (h.textContent || '').trim();
+      return t.length > 1 && h.offsetParent !== null;
+    });
+    if (heads.length < 2) return false;
+
+    var panel = makePanel('文章目录', heads.length + ' 节');
+    var list = mk('ul', 'qb-toc-list');
+
+    heads.forEach(function (h, i) {
+      if (!h.id) h.id = 'qb-h-' + i;
+      var lv = h.tagName === 'H1' ? 2 : (h.tagName === 'H2' ? 2 : (h.tagName === 'H3' ? 3 : 4));
+      var li = mk('li', 'qb-lv' + lv);
+      var a = mk('a');
+      a.href = '#' + h.id;
+      a.title = (h.textContent || '').trim();
+      a.textContent = (h.textContent || '').trim();
+      a.setAttribute('data-t', h.id);
+      li.appendChild(a);
+      list.appendChild(li);
+    });
+    panel.appendChild(list);
+    left.insertBefore(panel, left.firstChild);
+
+    /* 平滑跳转（留出顶栏高度） */
+    list.addEventListener('click', function (e) {
+      var a = e.target.closest ? e.target.closest('a') : null;
+      if (!a) return;
+      var t = document.getElementById(a.getAttribute('data-t'));
+      if (!t) return;
+      e.preventDefault();
+      window.scrollTo({ top: t.getBoundingClientRect().top + window.pageYOffset - 72, behavior: 'smooth' });
+      history.replaceState(null, '', a.getAttribute('href'));
+    });
+
+    /* scroll spy */
+    var links = [].slice.call(list.querySelectorAll('a'));
+    var byId = {};
+    links.forEach(function (a) { byId[a.getAttribute('data-t')] = a; });
+    var box = left; /* 滚动容器 */
+    var lock = false;
+
+    function spy() {
+      lock = false;
+      var line = 120, cur = links[0];
+      heads.forEach(function (h) {
+        if (h.getBoundingClientRect().top <= line) cur = byId[h.id];
+      });
+      if (window.innerHeight + window.pageYOffset >= document.body.scrollHeight - 60) {
+        cur = links[links.length - 1];
+      }
+      links.forEach(function (a) {
+        if (a === cur) { a.classList.add('on'); } else { a.classList.remove('on'); }
+      });
+      /* 当前项滚进目录可视区 */
+      if (cur && cur.offsetTop < box.scrollTop ||
+          cur && cur.offsetTop > box.scrollTop + box.clientHeight - 40) {
+        box.scrollTo({ top: cur.offsetTop - box.clientHeight / 2, behavior: 'smooth' });
+      }
+    }
+    window.addEventListener('scroll', function () {
+      if (lock) return;
+      lock = true;
+      requestAnimationFrame(spy);
+    }, { passive: true });
+    spy();
+    return true;
+  }
+
+  /* ---------- 2. 列表页：文章标题 → 文章列表目录 ---------- */
+  function buildPostList(left) {
+    var days = [].slice.call(document.querySelectorAll('#mainContent .day'));
+    if (!days.length) return false;
+
+    var panel = makePanel('文章列表', days.length + ' 篇');
+    var list = mk('ul', 'qb-toc-list');
+
+    days.forEach(function (day) {
+      var src = day.querySelector('.postTitle a') || day.querySelector('.postTitle');
+      if (!src) return;
+      var li = mk('li', 'qb-lv2');
+      var a = mk('a');
+      /* 首页点条目 = 跳本篇锚点；其它列表页 = 进文章 */
+      var isHome = /^\/[^\/]+\/?$/.test(location.pathname);
+      a.href = src.href;
+      a.title = (src.textContent || '').trim();
+      a.textContent = (src.textContent || '').trim();
+      if (isHome) {
+        var post = day.querySelector('.postTitle');
+        if (post) {
+          var anchorId = (post.id || '').replace('_title', '');
+          if (anchorId) {
+            a.setAttribute('data-anchor', '#' + (post.id || ''));
+            a.href = '#' + (post.id || '');
+          }
+        }
+      }
+      li.appendChild(a);
+      list.appendChild(li);
+    });
+
+    if (!list.children.length) return false;
+    panel.appendChild(list);
+    left.insertBefore(panel, left.firstChild);
+    return true;
+  }
+
+  /* ---------- 3. 顶栏当前项高亮 ---------- */
+  function markNav() {
+    var links = document.querySelectorAll('.qb-links a');
+    if (!links.length) return;
+    var here = location.href.replace(/[?#].*$/, '').replace(/\/$/, '');
+    links.forEach(function (a) {
+      var t = a.href.replace(/[?#].*$/, '').replace(/\/$/, '');
+      a.classList.toggle('on', t === here);
+    });
+  }
+
+  /* ---------- 启动 ---------- */
+  function boot() {
+    var left = document.getElementById('leftcontentcontainer');
+    var body = document.getElementById('cnblogs_post_body');
+
+    if (left) {
+      var done = false;
+      if (body) { done = buildToc(body, left); }
+      if (!done) { buildPostList(left); }
+      /* 目录卡就位后，分类卡改名为「分类导航」，避免和目录重名 */
+      var cat = document.getElementById('sidebar_categories');
+      if (cat) cat.classList.add('qb-secondary');
+    }
+    markNav();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', boot);
+  } else {
+    boot();
+  }
+})();
+</script>
+</div>
 
     <input type="hidden" id="antiforgery_token" value="CfDJ8Pn9bUKjiU5Il6bOWcQWpk3I9SdVjz7RZhHQr9op-jcuO1DrfhFpUmvQTgwOuoZ3jg5S_FirZLscgtEZxG9waAgUvTfpwT936O0QYUIBUGESxUULA1dBegnKAXVWnA9fEF-T5O_49amt_uFIyIpx-p0" />
     <script defer src="https://hm.baidu.com/hm.js?866c9be12d4a814454792b1fd0fed295"></script>
