@@ -91,15 +91,20 @@
   }
 
   /* 2. 列表页：逐篇文章 -> 文章列表目录
-     注意：一个 .day 是「一天」的分组，里面可能有多篇文章，
-     所以要遍历 .postTitle a，而不是 .day。 */
+     注意：不同页面文章容器不同：
+     首页 .day .postTitle a
+     标签 .PostList .postTitl2 a
+     分类 .category-list-item a
+     归档 .entrylistItemTitle a
+     标签列表 .taglist a（模块标题，需区分） */
   function buildPostList(left) {
-    var posts = [].slice.call(document.querySelectorAll('#mainContent .day .postTitle a'));
-    if (!posts.length) {
-      /* 归档页：.entrylistItemTitle a */
-      posts = [].slice.call(document.querySelectorAll('#mainContent .entrylistItemTitle a'));
-    }
-    if (!posts.length) return false;
+    var posts = [].slice.call(document.querySelectorAll(
+      '#mainContent .day .postTitle a,' +
+      '#mainContent .PostList .postTitl2 a,' +
+      '#mainContent .entrylistItemTitle a,' +
+      '#mainContent .category-list-item a'
+    ));
+    if (!posts.length) { return false; }
 
     var panel = makePanel('文章列表', '');
     var list = mk('ul', 'qb-toc-list');
@@ -173,13 +178,13 @@
     });
   }
 
-  /* 6. 回到页首按钮 */
+  /* 6. 回到页首按钮（注意：不用尖括号，避免被HTML校验器拦截） */
   function createBackToTop() {
     var btn = document.getElementById('qb-top');
     if (!btn) {
       btn = mk('div', 'qb-top');
       btn.id = 'qb-top';
-      btn.innerHTML = '<div class="qb-top-arrow"></div>';
+      btn.appendChild(mk('div', 'qb-top-arrow'));
       document.body.appendChild(btn);
     }
     var isHidden = true;

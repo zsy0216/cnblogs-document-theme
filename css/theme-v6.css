@@ -552,7 +552,44 @@ body.has-navbar { padding-top: 0 !important; margin-top: 0 !important; }
 .entrylistItemPostDesc a { color: var(--meta) !important; }
 .entrylistItemPostDesc a:hover { color: var(--accent-deep) !important; }
 
-/* ---------- 5.2 标签页（taglist） ---------- */
+/* ---------- 5.2 标签文章（PostList / tag list item） ---------- */
+.PostList {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    box-sizing: border-box;
+    padding: 20px 22px 16px;
+    margin: 0 0 16px;
+}
+.PostListTitle {
+    font-size: 20px !important;
+    font-weight: 600 !important;
+    color: var(--ink) !important;
+    margin: 0 0 16px !important;
+}
+.postTitl2 a {
+    font-size: 16px !important;
+    font-weight: 600 !important;
+    color: var(--ink) !important;
+    line-height: 1.5;
+    display: block;
+}
+.postTitl2 a:hover { color: var(--accent-deep) !important; }
+.postDesc2 {
+    font-size: 12.5px !important;
+    color: var(--meta) !important;
+    margin: 12px 0 0 !important;
+}
+.postDesc2 a { color: var(--meta) !important; }
+.postDesc2 a:hover { color: var(--accent-deep) !important; }
+.postText2 {
+    margin: 12px 0 0 !important;
+    color: var(--body) !important;
+    font-size: 13.5px !important;
+}
+
+/* 标签云胶囊（标签名称列表） */
 #taglist_main table { width: 100% !important; }
 #MyTag1_dtTagList a,
 #taglist a {
