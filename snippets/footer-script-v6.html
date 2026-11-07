@@ -23,6 +23,10 @@
   }
 
   /* 1. 详情页：正文标题 -> 文章目录 */
+  /* 标题自己就带编号时（「一、」「1.」「（二）」「第三章」…），不再叠加目录序号，
+     否则会出现「5. 1. 三栏布局」这种双编号。 */
+  var NUM_HEAD = /^(\d+(?:\.\d+)*\s*[.、)）]|[（(][一二三四五六七八九十百\d]+[)）]|[一二三四五六七八九十]+\s*[、.]|第[一二三四五六七八九十百\d]+[章节部篇]|(?:step|chapter|part)\s*\d)/i;
+
   function buildToc(body, left) {
     var heads = [].slice.call(body.querySelectorAll('h1, h2, h3, h4')).filter(function (h) {
       var t = (h.textContent || '').trim();
@@ -36,11 +40,12 @@
     heads.forEach(function (h, i) {
       if (!h.id) h.id = 'qb-h-' + i;
       var lv = h.tagName === 'H1' ? 2 : (h.tagName === 'H2' ? 2 : (h.tagName === 'H3' ? 3 : 4));
-      var li = mk('li', 'qb-lv' + lv);
+      var txt = (h.textContent || '').trim();
+      var li = mk('li', 'qb-lv' + lv + (NUM_HEAD.test(txt) ? ' qb-nonum' : ''));
       var a = mk('a');
       a.href = '#' + h.id;
-      a.title = (h.textContent || '').trim();
-      a.textContent = (h.textContent || '').trim();
+      a.title = txt;
+      a.textContent = txt;
       a.setAttribute('data-t', h.id);
       li.appendChild(a);
       list.appendChild(li);
@@ -134,8 +139,24 @@
     list.style.overscrollBehavior = 'contain';
     panel.children[0].appendChild(mk('span', 'qb-count', n + ' 篇'));
 
+    /* 真的超出可视高度时才加 .qb-scroll：CSS 用它做底部渐隐，
+       避免最后一行被切成半截露出半个字（短列表不加，免得淡掉末项） */
+    watchOverflow(list);
+
     left.insertBefore(panel, left.firstChild);
     return true;
+  }
+
+  /* 列表是否溢出：溢出才打标记，随窗口变化实时更新 */
+  function watchOverflow(el) {
+    function upd() {
+      var over = el.scrollHeight - el.clientHeight > 4;
+      if (over) { el.classList.add('qb-scroll'); } else { el.classList.remove('qb-scroll'); }
+    }
+    upd();
+    requestAnimationFrame(upd);
+    window.addEventListener('resize', upd);
+    window.addEventListener('load', upd);
   }
 
   /* 3. 侧栏下方的常用链接 / 随笔档案 / 搜索 / 排行 -> 右栏公告下方 */
@@ -175,6 +196,63 @@
     links.forEach(function (a) {
       var t = a.href.replace(/[?#].*$/, '').replace(/\/$/, '');
       if (t === here) { a.classList.add('on'); } else { a.classList.remove('on'); }
+    });
+  }
+
+  /* 5.5 顶栏吸顶（sticky）修复
+     页首 HTML 里的 .qb-nav 会被博客园塞进 #page_begin_html 容器，而该容器的高度
+     就等于顶栏自身高度 —— position:sticky 没有可吸附的行程，滚一屏就跟着滚走了。
+     把顶栏提升为 body 的直接子元素，吸附范围才等于整页。
+     注意：必须在任何按视口测量位置的逻辑（建目录、搬侧栏）之前调用。 */
+  function hoistNav() {
+    var nav = document.querySelector('.qb-nav');
+    if (!nav || !document.body) return;
+    if (nav.parentNode === document.body) return;
+    document.body.insertBefore(nav, document.body.firstChild);
+  }
+
+  /* 5.6 拆分「同一天的多篇」
+     博客园的列表页把同一天发布的多篇文章塞进同一个 .day 容器，中间用
+     .postSeparator 分隔。本主题把 .day 当卡片，于是十几二十篇挤成一张
+     两三千像素高的巨卡（标题、摘要、作者行周期性重复），非常像「样式错乱」。
+     这里按 .postSeparator 把子节点重新分组，每组套一层同 class 的 .day，
+     一篇一张卡。只处理含多个 .postTitle 的分组，单篇的不动。 */
+  function splitDayGroups() {
+    [].forEach.call(document.querySelectorAll('#mainContent .day'), function (day) {
+      if (day.getAttribute('data-qb-split')) return;
+
+      var seps = 0;
+      [].forEach.call(day.children, function (c) {
+        if (c.classList && c.classList.contains('postSeparator')) seps++;
+      });
+      if (!seps) return;
+
+      var groups = [[]];
+      [].slice.call(day.childNodes).forEach(function (n) {
+        if (n.nodeType === 1 && n.classList && n.classList.contains('postSeparator')) {
+          groups.push([]);
+          return;
+        }
+        groups[groups.length - 1].push(n);
+      });
+
+      var valid = groups.filter(function (g) {
+        return g.some(function (n) {
+          return n.nodeType === 1 && n.classList && n.classList.contains('postTitle');
+        });
+      });
+      if (valid.length < 2) return;
+
+      var anchor = day;
+      valid.forEach(function (g) {
+        var box = document.createElement('div');
+        box.className = day.className;
+        box.setAttribute('data-qb-split', '1');
+        g.forEach(function (n) { box.appendChild(n); });
+        anchor.parentNode.insertBefore(box, anchor.nextSibling);
+        anchor = box;
+      });
+      if (day.parentNode) day.parentNode.removeChild(day);
     });
   }
 
@@ -359,12 +437,16 @@
     var left = document.getElementById('leftcontentcontainer');
     var body = document.getElementById('cnblogs_post_body');
 
+    /* 顶栏吸顶修复：必须最先做，否则后续按视口测量的位置全是错的 */
+    hoistNav();
+
+    /* 先把「同日多篇」拆成一篇一卡，再建目录（目录要按拆完的顺序取文章） */
+    splitDayGroups();
+
     if (left) {
       var done = false;
       if (body) { done = buildToc(body, left); }
       if (!done) { buildPostList(left); }
-      var cat = document.getElementById('sidebar_categories');
-      if (cat) cat.classList.add('qb-secondary');
     }
     moveSideWidgets();
     lazyImages();
@@ -373,10 +455,12 @@
     initDarkMode();
     createBackToTop();
 
-    /* 博客园侧栏是异步加载的，加载完可能重排节点，这里兜底复位一次 */
+    /* 博客园侧栏是异步加载的，加载完可能重排节点，这里兜底复位一次；
+       顺带再拆一遍「同日多篇」（防分页/懒加载后追加进来的新分组） */
     var tries = 0;
     var timer = setInterval(function () {
       tries += 1;
+      splitDayGroups();
       moveSideWidgets();
       if (tries > 12) clearInterval(timer);
     }, 500);

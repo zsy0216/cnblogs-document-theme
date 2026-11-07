@@ -18,10 +18,10 @@
 
 > ⚠️ **第 0 步（最重要）**：设置 → 皮肤 → 选择 **`Custom`（自定义）**，否则后续全部不生效！
 
-1. **页面定制 CSS 代码** → 全选**替换为 `css/theme-v6.min.css`（15.7KB，比全版 -34%）** → 保存
+1. **页面定制 CSS 代码** → 全选**替换为 `css/theme-v6.min.css`（24.7KB，比全版 -38%）** → 保存
 2. **页首 HTML 代码** → 粘贴 `snippets/head-nav-v6.html`（3.5KB）→ 保存
-3. **页脚 HTML 代码** → 粘贴 `snippets/footer-script-v6.html`（需先清空）→ 保存
-4. **公告** → 粘贴 `snippets/announcement-v6.html`（1.5KB）→ 保存
+3. **页脚 HTML 代码** → 粘贴 `snippets/footer-script-v6.html`（18.9KB，需先清空）→ 保存
+4. **公告** → 粘贴 `snippets/announcement-v6.html`（0.9KB）→ 保存
 5. 前台 `Ctrl+F5` 强刷
 
 > 本地 `preview/home-v6.html` / `preview/post-v6.html` 是离线预览页（把线上 DOM + 主题 CSS 合成），可在本地直接打开看效果，不算服务。
@@ -62,21 +62,25 @@
 
 ### 品牌区 logo
 
-博客名前面默认带一个内联 SVG logo（交叉笔画 + 橙点），不额外发请求，颜色跟随明暗自动切换：
+`.qb-brand` 里可以放任意多个 `.qb-logo`，CSS 对图片和内联 SVG 两种内容都做了适配，所以「图 + 名字 + 装饰」并排是合法的：
 
 ```html
 <a class="qb-brand" href="https://www.cnblogs.com/zhangshuaiyin/">
+  <span class="qb-logo">
+    <img src="https://你的图床/logo.png" alt="博客名" />
+  </span>
+  <span class="qb-brand-text">Ep流苏</span>
   <span class="qb-logo" aria-hidden="true">
     <svg viewBox="0 0 32 32"><!-- 见 head-nav-v6.html 完整代码 --></svg>
   </span>
-  <span class="qb-brand-text">Ep流苏</span>
 </a>
 ```
 
-- **换成自己的图片**：把 `<span class="qb-logo">…</span>` 里的 `<svg>` 换成 `<img src="https://你的图床/logo.png" alt="博客名" />`，CSS 已对 `.qb-logo img` 做好 `object-fit: contain` 与圆角
-- **改大小**：`.qb-logo` 的 `width` / `height` / `flex-basis` 三个值保持一致（默认 26px，小屏 22px）
+- **只用图片**：删掉最后一个 `qb-logo`，把 `img` 的 `src` 换成自己的图
+- **只用 SVG**：删掉带 `img` 的那个 `qb-logo`；笔画用 `stroke="currentColor"`，hover 变强调色时会跟着变，不用额外写规则
+- **改大小**：`.qb-logo` 的 `width` / `height` / `flex-basis` 三个值保持一致（默认 30px，小屏 24px）
 - **改点缀色**：`.qb-logo .qb-logo-dot` 的 `fill`（暗色单独一档在 `body.qb-dark` 下）
-- 笔画用 `stroke="currentColor"`，所以 hover 变强调色时会跟着变，不用额外写规则
+- **间距**：元素间距统一由 `.qb-brand` 的 `gap` 控制（默认 9px）
 - 小屏（≤860px）顶栏菜单改为**横向滑动**，logo 与暗黑开关固定不动；不要在 `.qb-links` 上加 `flex-wrap`，会把顶栏撑成两行
 
 ### 自定义浏览器标签图标（favicon）
@@ -127,6 +131,121 @@
 
 流程：进入页面 → `boot()` → `left` 非空 → 有正文就写文章目录，否则写文章列表。
 
+### 排版细节
+
+| 问题 | 处理 |
+|:---|:---|
+| 编号和标题贴在一起，两位数的 `10.` 会顶到标题上 | 编号列固定 `width:24px` + `text-align:right`，标题 `padding-left:32px`，数字宽度不同也竖直对齐 |
+| 列表超出高度后，最后一行被切成半个字 | 脚本判定真的溢出（`scrollHeight - clientHeight > 4`）才加 `.qb-scroll`，底部 18px 渐隐 |
+| 标题自己带「一、」「1.」时，目录里出现双编号（`5. 1. 三栏布局`） | `NUM_HEAD` 正则识别编号前缀，命中就加 `.qb-nonum`，不再叠加目录序号 |
+
+`NUM_HEAD` 覆盖的写法：`1.` `1.2` `（二）` `一、` `第三章` `Step 2` / `Chapter 2` / `Part 2`。只作用于**文章目录**，列表页的文章标题照常编号。
+
+`.qb-scroll` 只在溢出时出现，所以短列表（几行）不会把最后一项淡掉。
+
+### 一篇一卡：同日多篇拆分
+
+博客园的列表页把**同一天发布的多篇文章塞进同一个 `.day`**，靠 `.postSeparator` 分隔（`dayTitle` 是日期标题，后面依次是这个日期的第 1、2、3… 篇）。本主题把 `.day` 当卡片，碰上「一天发二十篇」时就变成一张两三千像素高的巨卡，标题、摘要、作者行周期性重复 —— 看起来完全像样式错乱。实测首页 7 个 `.day` 里，最大的那个高 2447px、装了 20 篇。
+
+页脚脚本 `splitDayGroups()` 按 `.postSeparator` 把子节点重新分组，每组包一层同 class 的 `.day`：
+
+```js
+[].slice.call(day.childNodes).forEach(function (n) {
+  if (n.nodeType === 1 && n.classList.contains('postSeparator')) { groups.push([]); return; }
+  groups[groups.length - 1].push(n);
+});
+```
+
+- 只处理含 **2 个以上 `.postTitle`** 的分组，单篇容器不碰
+- 拆出来的卡片带 `data-qb-split="1"`，函数幂等，可以重复调用
+- `boot()` 里紧跟 `hoistNav()` 执行（后面的文章目录要按拆分后的顺序取），侧栏兜底轮询里再调一次，兜住分页/懒加载追加的分组
+
+实测：7 个 `.day`（最大 2447px）→ 27 个（141~190px），`.postTitle` / `.postDesc` / 链接数前后都是 27，无丢失无重复。
+
+## 滚动行为
+
+| 区域 | 行为 | 实现 |
+|:---|:---|:---|
+| 顶栏 `.qb-nav` | 吸顶，始终可见 | `position:sticky; top:0` |
+| 左栏 `#leftcontentcontainer` | 吸顶，内容超高时内部滚动 | `position:sticky; top:74px; max-height:calc(100vh - 96px)` |
+| 右栏 `#qb-right` | **跟随页面滚动**，不吸顶 | 普通文档流 |
+
+顶栏吸顶有个坑必须靠 JS 解决：
+
+```js
+function hoistNav() {
+  var nav = document.querySelector('.qb-nav');
+  if (nav.parentNode !== document.body) document.body.insertBefore(nav, document.body.firstChild);
+}
+```
+
+博客园会把页首 HTML 塞进 `#page_begin_html` 容器，而这个容器的高度**就等于顶栏自身高度**——`position:sticky` 找不到可吸附的行程，滚一屏就跟着页面一起滚走（表现为「写了 sticky 却不起作用」）。把顶栏提升为 `body` 的直接子元素，吸附范围才等于整页。`hoistNav()` 在 `boot()` 第一步执行，早于任何按视口测量的逻辑。
+
+配套：`html { scroll-padding-top: 74px }`，否则点目录或 `#hash` 跳转时目标标题会被压在顶栏下面。
+
+## 右栏精简
+
+右栏由页脚脚本把 `#sidebar_news`（公告）和 `#blog-sidecolumn`（侧栏小部件）搬进 `#qb-right`。小部件 id 与博客园后台「侧边栏设置」里的条目一一对应。右栏只承担辅助信息，默认隐藏这四块（高度合计 1100px 左右，会把页面拉得很长）：
+
+| 小部件 | id | 隐藏理由 |
+|:---|:---|:---|
+| 最新随笔 | `#sidebar_recentposts` | 列出的文章与左栏「文章列表」是同一批，纯重复 |
+| 常用链接 | `#sidebar_shortcut` | 我的随笔/我的评论/我的参与/最新评论，四个站内入口，顶栏和站点头像里都能进 |
+| 我的标签 | `#sidebar_toptags` | 标签云会随文章越用越多，每篇正文底部也有标签 |
+| 分类导航 | `#sidebar_categories` | 见下方「它其实是三张卡」 |
+
+实现只有一行，想恢复就把对应 id 删掉：
+
+```css
+#qb-right #sidebar_recentposts,
+#qb-right #sidebar_shortcut,
+#qb-right #sidebar_toptags,
+#qb-right #sidebar_categories {
+    display: none !important;
+}
+```
+
+线上实测效果（1440 宽）：右栏 3176px → **1755px**，只剩 公告 → 搜索 → 积分与排名 → 三个排行榜。
+
+### 「分类导航」其实是三张卡
+
+`#sidebar_categories` 不是一张卡，而是包了三张小部件的容器：
+
+| 子卡 | id | 内容 |
+|:---|:---|:---|
+| 随笔分类 | `#sidebar_postcategory` | 58 个分类，222px |
+| 随笔档案 | `#sidebar_postarchive` | 56 个月份，400px |
+| 站点 | `#sidebar_links<用户id>` | 「我的博客」等自定义链接，80px |
+
+旧版 CSS 用后代选择器 `#sidebar_categories .catListTitle::before { content: "分类导航" }` 改标题，结果**三张卡全被改成「分类导航」**。现在选择器已收窄到子卡，随笔档案显示「随笔档案」、链接卡显示「站点」，只有随笔分类叫「分类导航」。以后要单独隐藏其中一张，按子卡 id 写规则，不要用容器 id。
+
+要继续精简别的部件，照着上面的写法把 id 换掉即可。线上实测存在的常用 id：
+
+| 小部件 | id |
+|:---|:---|
+| 搜索 | `#sidebar_search` |
+| 常用链接 | `#sidebar_shortcut` |
+| 我的标签 | `#sidebar_toptags` |
+| 积分与排名 | `#sidebar_scorerank` |
+| 随笔分类 | `#sidebar_postcategory` |
+| 随笔档案 | `#sidebar_postarchive` |
+| 阅读排行榜 | `#sidebar_topviewedposts` |
+| 评论排行榜 | `#sidebar_topcommentedposts` |
+| 推荐排行榜 | `#sidebar_topdiggedposts` |
+| 最新评论 | `#sidebar_recentcomments` |
+
+`display:none` 的元素不参与 flex 布局，隐藏后不会在卡片之间留下空档。
+
+### 公告卡
+
+公告正文是博客园注入的，里面带用户手写的行内样式（`style="margin:…;color:…"`），选择器优先级盖不过 `style` 属性，所以这里只做不会被 inline 压掉的三件事：
+
+- **取消 `max-height:420px` + `overflow:auto`**。原来卡片里还会再出现一条滚动条，滚轮经常先滚内层，表现为「页面滚不动」；内容一多还会切掉半行
+- **段落间距统一 8px、行高 1.75**（只在公告段落没写 inline margin 时生效，写了就以公告为准）
+- **`#profile_block`（昵称/园龄/粉丝/关注）降字号到 12.5px、行高 1.9**，和正文拉开层次。这里**故意不加 `border-top`**：公告正文最后一段通常自带一条分隔线，两条并排会显得碎
+
+行内样式的颜色（如 `color:#1f2329`）在暗色下由 `body.qb-dark #sidebar_news_container [style*="color"]` 统一接管，背景同理压成 `rgba(255,255,255,.04)`。
+
 ## 布局原理
 
 ```css
@@ -143,7 +262,7 @@
 
 ```
 css/theme-v6.css              源文件（开发版，全注释，正式环境粘贴 min）
-css/theme-v6.min.css          发布版（已压缩，效果与全版等同，大小 -34%）
+css/theme-v6.min.css          发布版（已压缩，效果与全版等同，大小 -35%）
 css/变量说明.md               主题变量表（--accent 等）
 snippets/head-nav-v6.html     顶栏结构（页首 HTML，含暗黑开关）
 snippets/announcement-v6.html 公告模板（内联样式，抗覆盖）

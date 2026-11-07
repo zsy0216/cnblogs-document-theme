@@ -77,6 +77,9 @@ html, body {
     padding: 0 !important;
     -webkit-font-smoothing: antialiased;
 }
+/* 顶栏是吸顶的，锚点跳转（页内 #hash、目录、评论锚）要预留出它的高度，
+   否则目标标题会被压在顶栏下面。74 = 顶栏 59 + 一点呼吸。 */
+html { scroll-padding-top: 74px; }
 #home { background: transparent !important; }
 a { text-decoration: none; transition: color .18s ease; }
 
@@ -233,7 +236,8 @@ body.qb-dark .qb-logo .qb-logo-dot { fill: #ff7a5c; }
 }
 #leftcontentcontainer::-webkit-scrollbar { width: 4px; }
 #leftcontentcontainer::-webkit-scrollbar-thumb { background: var(--line); border-radius: 4px; }
-/* 右：公告 + 常用链接 / 随笔档案 / 搜索 / 排行（由页脚脚本搬进来） */
+/* 右：公告 + 常用链接 / 随笔档案 / 搜索 / 排行（由页脚脚本搬进来）
+   与左栏相反 —— 右栏跟随页面一起滚动，不做吸顶，也不再内部滚动。 */
 #qb-right {
     grid-column: 3;
     grid-row: 1;
@@ -241,23 +245,26 @@ body.qb-dark .qb-logo .qb-logo-dot { fill: #ff7a5c; }
     display: flex;
     flex-direction: column;
     gap: 16px;
-    position: sticky;
-    top: 74px;
-    max-height: calc(100vh - 96px);
-    overflow-y: auto;
-    overflow-x: hidden;
-    padding-right: 2px;
-    scrollbar-width: thin;
-    scrollbar-color: var(--line) transparent;
 }
-#qb-right::-webkit-scrollbar { width: 4px; }
-#qb-right::-webkit-scrollbar-thumb { background: var(--line); border-radius: 4px; }
 /* 搬进容器后，取消原来的网格定位，改由父容器 flex 排列 */
 #qb-right #sidebar_news,
 #qb-right #blog-sidecolumn {
     grid-column: auto !important;
     grid-row: auto !important;
     flex: 0 0 auto;
+}
+/* 右栏精简：右栏只是辅助信息，这四块高度加起来一千多像素，会把页面拉得很长，
+   而且内容都能在别处找到，默认隐藏。
+   - 最新随笔：就是左侧「文章列表」那几篇，纯重复
+   - 常用链接：我的随笔 / 我的评论 / 我的参与 / 最新评论，四个站内入口，顶栏与站点头像里都有
+   - 我的标签：标签云，进任一篇文章的标签区都能看到，且条数会越用越多
+   - 分类导航：随笔分类 + 随笔档案 + 站点链接三张卡的合集（见 4.1 节）
+   想恢复就把对应的 id 从下面这行删掉（也可以在博客后台「侧边栏设置」里取消勾选）。 */
+#qb-right #sidebar_recentposts,
+#qb-right #sidebar_shortcut,
+#qb-right #sidebar_toptags,
+#qb-right #sidebar_categories {
+    display: none !important;
 }
 
 #sidebar_news {
@@ -366,7 +373,7 @@ body.qb-dark .qb-logo .qb-logo-dot { fill: #ff7a5c; }
 .qb-toc-list a {
     position: relative;
     display: block;
-    padding: 5px 8px 5px 24px;
+    padding: 6px 8px 6px 32px;
     border-radius: 6px;
     font-size: 13px;
     line-height: 1.55;
@@ -376,12 +383,14 @@ body.qb-dark .qb-logo .qb-logo-dot { fill: #ff7a5c; }
     text-overflow: ellipsis;
     transition: background .16s ease, color .16s ease;
 }
+/* 编号固定宽度 + 右对齐：两位数（10. 11. …）不会顶到标题上 */
 .qb-toc-list a::before {
     content: counter(qbtoc) ".";
     position: absolute;
-    left: 4px;
-    top: 5px;
-    width: 16px;
+    left: 2px;
+    top: 6px;
+    width: 24px;
+    text-align: right;
     color: var(--num);
     font-weight: 600;
     font-size: 12px;
@@ -396,24 +405,35 @@ body.qb-dark .qb-logo .qb-logo-dot { fill: #ff7a5c; }
 }
 .qb-toc-list a.on::before { color: var(--accent); }
 
-/* 二级及以下标题：缩进 + 降字号，层级一眼可辨 */
-.qb-toc-list .qb-lv3 a { padding-left: 34px; font-size: 12.5px; }
-.qb-toc-list .qb-lv4 a { padding-left: 44px; font-size: 12.5px; color: var(--meta) !important; }
-.qb-toc-list .qb-lv3 a::before { left: 18px; width: 14px; font-size: 11.5px; color: var(--num); }
-.qb-toc-list .qb-lv4 a::before { left: 28px; width: 14px; font-size: 11px; color: var(--num); }
+/* 二级及以下标题：缩进 + 降字号，层级一眼可辨。
+   编号列统一 24px 宽右对齐，缩进只动 left，保证各级编号竖直对齐观感一致 */
+.qb-toc-list .qb-lv3 a { padding-left: 42px; font-size: 12.5px; }
+.qb-toc-list .qb-lv4 a { padding-left: 52px; font-size: 12.5px; color: var(--meta) !important; }
+.qb-toc-list .qb-lv3 a::before { left: 12px; width: 24px; font-size: 11.5px; color: var(--num); }
+.qb-toc-list .qb-lv4 a::before { left: 22px; width: 24px; font-size: 11px; color: var(--num); }
 
 /* 一级条目（列表页文章 / H1、H2）：层级基线 */
-.qb-toc-list .qb-lv2 a { padding-left: 24px; }
+.qb-toc-list .qb-lv2 a { padding-left: 32px; }
 
-/* 目录卡就位后，分类卡自动降级为次要导航 */
-#sidebar_categories.qb-secondary .catListTitle::before {
-    content: "分类导航";
-    font-size: 12.5px;
-    font-weight: 500;
-    color: var(--meta);
+/* 标题自带编号（一、 / 1. / （二） / 第三章）时，脚本会加 .qb-nonum：
+   不叠加目录序号，缩进退回到与「编号列」等宽的起点，跟有编号的项视觉对齐 */
+.qb-toc-list li.qb-nonum a { padding-left: 10px; }
+.qb-toc-list li.qb-nonum a::before { content: none; }
+.qb-toc-list li.qb-nonum.qb-lv3 a { padding-left: 20px; }
+.qb-toc-list li.qb-nonum.qb-lv4 a { padding-left: 30px; }
+
+/* 列表超出可视高度时（由脚本加 .qb-scroll）底部渐隐，避免最后一行被切成半截 */
+.qb-toc-list.qb-scroll {
+    -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 18px), transparent 100%);
+    mask-image: linear-gradient(to bottom, #000 calc(100% - 18px), transparent 100%);
 }
 
-/* ---------- 4.1 左栏「分类导航」编号目录（次要卡） ---------- */
+/* ---------- 4.1 「分类导航」编号目录（次要卡；默认隐藏，见第 2 节） ---------- */
+/* #sidebar_categories 并不是一张卡，它是个包了三张小部件的容器：
+   #sidebar_postcategory（随笔分类）/ #sidebar_postarchive（随笔档案）/
+   #sidebar_links<用户id>（站点链接）。所以下面所有选择器都必须收窄到子卡，
+   不能写 `#sidebar_categories .catListTitle` —— 那是后代选择器，会把三张卡
+   的标题统统改成同一句话（旧版就是这个 bug，三张卡都显示「分类导航」）。 */
 #sidebar_categories {
     position: static;
     display: flex;
@@ -421,7 +441,7 @@ body.qb-dark .qb-logo .qb-logo-dot { fill: #ff7a5c; }
     max-height: none;
     overflow: visible;
 }
-/* 标题文字替换为「文章导航」（不改 HTML） */
+/* 标题文字替换（不改 HTML）：font-size:0 藏掉原标题，再用 ::before 写新标题 */
 #sidebar_categories .catListTitle {
     font-size: 0 !important;
     display: flex;
@@ -436,6 +456,9 @@ body.qb-dark .qb-logo .qb-logo-dot { fill: #ff7a5c; }
     color: var(--ink);
     letter-spacing: .02em;
 }
+/* 后两张卡给回自己的名字，不再跟着叫「分类导航」 */
+#sidebar_postarchive .catListTitle::before { content: "随笔档案"; }
+#sidebar_categories [id^="sidebar_links"] .catListTitle::before { content: "站点"; }
 #sidebar_categories .catListTitle::after {
     content: "";
     flex: 1;
@@ -556,16 +579,45 @@ body.qb-dark .qb-logo .qb-logo-dot { fill: #ff7a5c; }
 
 /* ---------- 4. 右栏：公告 ---------- */
 #sidebar_news { padding: 18px; }
+/* 公告正文：右栏整体跟随页面滚动，这里不再单独限高 + 内滚。
+   原来 420px 限高会在卡片里再造一层滚动条，滚轮经常先滚内层，
+   看起来像「页面卡住不动」，内容一多还会切掉半行。 */
 #sidebar_news .sidebar-news,
 #sidebar_news_container {
     font-size: 13px;
     color: var(--body);
-    line-height: 1.8;
-    max-height: 420px;
-    overflow-y: auto;
+    line-height: 1.75;
+    max-height: none;
+    overflow: visible;
+    /* 中文断行时尽量别让最后一行只剩一两个字 */
+    text-wrap: pretty;
+}
+/* 段落间距统一：博客园公告默认 margin 偏大，一行一段时会散开 */
+#sidebar_news_container p { margin: 0 0 8px; }
+#sidebar_news_container p:last-child { margin-bottom: 0; }
+/* 公告里手写的引用块（📌 那句）：圆角 + 左线，缩进收一点 */
+#sidebar_news_container blockquote {
+    margin: 10px 0;
+    padding: 8px 12px;
+    background: var(--accent-soft);
+    border-left: 2px solid var(--accent);
+    border-radius: var(--radius-sm);
+    color: var(--body);
 }
 #sidebar_news_container img { max-width: 100%; border-radius: var(--radius-sm); }
 #sidebar_news a { color: var(--accent-deep); }
+
+/* 公告底部个人资料（博客园自带 #profile_block）：和正文分开，行距收一点。
+   注意别加 border-top —— 公告正文最后一个段落往往自己就带一条分隔线，
+   两条线挨着会显得碎（本博客实测就是这种情况）。 */
+#sidebar_news #profile_block {
+    margin-top: 12px;
+    font-size: 12.5px;
+    line-height: 1.9;
+    color: var(--meta);
+}
+#sidebar_news #profile_block a { color: var(--accent-deep); font-weight: 500; }
+#sidebar_news #profile_block .follow-tip { margin-top: 4px; }
 
 /* 公告里的空行/杂乱标记清理 */
 #sidebar_news br + br { display: none; }
