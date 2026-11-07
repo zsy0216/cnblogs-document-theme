@@ -178,6 +178,75 @@
     });
   }
 
+  /* 6. 博客 Icon（favicon）：页首 HTML 里贴的 <link rel=icon> 在 body 里不生效，必须移进 <head> */
+  function initFavicon() {
+    var head = document.head || document.querySelector('head');
+    if (!head) return;
+    // 页首里用户贴的地址（支持 png / ico / svg）
+    var userHrefs = [];
+    var allLinks = [].slice.call(
+      document.querySelectorAll('link[rel="shortcut icon"], link[rel="icon"]')
+    );
+    allLinks.forEach(function (el) {
+      if (!el.href) return;
+      if (userHrefs.indexOf(el.href) === -1) userHrefs.push(el.href);
+    });
+    if (!userHrefs.length) { return; } // 没贴地址，不改动
+    function apply() {
+      // 清掉 head 里所有 icon
+      var h = [].slice.call(head.querySelectorAll('link[rel="shortcut icon"], link[rel="icon"]'));
+      h.forEach(function (el) { if (el.parentNode) el.parentNode.removeChild(el); });
+      // 清掉 body 里所有 icon
+      var b = [].slice.call(document.querySelectorAll('link[rel="shortcut icon"], link[rel="icon"]'));
+      b.forEach(function (el) {
+        var p = el.parentNode;
+        if (p) p.removeChild(el);
+      });
+      // 往 head 里一头贴用户的
+      var seen = {};
+      userHrefs.forEach(function (href) {
+        if (seen[href]) return;
+        seen[href] = true;
+        var link = document.createElement('link');
+        link.setAttribute('rel', 'icon');
+        link.setAttribute('type', 'image/x-icon');
+        link.setAttribute('href', href);
+        head.appendChild(link);
+      });
+    }
+    apply();
+    // 园方/插件脚本可能随时在 head 里重新塞 icon，loop 每 100ms 修正一次，共 40 轮，再加上 MutationObserver 实时拦截
+    var round = 0;
+    var timer = setInterval(function () {
+      round++;
+      var current = [].slice.call(head.querySelectorAll('link[rel="icon"], link[rel="shortcut icon"]'));
+      var changed = false;
+      current.forEach(function (el) {
+        if (userHrefs.indexOf(el.href) === -1) {
+          if (el.parentNode) el.parentNode.removeChild(el);
+          changed = true;
+        }
+      });
+      if (changed) apply();
+      if (round >= 40) { clearInterval(timer); timer = null; }
+    }, 100);
+    // MutationObserver 实时拦截
+    try {
+      var observer = new MutationObserver(function (mutations) {
+        mutations.forEach(function (m) {
+          m.addedNodes.forEach(function (node) {
+            if (!node || node.nodeType !== 1 || node.tagName !== 'LINK') return;
+            var rel = (node.getAttribute('rel') || '').toLowerCase();
+            if (rel.indexOf('icon') === -1) return;
+            if (userHrefs.indexOf(node.href) !== -1) return; // 用户地址，不碰
+            if (node.parentNode) node.parentNode.removeChild(node);
+          });
+        });
+      });
+      observer.observe(head, { childList: true, subtree: true });
+    } catch (e) { /* 不支持时静默 */ }
+  }
+
   /* 6. 暗黑模式开关（保存于 localStorage，刷新保持） */
   function initDarkMode() {
     var btn = document.getElementById('qb-dark-toggle');
@@ -236,6 +305,7 @@
     moveSideWidgets();
     lazyImages();
     markNav();
+    initFavicon();
     initDarkMode();
     createBackToTop();
 
