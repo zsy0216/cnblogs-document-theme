@@ -302,6 +302,17 @@ body.has-navbar { padding-top: 0 !important; margin-top: 0 !important; }
 .qb-toc-list .qb-lv3 a::before { left: 18px; width: 14px; font-size: 11.5px; color: #cdd3da; }
 .qb-toc-list .qb-lv4 a::before { left: 28px; width: 14px; font-size: 11px; color: #d7dce2; }
 
+/* 一级条目（列表页文章 / H1、H2）：层级基线 */
+.qb-toc-list .qb-lv2 a { padding-left: 24px; }
+
+/* 目录卡就位后，分类卡自动降级为次要导航 */
+#sidebar_categories.qb-secondary .catListTitle::before {
+    content: "分类导航";
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--meta);
+}
+
 /* ---------- 4.1 左栏「分类导航」编号目录（次要卡） ---------- */
 #sidebar_categories {
     position: static;
