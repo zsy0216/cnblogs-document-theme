@@ -1,8 +1,8 @@
-<!-- 流苏主题 v6.27 · 2026-11-08 页脚 HTML 重要脚本
+<!-- 流苏主题 v6.28 · 2026-11-09 页脚 HTML 重要脚本
      位置：博客园后台 -> 设置 -> 页脚 HTML 代码
      说明：1. 这里的 script 包含全部 DOM 操作逻辑（目录生成、滚动高亮、部件搬运）。2. 粘贴前务必备份原有内容。3. 博客园 HTML 校验器：确保没有未配对的尖括号，所有符号合法。 -->
 <script>
-/* 流苏主题 v6.27 · 2026-11-08 页脚：列表页文章目录 / 详情页文章目录 / 归档时间线 / 分页 / 回到顶部 / 滚动高亮 */
+/* 流苏主题 v6.28 · 2026-11-09 页脚：列表页文章目录 / 详情页文章目录 / 归档时间线 / 分页 / 回到顶部 / 滚动高亮 */
 (function () {
   'use strict';
 
@@ -616,40 +616,68 @@
   /* 数据层：按月缓存 + 单月抓取。
      缓存粒度是「一个月」而不是「整站快照」：发新文章只会让最新那个月失效，
      其它月份仍命中本地缓存，不用为了 1 篇新文章重抓几十个页面。
-     key 带 v2，旧的整站快照（v1）不再读取，由 clearArcCacheV1() 顺手清掉。 */
-  var ARC_TTL = 24 * 3600 * 1000;
 
-  function arcCacheKey(key) {
-    return 'qb-arc-v2:' + location.pathname.split('/p/')[0] + ':' + key;
+     失效条件除了时间，还有「篇数对不对得上」：左栏「随笔档案」的篇数是服务端
+     实时渲染的，缓存里存的则是上次抓到时的篇数。两者不一致就说明这个月有新文章
+     （或文章被删/改到其它月份），必须重抓 —— 否则会出现页头写「6 篇」、正文只有
+     1 行的自相矛盾画面。v6.27 及之前只按 24 小时失效，于是「当天先看过归档页、
+     再发文章」就会把 1 篇的旧快照一直用到缓存过期。
+
+     key 带 v3：v2 条目没有 n 字段，读到时必然判为不一致而重抓一次；
+     clearArcCacheOld() 顺手删掉 v1/v2 的键，避免 localStorage 里堆几份过期快照。 */
+  var ARC_TTL = 24 * 3600 * 1000;
+  var ARC_PREFIX = 'qb-arc-v3:';
+
+  function arcSiteKey() {
+    return location.pathname.split('/p/')[0];
   }
 
-  function readArcCache(key) {
+  function arcCacheKey(key) {
+    return ARC_PREFIX + arcSiteKey() + ':' + key;
+  }
+
+  function readArcCache(key, expect) {
     try {
       var c = JSON.parse(localStorage.getItem(arcCacheKey(key)) || 'null');
-      if (c && c.t && Date.now() - c.t < ARC_TTL && c.d && c.d.length) return c.d;
+      if (!c || !c.t || Date.now() - c.t >= ARC_TTL || !c.d || !c.d.length) return null;
+      /* 篇数对不上就当作没缓存（expect 为 0/undefined 时不校验） */
+      if (expect && c.n !== expect) return null;
+      return c.d;
     } catch (e) { /* 结构坏了当作没缓存 */ }
     return null;
   }
 
-  function writeArcCache(key, items) {
+  function writeArcCache(key, items, expect) {
     if (!items || !items.length) return;
-    try { localStorage.setItem(arcCacheKey(key), JSON.stringify({ t: Date.now(), d: items })); }
+    /* 抓到的不如侧栏说的多（归档页被截断、中间层改写）就不写缓存：
+       宁可下次再抓一次，也不要把残缺快照固化 24 小时 */
+    if (expect && items.length < expect) return;
+    try { localStorage.setItem(arcCacheKey(key), JSON.stringify({ t: Date.now(), n: items.length, d: items })); }
     catch (e) { /* 配额满或隐私模式，忽略 */ }
   }
 
-  function clearArcCacheV1() {
-    try { localStorage.removeItem('qb-arc-v1:' + location.pathname.split('/p/')[0]); } catch (e) {}
+  function clearArcCacheOld() {
+    try {
+      var site = arcSiteKey();
+      var dead = ['qb-arc-v1:' + site, 'qb-arc-v2:' + site];
+      Object.keys(localStorage).forEach(function (k) {
+        if (dead.indexOf(k) >= 0 || k.indexOf('qb-arc-v2:' + site + ':') === 0) localStorage.removeItem(k);
+      });
+    } catch (e) { /* 隐私模式下 Object.keys(localStorage) 可能抛错 */ }
   }
 
   function fetchArchiveMonth(mo) {
-    var hit = readArcCache(mo.key);
+    var hit = readArcCache(mo.key, mo.n);
     if (hit) return Promise.resolve(hit);
-    return fetch(mo.url, { credentials: 'same-origin' }).then(function (r) {
+    /* cache:'no-cache' —— 允许 304 复验，但强制问一次服务器。
+       纯靠浏览器 HTTP 缓存的话，服务端已更新、本地那份还是旧的，
+       上面按篇数做的失效就白费了 */
+    return fetch(mo.url, { credentials: 'same-origin', cache: 'no-cache' }).then(function (r) {
       if (!r.ok) throw new Error('HTTP ' + r.status);
       return r.text();
     }).then(function (h) {
       var items = parseMonthPage(h, mo).items;
-      writeArcCache(mo.key, items);
+      writeArcCache(mo.key, items, mo.n);
       return items;
     });
   }
@@ -730,6 +758,15 @@
       li.appendChild(a);
       ul.appendChild(li);
     });
+    /* 抓到的比侧栏说的少 —— 不装作完整：把差额和入口一起摆出来 */
+    if (mo.n && items.length < mo.n) {
+      var miss = mk('li', 'qb-arc-tip');
+      var am = mk('a', 'qb-arc-jump',
+        '另有 ' + (mo.n - items.length) + ' 篇未取到 · 打开该月 ↗');
+      am.href = mo.url;
+      miss.appendChild(am);
+      ul.appendChild(miss);
+    }
   }
 
   /* 左栏：年份 + 月份胶囊索引，点一下滚到对应月份（只用月份索引数据，不等抓取）。
@@ -942,7 +979,7 @@
 
     /* 左栏索引在 buildArchiveShell 之后才追加，点击时先补数据再滚动 */
     renderArchiveIndex(panel, months, curKey, loadMonth);
-    clearArcCacheV1();
+    clearArcCacheOld();
     normalizeArchiveUrl(months);
     return true;
   }

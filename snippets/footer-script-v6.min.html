@@ -1,4 +1,4 @@
-<!-- 流苏主题 v6.27 · 2026-11-08 页脚 HTML（压缩版）
+<!-- 流苏主题 v6.28 · 2026-11-09 页脚 HTML（压缩版）
      位置：博客园后台 -> 设置 -> 页脚 HTML 代码（粘贴前先清空）
      说明：本文件由 _dev-tools/gen-footer-min.py 从 footer-script-v6.html 生成，
            功能完全一致，只删注释与缩进。要改逻辑请改源文件后重新生成，不要改这里。 -->
@@ -471,33 +471,46 @@ r: r ? +r[1] : 0
 return { key: mo.key, y: mo.y, m: mo.m, n: mo.n, url: mo.url, items: items };
 }
 var ARC_TTL = 24 * 3600 * 1000;
-function arcCacheKey(key) {
-return 'qb-arc-v2:' + location.pathname.split('/p/')[0] + ':' + key;
+var ARC_PREFIX = 'qb-arc-v3:';
+function arcSiteKey() {
+return location.pathname.split('/p/')[0];
 }
-function readArcCache(key) {
+function arcCacheKey(key) {
+return ARC_PREFIX + arcSiteKey() + ':' + key;
+}
+function readArcCache(key, expect) {
 try {
 var c = JSON.parse(localStorage.getItem(arcCacheKey(key)) || 'null');
-if (c && c.t && Date.now() - c.t < ARC_TTL && c.d && c.d.length) return c.d;
+if (!c || !c.t || Date.now() - c.t >= ARC_TTL || !c.d || !c.d.length) return null;
+if (expect && c.n !== expect) return null;
+return c.d;
 } catch (e) { }
 return null;
 }
-function writeArcCache(key, items) {
+function writeArcCache(key, items, expect) {
 if (!items || !items.length) return;
-try { localStorage.setItem(arcCacheKey(key), JSON.stringify({ t: Date.now(), d: items })); }
+if (expect && items.length < expect) return;
+try { localStorage.setItem(arcCacheKey(key), JSON.stringify({ t: Date.now(), n: items.length, d: items })); }
 catch (e) { }
 }
-function clearArcCacheV1() {
-try { localStorage.removeItem('qb-arc-v1:' + location.pathname.split('/p/')[0]); } catch (e) {}
+function clearArcCacheOld() {
+try {
+var site = arcSiteKey();
+var dead = ['qb-arc-v1:' + site, 'qb-arc-v2:' + site];
+Object.keys(localStorage).forEach(function (k) {
+if (dead.indexOf(k) >= 0 || k.indexOf('qb-arc-v2:' + site + ':') === 0) localStorage.removeItem(k);
+});
+} catch (e) { }
 }
 function fetchArchiveMonth(mo) {
-var hit = readArcCache(mo.key);
+var hit = readArcCache(mo.key, mo.n);
 if (hit) return Promise.resolve(hit);
-return fetch(mo.url, { credentials: 'same-origin' }).then(function (r) {
+return fetch(mo.url, { credentials: 'same-origin', cache: 'no-cache' }).then(function (r) {
 if (!r.ok) throw new Error('HTTP ' + r.status);
 return r.text();
 }).then(function (h) {
 var items = parseMonthPage(h, mo).items;
-writeArcCache(mo.key, items);
+writeArcCache(mo.key, items, mo.n);
 return items;
 });
 }
@@ -566,6 +579,14 @@ if (it.r) a.appendChild(mk('span', 'qb-arc-r', String(it.r)));
 li.appendChild(a);
 ul.appendChild(li);
 });
+if (mo.n && items.length < mo.n) {
+var miss = mk('li', 'qb-arc-tip');
+var am = mk('a', 'qb-arc-jump',
+'另有 ' + (mo.n - items.length) + ' 篇未取到 · 打开该月 ↗');
+am.href = mo.url;
+miss.appendChild(am);
+ul.appendChild(miss);
+}
 }
 function renderArchiveIndex(panel, months, curKey, onJump) {
 var total = 0, years = [];
@@ -732,7 +753,7 @@ io.observe(sec);
 months.forEach(function (mo) { loadMonth(mo.key); });
 }
 renderArchiveIndex(panel, months, curKey, loadMonth);
-clearArcCacheV1();
+clearArcCacheOld();
 normalizeArchiveUrl(months);
 return true;
 }
