@@ -256,6 +256,88 @@
     });
   }
 
+  /* 5b. 列表页分页
+     博客园的列表页会在文章上下各渲染一份分页：
+       - 首页/随笔列表：顶部 #homepage_top_pager、底部 #homepage_bottom_pager，都是 .topicListFooter > .pager
+       - 第一页只输出一个 #nav_next_page，里面孤零零一个「下一页」，没有页码、没有当前页
+     处理成：
+       1) 文章上方那份直接隐藏（用户只看下方那条）
+       2) 空壳分页隐藏（没分页时园方仍输出空 .pager / 空 #nav_next_page，会留 44px 空白）
+       3) 当前页那串裸文本包成 .qb-cur，上一页/下一页打标
+       4) 第一页补出「‹ 上一页（禁用）｜1｜下一页 ›」，与后面几页视觉连续 */
+  function enhancePager() {
+    var main = document.getElementById('mainContent');
+    if (!main) return;
+
+    var firstArt = main.querySelector('.day, .entrylistItem, .PostList');
+
+    [].forEach.call(main.querySelectorAll('.pager, #nav_next_page'), function (unit) {
+      if (unit.getAttribute('data-qb-pg')) return;
+      unit.setAttribute('data-qb-pg', '1');
+
+      var bar = unit.parentNode;
+      if (bar && bar.classList && bar.classList.contains('topicListFooter')) {
+        bar.classList.add('qb-pager-bar');
+      }
+
+      /* 空壳 */
+      if (!(unit.textContent || '').replace(/\s+/g, '')) {
+        unit.style.display = 'none';
+        return;
+      }
+
+      /* 在首篇文章之前 = 上方那份，隐藏。
+         DOCUMENT_POSITION_FOLLOWING(4)：unit 在 firstArt 之后 */
+      if (firstArt && firstArt !== unit && !unit.contains(firstArt)) {
+        var rel = firstArt.compareDocumentPosition(unit);
+        if (!(rel & 4)) {
+          unit.classList.add('qb-pager-top');
+          return;
+        }
+      }
+
+      unit.classList.add('qb-pager');
+
+      /* 上一页/下一页 打标（园方文本就是「上一页」「下一页」） */
+      [].forEach.call(unit.querySelectorAll('a'), function (a) {
+        var t = (a.textContent || '').replace(/\s+/g, '');
+        if (t === '上一页') a.classList.add('qb-prev');
+        else if (t === '下一页') a.classList.add('qb-next');
+      });
+
+      /* 当前页码是裸文本节点，包成 span 才能上底色 */
+      [].slice.call(unit.childNodes).forEach(function (n) {
+        if (n.nodeType === 3 && n.nodeValue.replace(/\s+/g, '')) {
+          unit.replaceChild(mk('span', 'qb-cur', n.nodeValue.replace(/\s+/g, '')), n);
+        }
+      });
+
+      /* 第一页没输出当前页码，补一个 1 */
+      var hasNext = unit.querySelector('.qb-next');
+      if (!unit.querySelector('.qb-cur')) {
+        var cur = mk('span', 'qb-cur', '1');
+        if (hasNext) unit.insertBefore(cur, hasNext);
+        else unit.appendChild(cur);
+      }
+
+      /* 缺上一页/下一页时补禁用占位，左右不塌 */
+      if (!unit.querySelector('.qb-prev')) {
+        unit.insertBefore(mk('span', 'qb-dis qb-prev', '上一页'), unit.firstChild);
+      }
+      if (!unit.querySelector('.qb-next')) {
+        unit.appendChild(mk('span', 'qb-dis qb-next', '下一页'));
+      }
+    });
+
+    /* 整条都没有可见分页时，别留一条空的下边框 */
+    [].forEach.call(main.querySelectorAll('.qb-pager-bar'), function (bar) {
+      var vis = [].slice.call(bar.querySelectorAll('.pager, #nav_next_page')).filter(function (u) {
+        return u.style.display !== 'none' && !u.classList.contains('qb-pager-top');
+      });
+      if (!vis.length) bar.setAttribute('data-qb-empty', '1');
+    });
+  }
+
   /* 6. 博客 Icon（favicon）
      要点：
      1) 页首 HTML 里的 <link rel=icon> 会被放在 body 的 #page_begin_html 容器里，
@@ -827,6 +909,7 @@
 
     /* 先把「同日多篇」拆成一篇一卡，再建目录（目录要按拆完的顺序取文章） */
     splitDayGroups();
+    enhancePager();
 
     if (left) {
       var done = false;
@@ -849,6 +932,7 @@
     var timer = setInterval(function () {
       tries += 1;
       splitDayGroups();
+      enhancePager();
       moveSideWidgets();
       /* 侧栏比脚本晚到时补建归档；已经回退过也能在这里自愈。
          syncArchiveNav 一起补：否则顶栏「归档」还停在该死的旧月份上 */

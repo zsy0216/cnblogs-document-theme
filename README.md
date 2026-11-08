@@ -18,9 +18,9 @@
 
 > ⚠️ **第 0 步（最重要）**：设置 → 皮肤 → 选择 **`Custom`（自定义）**，否则后续全部不生效！
 
-1. **页面定制 CSS 代码** → 全选**替换为 `css/theme-v6.min.css`（28.8KB，比全版 -37%）** → 保存
+1. **页面定制 CSS 代码** → 全选**替换为 `css/theme-v6.min.css`（30.0KB，比全版 -37%）** → 保存
 2. **页首 HTML 代码** → 粘贴 `snippets/head-nav-v6.html`（3.5KB）→ 保存
-3. **页脚 HTML 代码** → 粘贴 `snippets/footer-script-v6.html`（35.8KB，需先清空）→ 保存
+3. **页脚 HTML 代码** → 粘贴 `snippets/footer-script-v6.html`（39.8KB，需先清空）→ 保存
 4. **公告** → 粘贴 `snippets/announcement-v6.html`（0.9KB）→ 保存
 5. 前台 `Ctrl+F5` 强刷
 
@@ -252,6 +252,31 @@
 
 自检：在归档页按 `Ctrl+U` 搜 `buildFullArchive`，搜得到就说明脚本已部署；再看页面首屏是否出现「全部归档 · N 篇 · N 个月」。
 
+## 列表页分页
+
+博客园的列表页会在**文章上下各渲染一份分页**，而且第一页只输出一个孤零零的「下一页」：
+
+| 页面 | 上方 | 下方 |
+|:---|:---|:---|
+| 首页 / 随笔列表 第 1 页 | 无 | `#nav_next_page`，只有一个「下一页」，没有页码、没有当前位置 |
+| 首页 / 随笔列表 第 2 页起 | `#homepage_top_pager` 完整页码 | `#homepage_bottom_pager` 完整页码；另有一个**空的** `#nav_next_page` |
+| 分类 / 标签 / 归档月页 | 偶尔有空 `.pager` | 同上 |
+
+现在统一成：**上方那份隐藏，只留下方一条**，并且两边页脚对齐。
+
+| 处理 | 实现 |
+|:---|:---|
+| 认出「上方那份」 | 不写死 id，用位置判断：`firstArt.compareDocumentPosition(unit) & 4` 为假即位于首篇文章之前，打 `.qb-pager-top` 隐藏 |
+| 空壳分页 | 园方没分页时仍输出空 `.pager` / 空 `#nav_next_page`，会白留 44px；文本为空直接 `display:none` |
+| 空条不留线 | 整条 `.qb-pager-bar` 里没有可见分页时打 `data-qb-empty`，连上边框一起隐藏 |
+| 当前页码 | 园方把当前页写成**裸文本节点**（`<div class="pager">…2…</div>`），CSS 选不中，用 `enhancePager()` 包成 `<span class="qb-cur">`，才上得了实心底色 |
+| 首末页对称 | 第一页没有「上一页」、末页没有「下一页」，补 `.qb-dis` 灰色占位，否则一排按钮会左右歪 |
+| 第一页补页码 | 第一页只输出一个「下一页」，补出「‹ 上一页（禁用）｜1｜下一页 ›」，与后面几页视觉连续 |
+
+样式：34px 高的圆角按钮，当前页实心强调色（浅色紫 `#d05ce8` / 暗色蓝 `#58a6ff`），`hover` 上浮 1px，移动端降到 30px。想恢复博客园原样式，删掉 `boot()` 里的 `enhancePager()` 调用即可（`.qb-pager-top` 的隐藏也会随之失效）。
+
+> **为什么第一页不补出 1 2 3 4 的完整页码**：博客园这一页的分页是按「天」分组切的，不是按篇数切 —— 实测第 1~4 页分别 17 / 15 / 15 / 11 篇，第一页既没有总条数也没有总页数；后续页用的是窗口式分页（第 2 页只给出 `1 2 3 4`），从任何一页都推不出真实末页。硬算总页数会算出 5、6 页这种不存在的页，所以第一页只做「当前位置 + 下一页」。
+
 ## 滚动行为
 
 | 区域 | 行为 | 实现 |
@@ -356,7 +381,7 @@ css/theme-v6.min.css          发布版（已压缩，效果与全版等同，�
 css/变量说明.md               主题变量表（--accent 等）
 snippets/head-nav-v6.html     顶栏结构（页首 HTML，含暗黑开关）
 snippets/announcement-v6.html 公告模板（内联样式，抗覆盖）
-snippets/footer-script-v6.html 左栏目录 + 右栏搬运 + 归档时间线 + 暗黑开关（页脚 HTML，需先清空）
+snippets/footer-script-v6.html 左栏目录 + 右栏搬运 + 归档时间线 + 分页处理 + 暗黑开关（页脚 HTML，需先清空）
 preview/home-v6.html          首页离线预览（真实 DOM 复刻）
 preview/post-v6.html          文章页离线预览
 ```
