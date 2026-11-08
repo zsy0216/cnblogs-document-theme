@@ -35,6 +35,7 @@ FILES = [
 
 SRC = FILES[0]
 MIN = 'css/theme-v6.min.css'
+MIN_HTML = 'snippets/footer-script-v6.min.html'
 LOG = 'CHANGELOG.md'
 TODAY = datetime.date.today().strftime('%Y-%m-%d')
 
@@ -92,21 +93,22 @@ def check(found, quiet=False):
         print('✗ 跨文件版本不一致：%s' % ', '.join(sorted(versions)))
         ok = False
 
-    # min 版头部应与源文件同版
-    if os.path.exists(MIN):
-        m = TOKEN.search(read(MIN))
-        src_ver = current_version(found)
-        if not m:
-            print('✗ %-32s 缺少版本横幅（跑一次 gen-min.py）' % MIN)
+    # 两个压缩产物都应带同版本横幅
+    for path in (MIN, MIN_HTML):
+        if not os.path.exists(path):
+            print('✗ %-32s 不存在（跑一次生成脚本）' % path)
             ok = False
-        elif m.group(1) != src_ver:
-            print('✗ %-32s %s ≠ 源码 %s' % (MIN, m.group(1), src_ver))
+            continue
+        mm = TOKEN.search(read(path))
+        src_ver = current_version(found)
+        if not mm:
+            print('✗ %-32s 缺少版本横幅' % path)
+            ok = False
+        elif mm.group(1) != src_ver:
+            print('✗ %-32s %s ≠ 源码 %s' % (path, mm.group(1), src_ver))
             ok = False
         elif not quiet:
-            print('✓ %-32s %s' % (MIN, m.group(1)))
-    else:
-        print('✗ %s 不存在' % MIN)
-        ok = False
+            print('✓ %-32s %s' % (path, mm.group(1)))
 
     return ok
 
@@ -163,9 +165,11 @@ def main():
         css = re.sub(r'(最近：)[^\r\n]*', lambda m: m.group(1) + args.note, css, count=1)
         write(SRC, css)
 
-    # 3) 重建 min（横幅版本取自源码头部）
+    # 3) 重建两个压缩产物（横幅版本都取自源码头部）
     print('— 重建 min 版 —')
     subprocess.check_call([sys.executable, '_dev-tools/gen-min.py'])
+    print('— 重建页脚压缩版 —')
+    subprocess.check_call([sys.executable, '_dev-tools/gen-footer-min.py'])
 
     # 4) CHANGELOG
     if not args.no_changelog and args.note:

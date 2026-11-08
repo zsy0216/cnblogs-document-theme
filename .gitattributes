@@ -1,0 +1,8 @@
+# 统一换行：仓库与工作区都按 LF 处理。
+# 不加这条时 core.autocrlf=true 会在 checkout 后把 CSS 转成 CRLF，
+# 与其它文件不一致，粘贴到博客园也会带上 \r。
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.gif binary

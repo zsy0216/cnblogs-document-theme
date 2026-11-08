@@ -21,6 +21,7 @@ preview/crop-*.png
 _dev-tools/*
 !_dev-tools/gen-min.py
 !_dev-tools/bump-version.py
+!_dev-tools/gen-footer-min.py
 preview/ref-*.png
 
 # 本地推送凭据（含 token，绝不能提交）

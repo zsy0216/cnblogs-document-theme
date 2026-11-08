@@ -30,6 +30,22 @@ for part in parts:
         out += part
 body = out.strip()
 
+# 等价替换收尾（都是不会改变渲染结果的写法变换）
+body = body.replace(';}', '}')                                       # 块尾分号
+body = re.sub(r'(?<![\w#.])0\.(\d+)', r'.\1', body)                  # 0.5 -> .5
+body = re.sub(r'(?<![\w.])0px\b', '0', body)                         # 0px -> 0
+body = re.sub(r':0 0 0 0(?=[;}])', ':0', body)                       # 四值全 0
+
+
+def _shrink_hex(m):
+    h = m.group(1).lower()
+    if h[0] == h[1] and h[2] == h[3] and h[4] == h[5]:
+        return '#' + h[0] + h[2] + h[4]
+    return m.group(0)
+
+
+body = re.sub(r'#([0-9a-fA-F]{6})(?![0-9a-fA-F])', _shrink_hex, body)  # #ffffff -> #fff
+
 io.open(OUT, 'w', encoding='utf-8', newline='\n').write(banner + body)
 
 print('version:', ver, day)

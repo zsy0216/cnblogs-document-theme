@@ -1,0 +1,782 @@
+<!-- 流苏主题 v6.27 · 2026-11-08 页脚 HTML（压缩版）
+     位置：博客园后台 -> 设置 -> 页脚 HTML 代码（粘贴前先清空）
+     说明：本文件由 _dev-tools/gen-footer-min.py 从 footer-script-v6.html 生成，
+           功能完全一致，只删注释与缩进。要改逻辑请改源文件后重新生成，不要改这里。 -->
+<script>(function () {
+'use strict';
+function mk(tag, cls, text) {
+var d = document.createElement(tag);
+if (cls) d.className = cls;
+if (text != null) d.textContent = text;
+return d;
+}
+function makePanel(title, extra) {
+var panel = mk('div', 'qb-panel');
+var hd = mk('div', 'qb-panel-hd');
+hd.appendChild(mk('span', 'qb-panel-title', title));
+if (extra) hd.appendChild(mk('span', 'qb-count', extra));
+panel.appendChild(hd);
+return panel;
+}
+var NUM_HEAD = /^(\d+(?:\.\d+)*\s*[.、)）]|[（(][一二三四五六七八九十百\d]+[)）]|[一二三四五六七八九十]+\s*[、.]|第[一二三四五六七八九十百\d]+[章节部篇]|(?:step|chapter|part)\s*\d)/i;
+function buildToc(body, left) {
+var heads = [].slice.call(body.querySelectorAll('h1, h2, h3, h4')).filter(function (h) {
+var t = (h.textContent || '').trim();
+return t.length > 1 && h.offsetParent !== null;
+});
+if (!(heads.length > 1)) return false;
+var panel = makePanel('文章目录', heads.length + ' 节');
+var list = mk('ul', 'qb-toc-list');
+heads.forEach(function (h, i) {
+if (!h.id) h.id = 'qb-h-' + i;
+var lv = h.tagName === 'H1' ? 2 : (h.tagName === 'H2' ? 2 : (h.tagName === 'H3' ? 3 : 4));
+var txt = (h.textContent || '').trim();
+var li = mk('li', 'qb-lv' + lv + (NUM_HEAD.test(txt) ? ' qb-nonum' : ''));
+var a = mk('a');
+a.href = '#' + h.id;
+a.title = txt;
+a.textContent = txt;
+a.setAttribute('data-t', h.id);
+li.appendChild(a);
+list.appendChild(li);
+});
+panel.appendChild(list);
+left.insertBefore(panel, left.firstChild);
+list.addEventListener('click', function (e) {
+var a = e.target.closest ? e.target.closest('a') : null;
+if (!a) return;
+var t = document.getElementById(a.getAttribute('data-t'));
+if (!t) return;
+e.preventDefault();
+window.scrollTo({ top: t.getBoundingClientRect().top + window.pageYOffset - 72, behavior: 'smooth' });
+history.replaceState(null, '', a.getAttribute('href'));
+});
+var links = [].slice.call(list.querySelectorAll('a'));
+var byId = {};
+links.forEach(function (a) { byId[a.getAttribute('data-t')] = a; });
+var box = left;
+var lock = false;
+function spy() {
+lock = false;
+var line = 120, cur = links[0];
+heads.forEach(function (h) {
+if (line >= h.getBoundingClientRect().top) cur = byId[h.id];
+});
+if (window.innerHeight + window.pageYOffset >= document.body.scrollHeight - 60) {
+cur = links[links.length - 1];
+}
+links.forEach(function (a) {
+if (a === cur) { a.classList.add('on'); } else { a.classList.remove('on'); }
+});
+if (cur && (box.scrollTop > cur.offsetTop ||
+cur.offsetTop > box.scrollTop + box.clientHeight - 40)) {
+box.scrollTo({ top: cur.offsetTop - box.clientHeight / 2, behavior: 'smooth' });
+}
+}
+window.addEventListener('scroll', function () {
+if (lock) return;
+lock = true;
+requestAnimationFrame(spy);
+}, { passive: true });
+spy();
+return true;
+}
+function buildPostList(left) {
+var posts = [].slice.call(document.querySelectorAll(
+'#mainContent .day .postTitle a,' +
+'#mainContent .PostList .postTitl2 a,' +
+'#mainContent .entrylistItemTitle,' +
+'#mainContent .category-list-item a'
+));
+if (!posts.length) { return false; }
+var panel = makePanel('文章列表', '');
+var list = mk('ul', 'qb-toc-list');
+posts.forEach(function (src) {
+var txt = (src.textContent || '').replace(/\[\s*置顶\s*\]/g, '').replace(/\s+/g, ' ').trim();
+if (!txt) return;
+var li = mk('li', 'qb-lv2');
+var a = mk('a');
+a.href = src.href;
+a.textContent = txt;
+a.title = txt;
+var day = src.closest ? src.closest('.day') : null;
+var dt = day ? day.querySelector('.dayTitle') : null;
+if (dt) a.title = (dt.textContent || '').replace(/\s+/g, ' ').trim() + ' · ' + txt;
+li.appendChild(a);
+list.appendChild(li);
+});
+if (!list.children.length) return false;
+panel.appendChild(list);
+var n = list.children.length;
+list.style.maxHeight = 'calc(100vh - 220px)';
+list.style.overflowY = 'auto';
+list.style.overscrollBehavior = 'contain';
+panel.children[0].appendChild(mk('span', 'qb-count', n + ' 篇'));
+watchOverflow(list);
+left.insertBefore(panel, left.firstChild);
+return true;
+}
+function watchOverflow(el) {
+function upd() {
+var over = el.scrollHeight - el.clientHeight > 4;
+if (over) { el.classList.add('qb-scroll'); } else { el.classList.remove('qb-scroll'); }
+}
+upd();
+requestAnimationFrame(upd);
+window.addEventListener('resize', upd);
+window.addEventListener('load', upd);
+}
+function moveSideWidgets() {
+var home = document.getElementById('sideBarMain') || document.getElementById('sideBar');
+if (!home) return;
+var news = document.getElementById('sidebar_news');
+var right = document.getElementById('qb-right');
+if (!right) {
+right = mk('div', 'qb-right');
+right.id = 'qb-right';
+if (news && news.parentNode === home) home.insertBefore(right, news);
+else home.appendChild(right);
+}
+if (news && news.parentNode !== right) right.appendChild(news);
+var side = document.getElementById('blog-sidecolumn');
+if (side && side.parentNode !== right) right.appendChild(side);
+}
+function lazyImages() {
+var imgs = [].slice.call(document.querySelectorAll('#cnblogs_post_body img'));
+imgs.forEach(function (img, i) {
+if (!(i > 1)) return;
+if (!img.getAttribute('loading')) img.setAttribute('loading', 'lazy');
+img.setAttribute('decoding', 'async');
+});
+}
+function markNav() {
+var links = document.querySelectorAll('.qb-links a');
+if (!links.length) return;
+var here = location.href.replace(/[?#].*$/, '').replace(/\/$/, '');
+links.forEach(function (a) {
+var t = a.href.replace(/[?#].*$/, '').replace(/\/$/, '');
+if (t === here) { a.classList.add('on'); } else { a.classList.remove('on'); }
+});
+}
+function hoistNav() {
+var nav = document.querySelector('.qb-nav');
+if (!nav || !document.body) return;
+if (nav.parentNode === document.body) return;
+document.body.insertBefore(nav, document.body.firstChild);
+}
+function splitDayGroups() {
+[].forEach.call(document.querySelectorAll('#mainContent .day'), function (day) {
+if (day.getAttribute('data-qb-split')) return;
+var seps = 0;
+[].forEach.call(day.children, function (c) {
+if (c.classList && c.classList.contains('postSeparator')) seps++;
+});
+if (!seps) return;
+var groups = [[]];
+[].slice.call(day.childNodes).forEach(function (n) {
+if (n.nodeType === 1 && n.classList && n.classList.contains('postSeparator')) {
+groups.push([]);
+return;
+}
+groups[groups.length - 1].push(n);
+});
+var valid = groups.filter(function (g) {
+return g.some(function (n) {
+return n.nodeType === 1 && n.classList && n.classList.contains('postTitle');
+});
+});
+if (valid.length < 2) return;
+var anchor = day;
+valid.forEach(function (g) {
+var box = document.createElement('div');
+box.className = day.className;
+box.setAttribute('data-qb-split', '1');
+g.forEach(function (n) { box.appendChild(n); });
+anchor.parentNode.insertBefore(box, anchor.nextSibling);
+anchor = box;
+});
+if (day.parentNode) day.parentNode.removeChild(day);
+});
+}
+function enhancePager() {
+var main = document.getElementById('mainContent');
+if (!main) return;
+var firstArt = main.querySelector('.day, .entrylistItem, .PostList');
+[].forEach.call(main.querySelectorAll('.pager, #nav_next_page'), function (unit) {
+if (unit.getAttribute('data-qb-pg')) return;
+unit.setAttribute('data-qb-pg', '1');
+var bar = unit.parentNode;
+if (bar && bar.classList && bar.classList.contains('topicListFooter')) {
+bar.classList.add('qb-pager-bar');
+}
+if (!(unit.textContent || '').replace(/\s+/g, '')) {
+unit.style.display = 'none';
+return;
+}
+if (firstArt && firstArt !== unit && !unit.contains(firstArt)) {
+var rel = firstArt.compareDocumentPosition(unit);
+if (!(rel & 4)) {
+unit.classList.add('qb-pager-top');
+return;
+}
+}
+unit.classList.add('qb-pager');
+[].forEach.call(unit.querySelectorAll('a'), function (a) {
+var t = (a.textContent || '').replace(/\s+/g, '');
+if (t === '上一页') a.classList.add('qb-prev');
+else if (t === '下一页') a.classList.add('qb-next');
+});
+[].slice.call(unit.childNodes).forEach(function (n) {
+if (n.nodeType === 3 && n.nodeValue.replace(/\s+/g, '')) {
+unit.replaceChild(mk('span', 'qb-cur', n.nodeValue.replace(/\s+/g, '')), n);
+}
+});
+var hasNext = unit.querySelector('.qb-next');
+if (!unit.querySelector('.qb-cur')) {
+var cur = mk('span', 'qb-cur', '1');
+if (hasNext) unit.insertBefore(cur, hasNext);
+else unit.appendChild(cur);
+}
+if (!unit.querySelector('.qb-prev')) {
+unit.insertBefore(mk('span', 'qb-dis qb-prev', '上一页'), unit.firstChild);
+}
+if (!unit.querySelector('.qb-next')) {
+unit.appendChild(mk('span', 'qb-dis qb-next', '下一页'));
+}
+});
+[].forEach.call(main.querySelectorAll('.qb-pager-bar'), function (bar) {
+var vis = [].slice.call(bar.querySelectorAll('.pager, #nav_next_page')).filter(function (u) {
+return u.style.display !== 'none' && !u.classList.contains('qb-pager-top');
+});
+if (!vis.length) bar.setAttribute('data-qb-empty', '1');
+});
+}
+function initFavicon() {
+var head = document.head || document.querySelector('head');
+if (!head) return;
+var src = document.getElementById('page_begin_html');
+if (!src) return;
+function iconType(href) {
+var p = href.split('?')[0].split('#')[0].toLowerCase();
+if (p.slice(-4) === '.png') return 'image/png';
+if (p.slice(-4) === '.svg') return 'image/svg+xml';
+if (p.slice(-5) === '.jpeg') return 'image/jpeg';
+if (p.slice(-4) === '.jpg') return 'image/jpeg';
+if (p.slice(-4) === '.gif') return 'image/gif';
+if (p.slice(-4) === '.webp') return 'image/webp';
+if (p.slice(-4) === '.ico') return 'image/x-icon';
+return '';
+}
+var userHrefs = [];
+[].forEach.call(src.querySelectorAll('link[rel="shortcut icon"], link[rel="icon"]'), function (el) {
+var h = el.getAttribute('href') || el.href;
+if (h && userHrefs.indexOf(h) === -1) userHrefs.push(h);
+});
+if (!userHrefs.length) return;
+function isIconLink(el) {
+if (!el || el.nodeName !== 'LINK') return false;
+var rel = (el.getAttribute('rel') || '').toLowerCase();
+return rel === 'icon' || rel === 'shortcut icon';
+}
+var FAV_VER = '6.20';
+function bust(href) {
+if (/[?&]v=/.test(href)) return href;
+return href + (href.indexOf('?') === -1 ? '?' : '&') + 'v=' + FAV_VER;
+}
+var desired = [];
+userHrefs.forEach(function (h) {
+var b = bust(h);
+if (desired.indexOf(b) === -1) desired.push(b);
+});
+function alreadyOK() {
+var cur = [].slice.call(head.querySelectorAll('link[rel="shortcut icon"], link[rel="icon"]'));
+if (cur.length !== desired.length) return false;
+for (var i = 0; i < cur.length; i++) {
+if (desired.indexOf(cur[i].getAttribute('href')) === -1) return false;
+}
+return document.querySelectorAll('body link[rel="shortcut icon"], body link[rel="icon"]').length === 0;
+}
+function apply() {
+if (alreadyOK()) return;
+[].forEach.call(document.querySelectorAll('body link[rel="shortcut icon"], body link[rel="icon"]'), function (el) {
+if (el.parentNode) el.parentNode.removeChild(el);
+});
+[].forEach.call(head.querySelectorAll('link[rel="shortcut icon"], link[rel="icon"]'), function (el) {
+if (el.parentNode) el.parentNode.removeChild(el);
+});
+desired.forEach(function (href) {
+var link = document.createElement('link');
+link.setAttribute('rel', 'icon');
+var t = iconType(href);
+if (t) link.setAttribute('type', t);
+link.setAttribute('href', href);
+head.appendChild(link);
+});
+var touch = head.querySelector('link[rel="apple-touch-icon"]');
+if (touch) touch.setAttribute('href', desired[0]);
+}
+apply();
+try {
+new MutationObserver(function (ms) {
+var dirty = false;
+ms.forEach(function (m) {
+if (m.type === 'childList') {
+[].forEach.call(m.addedNodes, function (n) {
+if (!isIconLink(n)) return;
+var h = n.getAttribute('href');
+if (!h || desired.indexOf(h) === -1) {
+if (n.parentNode) n.parentNode.removeChild(n);
+dirty = true;
+}
+});
+} else if (m.type === 'attributes' && m.attributeName === 'href') {
+var n2 = m.target;
+if (!isIconLink(n2) || !head.contains(n2)) return;
+if (desired.indexOf(n2.getAttribute('href')) === -1) dirty = true;
+}
+});
+if (dirty) apply();
+}).observe(head, { childList: true, attributes: true });
+} catch (e) { }
+var n = 0;
+var t = setInterval(function () {
+n++;
+apply();
+if (n >= 10) clearInterval(t);
+}, 1000);
+}
+function syncDarkClass(on) {
+var root = document.documentElement;
+var body = document.body;
+if (on) {
+root.classList.add('qb-dark');
+if (body) body.classList.add('qb-dark');
+} else {
+root.classList.remove('qb-dark');
+if (body) body.classList.remove('qb-dark');
+}
+}
+function initDarkMode() {
+var btn = document.getElementById('qb-dark-toggle');
+var icon = document.getElementById('qb-dark-icon');
+if (!btn) return;
+var dark = localStorage && localStorage.getItem('qb-dark');
+var on = (dark === '1') || (dark === null && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+syncDarkClass(on);
+if (icon) icon.textContent = on ? '☀️' : '🌙';
+btn.addEventListener('click', function (e) {
+e.preventDefault();
+on = !on;
+syncDarkClass(on);
+if (icon) icon.textContent = on ? '☀️' : '🌙';
+if (localStorage) localStorage.setItem('qb-dark', on ? '1' : '0');
+});
+}
+var TOP_ARROW_SVG =
+'<svg class="qb-top-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" ' +
+'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+'<path d="M12 19V5"/><path d="M5 12l7-7 7 7"/></svg>' +
+'<svg class="qb-top-ring" viewBox="0 0 44 44" aria-hidden="true">' +
+'<circle class="qb-top-ring-bg" cx="22" cy="22" r="18.5"/>' +
+'<circle class="qb-top-ring-fg" cx="22" cy="22" r="18.5"/></svg>';
+function createBackToTop() {
+var btn = document.getElementById('qb-top');
+if (!btn) {
+btn = document.createElement('button');
+btn.type = 'button';
+btn.id = 'qb-top';
+btn.className = 'qb-top';
+document.body.appendChild(btn);
+}
+if (!btn.querySelector('.qb-top-ico')) btn.innerHTML = TOP_ARROW_SVG;
+if (btn.tagName !== 'BUTTON') {
+btn.setAttribute('role', 'button');
+btn.setAttribute('tabindex', '0');
+}
+if (!btn.getAttribute('aria-label')) btn.setAttribute('aria-label', '回到顶部');
+btn.setAttribute('title', '回到顶部');
+var ring = btn.querySelector('.qb-top-ring-fg');
+var CIRC = 2 * Math.PI * (ring ? parseFloat(ring.getAttribute('r')) || 18.5 : 18.5);
+if (ring) {
+ring.style.strokeDasharray = CIRC;
+ring.style.strokeDashoffset = CIRC;
+}
+var isHidden = true;
+var ticking = false;
+function paint() {
+ticking = false;
+var doc = document.documentElement;
+var max = doc.scrollHeight - window.innerHeight;
+var p = max > 0 ? window.pageYOffset / max : 0;
+if (p < 0) p = 0;
+if (p > 1) p = 1;
+if (ring) ring.style.strokeDashoffset = String(CIRC * (1 - p));
+var show = window.pageYOffset > 300;
+if (show === isHidden) {
+isHidden = !show;
+if (show) btn.classList.add('show'); else btn.classList.remove('show');
+}
+}
+paint();
+window.addEventListener('scroll', function () {
+if (ticking) return;
+ticking = true;
+requestAnimationFrame(paint);
+}, { passive: true });
+var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+var lock = false;
+function toTop() {
+if (lock) return;
+lock = true;
+window.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' });
+setTimeout(function () { lock = false; }, 800);
+}
+btn.addEventListener('click', toTop);
+btn.addEventListener('keydown', function (e) {
+if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
+e.preventDefault();
+toTop();
+}
+});
+}
+function readArchiveMonths() {
+var out = [], seen = {};
+[].forEach.call(document.querySelectorAll('#sidebar_postarchive a'), function (a) {
+var m = (a.textContent || '').replace(/\s+/g, ' ')
+.match(/(\d{4})\s*年\s*(\d{1,2})\s*月\s*[（(]\s*(\d+)/);
+if (!m) return;
+var key = m[1] + '-' + ('0' + m[2]).slice(-2);
+if (seen[key]) return;
+seen[key] = 1;
+out.push({ key: key, y: +m[1], m: +m[2], n: +m[3], url: a.href.split('#')[0] });
+});
+out.sort(function (a, b) { return a.key < b.key ? 1 : -1; });
+return out;
+}
+function parseMonthPage(html, mo) {
+var doc = new DOMParser().parseFromString(html, 'text/html');
+var items = [].slice.call(doc.querySelectorAll('.entrylistItem')).map(function (it) {
+var a = it.querySelector('.entrylistItemTitle');
+var desc = (it.querySelector('.entrylistItemPostDesc') || {}).textContent || '';
+var d = desc.match(/(\d{4})-(\d{2})-(\d{2})\s+(\d{2}:\d{2})/);
+var r = desc.match(/阅读\s*[（(]\s*(\d+)/);
+return {
+t: ((a ? a.textContent : '') || '').replace(/\s+/g, ' ').trim() || '(无标题)',
+u: a ? a.href : mo.url,
+d: d ? d[1] + '-' + d[2] + '-' + d[3] : mo.key + '-01',
+hm: d ? d[4] : '',
+r: r ? +r[1] : 0
+};
+});
+return { key: mo.key, y: mo.y, m: mo.m, n: mo.n, url: mo.url, items: items };
+}
+var ARC_TTL = 24 * 3600 * 1000;
+function arcCacheKey(key) {
+return 'qb-arc-v2:' + location.pathname.split('/p/')[0] + ':' + key;
+}
+function readArcCache(key) {
+try {
+var c = JSON.parse(localStorage.getItem(arcCacheKey(key)) || 'null');
+if (c && c.t && Date.now() - c.t < ARC_TTL && c.d && c.d.length) return c.d;
+} catch (e) { }
+return null;
+}
+function writeArcCache(key, items) {
+if (!items || !items.length) return;
+try { localStorage.setItem(arcCacheKey(key), JSON.stringify({ t: Date.now(), d: items })); }
+catch (e) { }
+}
+function clearArcCacheV1() {
+try { localStorage.removeItem('qb-arc-v1:' + location.pathname.split('/p/')[0]); } catch (e) {}
+}
+function fetchArchiveMonth(mo) {
+var hit = readArcCache(mo.key);
+if (hit) return Promise.resolve(hit);
+return fetch(mo.url, { credentials: 'same-origin' }).then(function (r) {
+if (!r.ok) throw new Error('HTTP ' + r.status);
+return r.text();
+}).then(function (h) {
+var items = parseMonthPage(h, mo).items;
+writeArcCache(mo.key, items);
+return items;
+});
+}
+function arcQueue(max) {
+var q = [], running = 0;
+function pump() {
+while (running < max && q.length) {
+var job = q.shift();
+running += 1;
+var fin = function () { running -= 1; pump(); };
+Promise.resolve().then(job.fn).then(job.ok, job.bad).then(fin, fin);
+}
+}
+return function (fn, ok, bad) { q.push({ fn: fn, ok: ok, bad: bad }); pump(); };
+}
+function buildArchiveShell(box, months, curKey) {
+var map = {}, lastY = 0;
+months.forEach(function (mo) {
+if (mo.y !== lastY) {
+lastY = mo.y;
+var yTotal = 0;
+months.forEach(function (x) { if (x.y === mo.y) { yTotal += x.n; } });
+var yh = mk('div', 'qb-arc-yhd');
+yh.appendChild(mk('span', 'qb-arc-yname', String(mo.y)));
+yh.appendChild(mk('span', 'qb-arc-ytotal', yTotal + ' 篇'));
+box.appendChild(yh);
+}
+var sec = mk('section', 'qb-arc-mo' + (mo.key === curKey ? ' qb-arc-cur' : ''));
+sec.id = 'qb-arc-' + mo.key;
+var hd = mk('div', 'qb-arc-mhd');
+var name = mk('a', 'qb-arc-mname', mo.m + ' 月');
+name.href = mo.url;
+name.title = '打开 ' + mo.y + ' 年 ' + mo.m + ' 月的归档页';
+hd.appendChild(name);
+hd.appendChild(mk('span', 'qb-arc-mcount', mo.n + ' 篇'));
+hd.appendChild(mk('span', 'qb-arc-mline'));
+sec.appendChild(hd);
+var ul = mk('ul', 'qb-arc-list');
+ul.style.minHeight = (mo.n * 30 + 6) + 'px';
+ul.appendChild(mk('li', 'qb-arc-tip qb-arc-pend', '· · ·'));
+sec.appendChild(ul);
+box.appendChild(sec);
+map[mo.key] = ul;
+});
+return map;
+}
+function fillArchiveMonth(ul, mo, items) {
+ul.innerHTML = '';
+ul.style.minHeight = '';
+if (!items || !items.length) {
+var li0 = mk('li', 'qb-arc-tip');
+var a0 = mk('a', 'qb-arc-jump', '打开该月 · ' + mo.n + ' 篇 ↗');
+a0.href = mo.url;
+li0.appendChild(a0);
+ul.appendChild(li0);
+return;
+}
+items.forEach(function (it) {
+var li = mk('li', 'qb-arc-item');
+var a = mk('a', 'qb-arc-link');
+a.href = it.u;
+a.title = it.d + (it.hm ? ' ' + it.hm : '') + ' · ' + it.t;
+a.appendChild(mk('span', 'qb-arc-d', it.d.slice(5) + (it.hm ? ' ' + it.hm : '')));
+a.appendChild(mk('span', 'qb-arc-t', it.t));
+if (it.r) a.appendChild(mk('span', 'qb-arc-r', String(it.r)));
+li.appendChild(a);
+ul.appendChild(li);
+});
+}
+function renderArchiveIndex(panel, months, curKey, onJump) {
+var total = 0, years = [];
+months.forEach(function (mo) {
+total += mo.n;
+var y = years[years.length - 1];
+if (!y || y.y !== mo.y) { y = { y: mo.y, ms: [] }; years.push(y); }
+y.ms.push(mo);
+});
+var cnt = panel.querySelector('.qb-count');
+if (cnt) cnt.textContent = total + ' 篇';
+var wrap = mk('div', 'qb-arc-idx');
+years.forEach(function (y) {
+var row = mk('div', 'qb-arc-idx-row');
+row.appendChild(mk('span', 'qb-arc-idx-y', String(y.y)));
+var ms = mk('div', 'qb-arc-idx-ms');
+y.ms.forEach(function (mo) {
+var a = mk('a', 'qb-arc-idx-m' + (mo.key === curKey ? ' on' : ''));
+a.href = '#qb-arc-' + mo.key;
+a.setAttribute('data-t', 'qb-arc-' + mo.key);
+a.setAttribute('data-key', mo.key);
+a.title = mo.y + ' 年 ' + mo.m + ' 月 · ' + mo.n + ' 篇';
+a.appendChild(document.createTextNode(mo.m + '月'));
+a.appendChild(mk('i', 'qb-arc-idx-n', String(mo.n)));
+ms.appendChild(a);
+});
+row.appendChild(ms);
+wrap.appendChild(row);
+});
+panel.appendChild(wrap);
+wrap.addEventListener('click', function (e) {
+var a = e.target.closest ? e.target.closest('a') : null;
+if (!a) return;
+var t = document.getElementById(a.getAttribute('data-t'));
+if (!t) return;
+e.preventDefault();
+[].forEach.call(wrap.querySelectorAll('.qb-arc-idx-m'), function (x) { x.classList.remove('on'); });
+a.classList.add('on');
+if (onJump) onJump(a.getAttribute('data-key'));
+window.scrollTo({
+top: t.getBoundingClientRect().top + window.pageYOffset - 72,
+behavior: 'smooth'
+});
+history.replaceState(null, '', a.getAttribute('href'));
+});
+}
+function normalizeArchiveUrl(months) {
+var latest = months && months[0];
+if (!latest) return;
+try {
+var u = new URL(latest.url, location.href);
+u.search = '?view=all';
+u.hash = '';
+if (u.pathname + u.search !== location.pathname + location.search) {
+history.replaceState(null, '', u.pathname + u.search);
+}
+} catch (e) { }
+var site = (document.querySelector('.qb-brand-text') || {}).textContent || '';
+site = site.replace(/\s+/g, ' ').trim();
+if (site) document.title = '全部归档 - ' + site;
+}
+var ARC_WAITING = 0;
+function retryFullArchive(left) {
+if (!left || document.querySelector('.qb-archive')) return false;
+if (!/\/p\/archive\/\d{4}\/\d{1,2}/.test(location.pathname)) return false;
+if (readArchiveMonths().length < 2) return false;
+if (!document.querySelector('#mainContent .entrylist')) return false;
+[].forEach.call(left.querySelectorAll('.qb-panel'), function (p) {
+if (p.parentNode) p.parentNode.removeChild(p);
+});
+buildFullArchive(left);
+return !!document.querySelector('.qb-archive');
+}
+function waitArchiveReady(left) {
+if (ARC_WAITING) return 'wait';
+ARC_WAITING = 1;
+if (!left.querySelector('.qb-panel')) {
+var ph = makePanel('全部归档', '读取中');
+ph.appendChild(mk('div', 'qb-arc-wait', '正在读取月份索引…'));
+left.insertBefore(ph, left.firstChild);
+}
+var tries = 0;
+var timer = setInterval(function () {
+tries += 1;
+if (document.querySelector('.qb-archive')) { clearInterval(timer); ARC_WAITING = 0; return; }
+var ready = document.querySelector('#mainContent .entrylist') && readArchiveMonths().length >= 2;
+if (ready) {
+clearInterval(timer);
+ARC_WAITING = 0;
+retryFullArchive(left);
+syncArchiveNav();
+return;
+}
+if (tries >= 60) {
+clearInterval(timer);
+ARC_WAITING = 0;
+if (document.querySelector('.qb-archive')) return;
+[].forEach.call(left.querySelectorAll('.qb-panel'), function (p) {
+if (p.parentNode) p.parentNode.removeChild(p);
+});
+buildPostList(left);
+}
+}, 200);
+return 'wait';
+}
+function buildFullArchive(left) {
+if (!/\/p\/archive\/\d{4}\/\d{1,2}/.test(location.pathname)) return false;
+if (document.querySelector('.qb-archive')) return true;
+var entry = document.querySelector('#mainContent .entrylist');
+var months = readArchiveMonths();
+if (!entry || !months.length) return waitArchiveReady(left);
+if (months.length < 2) return false;
+var curKey = months[0].key;
+var total = 0;
+months.forEach(function (mo) { total += mo.n; });
+var panel = makePanel('全部归档', total + ' 篇');
+left.insertBefore(panel, left.firstChild);
+var box = mk('div', 'qb-archive');
+var hd = mk('div', 'qb-arc-hd');
+hd.appendChild(mk('span', 'qb-arc-title', '全部归档'));
+hd.appendChild(mk('span', 'qb-arc-meta',
+total + ' 篇 · ' + months.length + ' 个月 · ' +
+months[months.length - 1].key + ' → ' + months[0].key));
+box.appendChild(hd);
+var bodyBox = mk('div', 'qb-arc-body');
+box.appendChild(bodyBox);
+entry.parentNode.insertBefore(box, entry);
+entry.style.display = 'none';
+var map = buildArchiveShell(bodyBox, months, curKey);
+var byKey = {}, state = {};
+months.forEach(function (mo) { byKey[mo.key] = mo; });
+var enqueue = arcQueue(4);
+function loadMonth(key) {
+var mo = byKey[key];
+if (!mo || state[key]) return;
+state[key] = 'load';
+var ul = map[key];
+if (ul) { ul.innerHTML = ''; ul.appendChild(mk('li', 'qb-arc-tip', '加载中…')); }
+enqueue(function () { return fetchArchiveMonth(mo); }, function (items) {
+state[key] = 'ok';
+fillArchiveMonth(ul, mo, items);
+}, function () {
+delete state[key];
+fillArchiveMonth(ul, mo, null);
+});
+}
+if ('IntersectionObserver' in window) {
+var io = new IntersectionObserver(function (ents) {
+ents.forEach(function (en) {
+if (!en.isIntersecting) return;
+var k = en.target.getAttribute('data-arc-key');
+if (!k) return;
+io.unobserve(en.target);
+loadMonth(k);
+});
+}, { rootMargin: '600px 0px' });
+months.forEach(function (mo) {
+var sec = document.getElementById('qb-arc-' + mo.key);
+if (!sec) return;
+sec.setAttribute('data-arc-key', mo.key);
+io.observe(sec);
+});
+} else {
+months.forEach(function (mo) { loadMonth(mo.key); });
+}
+renderArchiveIndex(panel, months, curKey, loadMonth);
+clearArcCacheV1();
+normalizeArchiveUrl(months);
+return true;
+}
+function syncArchiveNav() {
+var link = document.querySelector('.qb-nav a[href*="/p/archive/"]');
+if (!link) return;
+var months = readArchiveMonths();
+if (!months.length) return;
+link.href = months[0].url;
+if (location.pathname.indexOf('/p/archive/') > -1) link.classList.add('on');
+}
+function boot() {
+var left = document.getElementById('leftcontentcontainer');
+var body = document.getElementById('cnblogs_post_body');
+hoistNav();
+splitDayGroups();
+enhancePager();
+if (left) {
+var done = false;
+if (body) { done = buildToc(body, left); }
+if (!done) { done = buildFullArchive(left); }
+if (!done) { buildPostList(left); }
+}
+moveSideWidgets();
+lazyImages();
+markNav();
+syncArchiveNav();
+initFavicon();
+initDarkMode();
+createBackToTop();
+var tries = 0;
+var timer = setInterval(function () {
+tries += 1;
+splitDayGroups();
+enhancePager();
+moveSideWidgets();
+retryFullArchive(left);
+syncArchiveNav();
+if (tries > 12) clearInterval(timer);
+}, 500);
+}
+if (document.readyState === 'loading') {
+document.addEventListener('DOMContentLoaded', boot);
+} else {
+boot();
+}
+})();</script>

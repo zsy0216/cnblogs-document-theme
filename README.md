@@ -18,9 +18,9 @@
 
 > ⚠️ **第 0 步（最重要）**：设置 → 皮肤 → 选择 **`Custom`（自定义）**，否则后续全部不生效！
 
-1. **页面定制 CSS 代码** → 全选**替换为 `css/theme-v6.min.css`（31.0KB，比全版 -35%）** → 保存
+1. **页面定制 CSS 代码** → 全选**替换为 `css/theme-v6.min.css`（30.7KB，比源文件 -36%）** → 保存
 2. **页首 HTML 代码** → 粘贴 `snippets/head-nav-v6.html`（3.5KB）→ 保存
-3. **页脚 HTML 代码** → 粘贴 `snippets/footer-script-v6.html`（41.6KB，需先清空）→ 保存
+3. **页脚 HTML 代码** → 粘贴 `snippets/footer-script-v6.min.html`（25.9KB，需先清空）→ 保存
 4. **公告** → 粘贴 `snippets/announcement-v6.html`（0.9KB）→ 保存
 5. 前台 `Ctrl+F5` 强刷
 
@@ -405,6 +405,7 @@ function hoistNav() {
 | `snippets/footer-script-v6.html` | 外部注释第 1 行 + `<script>` 内第 1 行 |
 | `snippets/console-inject.js` | 头部第 2 行 |
 | `css/theme-v6.min.css` | 第 1 行（压缩时唯一保留的横幅） |
+| `snippets/footer-script-v6.min.html` | 第 1 行（同上，生成物） |
 
 **改完代码必须同时改版本号**，一条命令把五处对齐：
 
@@ -427,23 +428,75 @@ python _dev-tools/bump-version.py --check
 
 完整历史见 [CHANGELOG.md](CHANGELOG.md)。
 
+## 体积与压缩
+
+真正要贴进博客园后台的只有两个字段，其余都是本地开发文件：
+
+| 字段 | 粘贴源文件 | 体积 | 压缩前 |
+|:---|:---|---:|---:|
+| 页面定制 CSS | `css/theme-v6.min.css` | 30.7KB | 49.3KB（源） |
+| 页脚 HTML | `snippets/footer-script-v6.min.html` | 25.9KB | 41.6KB（源） |
+| 页首 HTML | `snippets/head-nav-v6.html` | 3.5KB | 不压（够小） |
+| **合计** | | **60.1KB** | 94.4KB |
+
+两个压缩产物都由源文件生成，**不要直接改**：
+
+```bash
+python _dev-tools/gen-min.py         # CSS  -> theme-v6.min.css
+python _dev-tools/gen-footer-min.py  # 页脚 -> footer-script-v6.min.html
+# 或者一条命令连版本号一起处理：
+python _dev-tools/bump-version.py -n "改动摘要"
+```
+
+### 压缩做了什么
+
+只做无损变换，不改变任何行为：
+
+| 产物 | 处理 |
+|:---|:---|
+| CSS | 删注释、折叠空白、块尾分号、`0px`→`0`、`0.5`→`.5`、`#ffffff`→`#fff` |
+| 页脚 JS | 删注释、删每行缩进、删空行、折叠行内空格 |
+
+**不动的**：变量名、表达式、语句顺序、换行位置。保留换行是为了 ASI 语义不变，出问题时还能按行定位。
+
+页脚压缩器最容易翻车的地方是把字符串或正则里的空格也折叠掉（`'a  b'`、`/\s+/`）。所以先把字符串与正则字面量整体抽成占位符，压缩完再还原 —— 这一步保证 437 个字面量原样保留。
+
+### 怎么确认压缩没压坏
+
+```bash
+node _dev-tools/verify-min-parity.js
+```
+
+对 6 个页面（首页 / 随笔分页 / 文章页 / 归档页 / 标签页 / 分类页）分别注入**源版**和**压缩版**，逐项比较后输出是否一致：
+
+- 结构：左栏面板标题、目录条目、分页按钮文本、卡片高度、归档年月与文章数、回到顶部按钮属性；
+- 样式：15 个代表元素 × 15 项计算样式（背景色、字色、字号、字重、内外边距、边框、圆角、阴影、行高、宽高）；
+- 报错：过滤掉博客园自身的 `Permissions policy` 噪音后应为 0。
+
+当前结果：6 个页面全部一致。
+
+> 注意：验证脚本会先清掉页面上旧脚本留下的 `.qb-archive` 等结构，否则幂等守卫会让新脚本直接 `return`，等于没测到。
+
 ## 文件说明
 
 ```
 css/theme-v6.css              源文件（开发版，全注释，正式环境粘贴 min）
-css/theme-v6.min.css          发布版（已压缩，效果与全版等同，大小 -35%，头部保留版本横幅）
+css/theme-v6.min.css          发布版（已压缩 -36%，头部保留版本横幅）
 css/变量说明.md               主题变量表（--accent 等）
 snippets/head-nav-v6.html     顶栏结构（页首 HTML，含暗黑开关）
 snippets/announcement-v6.html 公告模板（内联样式，抗覆盖）
-snippets/footer-script-v6.html 左栏目录 + 右栏搬运 + 归档时间线 + 分页 + 回到顶部 + 暗黑开关（页脚 HTML，需先清空）
+snippets/footer-script-v6.html 页脚源文件：左栏目录 + 右栏搬运 + 归档时间线 + 分页 + 回到顶部 + 暗黑开关（改逻辑改这里）
+snippets/footer-script-v6.min.html 页脚发布版（-38%，正式环境粘贴这个）
 preview/home-v6.html          首页离线预览（真实 DOM 复刻）
 preview/post-v6.html          文章页离线预览
 CHANGELOG.md                  版本变更记录（每次改动 +1 版，含提交哈希）
-_dev-tools/gen-min.py         由源文件生成 min 版（版本横幅也从源码抽取）
+_dev-tools/gen-min.py         由源文件生成 min 版 CSS（版本横幅也从源码抽取）
+_dev-tools/gen-footer-min.py  由源文件生成页脚压缩版（字符串/正则先抽出保护）
+.gitattributes               固定 LF 换行，避免 core.autocrlf 把文件转成 CRLF
 _dev-tools/bump-version.py    版本号 + 文件头注释 + min + CHANGELOG 一键同步
 ```
 
-> **开发工作流**：本机只改 `theme-v6.css`，确定效果后跑一次 `python _dev-tools/bump-version.py -n "改动摘要"` —— 它会同时升版本号、改四份文件头、重建 min 版、往 CHANGELOG 插一行；发布时粘贴 `min` 版，正式环境立即生效。
+> **开发工作流**：本机只改 `theme-v6.css` 与 `footer-script-v6.html`，**不要改 `.min.` 文件**（都是生成物）。确定效果后跑一次 `python _dev-tools/bump-version.py -n "改动摘要"` —— 它会同时升版本号、改四份文件头、重建两个压缩产物、往 CHANGELOG 插一行；发布时粘贴两个 `min` 版，正式环境立即生效。
 
 ## 回滚
 
