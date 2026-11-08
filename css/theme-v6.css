@@ -687,6 +687,249 @@ body.qb-dark .qb-logo .qb-logo-dot { fill: #ff7a5c; }
 .entrylistItemPostDesc a { color: var(--meta) !important; }
 .entrylistItemPostDesc a:hover { color: var(--accent-deep) !important; }
 
+/* ---------- 5.1b 归档页：全量时间线（由页脚脚本生成 .qb-archive）
+   博客园按月归档页只有一个月的内容，脚本会把全部月份抓下来拼成一条时间线，
+   样式对齐首页卡片：一年一组、一月一小节、一篇一行。 ---------- */
+.qb-archive {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    box-sizing: border-box;
+    padding: 20px 22px 14px;
+    margin: 0 0 16px;
+}
+.qb-arc-hd {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--line);
+}
+.qb-arc-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--ink);
+    letter-spacing: .01em;
+}
+.qb-arc-meta {
+    font-size: 12.5px;
+    color: var(--meta);
+    font-variant-numeric: tabular-nums;
+}
+
+/* 年份分组标题 */
+.qb-arc-yhd {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 20px 0 2px;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--ink);
+    letter-spacing: .06em;
+    font-variant-numeric: tabular-nums;
+}
+.qb-arc-yname { color: var(--ink); }
+.qb-arc-ytotal {
+    font-size: 11.5px;
+    font-weight: 500;
+    color: var(--meta);
+    letter-spacing: 0;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 1px 7px;
+}
+.qb-arc-yhd::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--line);
+}
+
+/* 月份小节 */
+.qb-arc-mo {
+    padding: 8px 0 2px;
+    scroll-margin-top: 74px;
+}
+.qb-arc-mhd {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin: 0 0 4px;
+}
+.qb-arc-mname {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--body);
+    font-variant-numeric: tabular-nums;
+    text-decoration: none !important;
+    border-bottom: 1px dotted transparent;
+    transition: color .16s ease, border-color .16s ease;
+}
+.qb-arc-mname:hover {
+    color: var(--accent-deep);
+    border-bottom-color: var(--accent);
+}
+.qb-arc-mcount {
+    font-size: 11.5px;
+    color: var(--meta);
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 1px 7px;
+    font-variant-numeric: tabular-nums;
+}
+.qb-arc-mline {
+    flex: 1;
+    height: 1px;
+    background: var(--line);
+    opacity: .7;
+}
+/* 当前地址对应的月份：标题换成强调色 */
+.qb-arc-mo.qb-arc-cur .qb-arc-mname { color: var(--accent-deep); }
+.qb-arc-mo.qb-arc-cur .qb-arc-mcount { color: var(--accent-deep); border-color: var(--accent); }
+
+/* 文章行 */
+.qb-arc-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+.qb-arc-item { margin: 0; }
+.qb-arc-link {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    padding: 6px 10px;
+    border-radius: var(--radius-sm);
+    text-decoration: none !important;
+    transition: background .16s ease;
+}
+.qb-arc-link:hover { background: var(--accent-soft); }
+.qb-arc-d {
+    flex: 0 0 86px;
+    width: 86px;
+    font-size: 11.5px;
+    color: var(--num);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+.qb-arc-t {
+    flex: 1;
+    min-width: 0;
+    font-size: 13.5px;
+    color: var(--body);
+    line-height: 1.6;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.qb-arc-link:hover .qb-arc-t { color: var(--accent-deep); }
+.qb-arc-r {
+    flex: 0 0 auto;
+    font-size: 11px;
+    color: var(--meta);
+    font-variant-numeric: tabular-nums;
+}
+.qb-arc-r::after {
+    content: " 阅";
+    font-size: 10px;
+    opacity: .75;
+}
+
+/* 抓取失败/无文章时的占位行：给一个「打开该月」入口，不留空白 */
+.qb-arc-tip {
+    font-size: 12.5px;
+    color: var(--meta);
+    padding: 7px 10px;
+    list-style: none;
+}
+.qb-arc-jump {
+    color: var(--accent-deep) !important;
+    text-decoration: none !important;
+    border-bottom: 1px dotted var(--accent);
+}
+.qb-arc-jump:hover { color: var(--accent) !important; }
+
+/* 还没加载的月份：只占一行淡色点，滚到附近才发请求（见页脚脚本的 IntersectionObserver） */
+.qb-arc-pend {
+    letter-spacing: .2em;
+    opacity: .45;
+    padding: 6px 10px;
+}
+
+/* 侧栏月份索引还没到时的左栏占位（一般只出现几百毫秒） */
+.qb-arc-wait {
+    font-size: 12.5px;
+    line-height: 1.7;
+    color: var(--meta);
+    padding: 4px 2px 2px;
+}
+
+/* 左栏：年份 + 月份胶囊索引 */
+.qb-arc-idx { padding: 2px 0 2px; }
+.qb-arc-idx-row {
+    display: flex;
+    gap: 10px;
+    padding: 9px 0;
+    border-top: 1px dashed var(--line);
+}
+.qb-arc-idx-row:first-child { border-top: 0; padding-top: 4px; }
+.qb-arc-idx-y {
+    flex: 0 0 36px;
+    font-size: 12.5px;
+    font-weight: 700;
+    color: var(--ink);
+    padding-top: 5px;
+    font-variant-numeric: tabular-nums;
+}
+.qb-arc-idx-ms {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+.qb-arc-idx-m {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    border-radius: 999px;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    font-size: 12px;
+    line-height: 1.4;
+    color: var(--body) !important;
+    text-decoration: none !important;
+    transition: background .16s ease, border-color .16s ease, color .16s ease;
+}
+.qb-arc-idx-m i {
+    font-style: normal;
+    font-size: 10.5px;
+    color: var(--meta);
+    font-variant-numeric: tabular-nums;
+}
+.qb-arc-idx-m:hover {
+    background: var(--accent-soft);
+    border-color: var(--accent);
+    color: var(--accent-deep) !important;
+}
+.qb-arc-idx-m.on {
+    background: var(--accent-deep);
+    border-color: var(--accent-deep);
+    color: #fff !important;
+}
+.qb-arc-idx-m.on i { color: rgba(255, 255, 255, .82); }
+/* 暗色下强调色是浅蓝，白字对比不够，改成深字 */
+body.qb-dark .qb-arc-idx-m.on {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #0d1117 !important;
+}
+body.qb-dark .qb-arc-idx-m.on i { color: rgba(13, 17, 23, .7); }
+
 /* ---------- 5.2 标签文章（PostList / tag list item） ---------- */
 .PostList {
     background: var(--card);
