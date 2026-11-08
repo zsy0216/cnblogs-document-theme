@@ -18,9 +18,9 @@
 
 > ⚠️ **第 0 步（最重要）**：设置 → 皮肤 → 选择 **`Custom`（自定义）**，否则后续全部不生效！
 
-1. **页面定制 CSS 代码** → 全选**替换为 `css/theme-v6.min.css`（30.0KB，比全版 -37%）** → 保存
+1. **页面定制 CSS 代码** → 全选**替换为 `css/theme-v6.min.css`（31.0KB，比全版 -35%）** → 保存
 2. **页首 HTML 代码** → 粘贴 `snippets/head-nav-v6.html`（3.5KB）→ 保存
-3. **页脚 HTML 代码** → 粘贴 `snippets/footer-script-v6.html`（39.8KB，需先清空）→ 保存
+3. **页脚 HTML 代码** → 粘贴 `snippets/footer-script-v6.html`（41.6KB，需先清空）→ 保存
 4. **公告** → 粘贴 `snippets/announcement-v6.html`（0.9KB）→ 保存
 5. 前台 `Ctrl+F5` 强刷
 
@@ -298,6 +298,27 @@ function hoistNav() {
 
 配套：`html { scroll-padding-top: 74px }`，否则点目录或 `#hash` 跳转时目标标题会被压在顶栏下面。
 
+## 回到顶部
+
+右下角 44px 圆形按钮，滚过 300px 才淡入。图标是 inline SVG 的上箭头（Lucide `arrow-up` 的路径：`M12 19V5` + `M5 12l7-7 7 7`），外圈套一圈**阅读进度环**。
+
+旧实现是用 `border-right` + `border-bottom` 转 −45° 画箭头，问题是那条「拐角」只有两个折边、没有竖杆，指向也偏右上，缩到 10px 像个逗号。SVG 线条在任意尺寸下都清晰，还能直接改 `stroke-width`。
+
+| 细节 | 取值 | 理由 |
+|:---|:---|:---|
+| 按钮尺寸 | 44 × 44 | WCAG 建议的最小触控目标；移动端再收到 `right:16px / bottom:20px` |
+| 箭头 | 18px，`stroke-width:2.1`，圆头圆角 | 24 的 viewBox 缩到 18 时线宽会变 1.5px 显细，略微加粗补回来 |
+| 进度环 | `r=18.5`，周长 116.24 | 比按钮内沿缩进 1.5px，和 1px 边框之间留缝，不会叠成「双圈」 |
+| 环轨道 | `stroke: var(--line)` | 没读满的部分也有淡淡一圈，不至于悬空半截 |
+| 进度算法 | `pageYOffset / (scrollHeight - innerHeight)` | `rAF` 节流，滚到底刚好闭合；文章页、归档页高度变化时自动重算 |
+| hover | 上浮 2px + 箭头变强调色 + 阴影加强 | **不改边框颜色**：边框和进度环同为强调色时会糊成两条紫线 |
+| 无障碍 | `<button>` + `aria-label="回到顶部"` + `:focus-visible` 2px 描边 | 键盘 Tab 可达，Enter/Space 触发 |
+| 动效降级 | `prefers-reduced-motion: reduce` | 平移/过渡全关，平滑滚动退化为瞬间跳转 |
+
+老版本留下的是 `div` + 类名 `.qb-top-arrow`，脚本会就地升级（检测不到 `.qb-top-ico` 就重写内部结构，并补 `role=button` / `tabindex` / `aria-label`），所以贴着新版页脚刷新也不会出现「旧按钮 + 没箭头」的中间态。
+
+只想恢复箭头、不要进度环：删掉 `TOP_ARROW_SVG` 里的 `<svg class="qb-top-ring">` 那两行即可，箭头不受影响。
+
 ## 右栏精简
 
 右栏由页脚脚本把 `#sidebar_news`（公告）和 `#blog-sidecolumn`（侧栏小部件）搬进 `#qb-right`。小部件 id 与博客园后台「侧边栏设置」里的条目一一对应。右栏只承担辅助信息，默认隐藏这四块（高度合计 1100px 左右，会把页面拉得很长）：
@@ -373,20 +394,56 @@ function hoistNav() {
 
 纯 CSS，不依赖 JS 权限。断点：≤1024px 收两栏（隐藏右栏），≤860px 单栏。
 
+## 版本与变更记录
+
+版本号写在每个文件的头部注释里，格式统一为 `流苏主题 v6.N · YYYY-MM-DD`：
+
+| 文件 | 位置 |
+|:---|:---|
+| `css/theme-v6.css` | 头部第 2 行（**版本真源**） |
+| `snippets/head-nav-v6.html` | 头部第 1 行 |
+| `snippets/footer-script-v6.html` | 外部注释第 1 行 + `<script>` 内第 1 行 |
+| `snippets/console-inject.js` | 头部第 2 行 |
+| `css/theme-v6.min.css` | 第 1 行（压缩时唯一保留的横幅） |
+
+**改完代码必须同时改版本号**，一条命令把五处对齐：
+
+```bash
+python _dev-tools/bump-version.py -n "本次改动一句话"
+# v6.26 → v6.27：四份文件头 + min 横幅 + CHANGELOG 新行，全部同步
+```
+
+只体检、不改动：
+
+```bash
+python _dev-tools/bump-version.py --check
+```
+
+约定：
+
+- 版本真源是 `css/theme-v6.css` 头部，**其余文件不要手改版本号**，手改会被 `--check` 判为不一致；
+- 每交付一次改动 +1（两段式 `v6.N`），对应 git 一次提交、CHANGELOG 一行；
+- min 版头部刻意保留一行版本注释 —— 压缩会删掉其它所有注释，这行是**线上唯一能自查版本的证据**：粘贴后在页面 `Ctrl+U` 搜 `流苏主题 v6.` 就知道线上跑的是哪一版，不用猜缓存。
+
+完整历史见 [CHANGELOG.md](CHANGELOG.md)。
+
 ## 文件说明
 
 ```
 css/theme-v6.css              源文件（开发版，全注释，正式环境粘贴 min）
-css/theme-v6.min.css          发布版（已压缩，效果与全版等同，大小 -37%）
+css/theme-v6.min.css          发布版（已压缩，效果与全版等同，大小 -35%，头部保留版本横幅）
 css/变量说明.md               主题变量表（--accent 等）
 snippets/head-nav-v6.html     顶栏结构（页首 HTML，含暗黑开关）
 snippets/announcement-v6.html 公告模板（内联样式，抗覆盖）
-snippets/footer-script-v6.html 左栏目录 + 右栏搬运 + 归档时间线 + 分页处理 + 暗黑开关（页脚 HTML，需先清空）
+snippets/footer-script-v6.html 左栏目录 + 右栏搬运 + 归档时间线 + 分页 + 回到顶部 + 暗黑开关（页脚 HTML，需先清空）
 preview/home-v6.html          首页离线预览（真实 DOM 复刻）
 preview/post-v6.html          文章页离线预览
+CHANGELOG.md                  版本变更记录（每次改动 +1 版，含提交哈希）
+_dev-tools/gen-min.py         由源文件生成 min 版（版本横幅也从源码抽取）
+_dev-tools/bump-version.py    版本号 + 文件头注释 + min + CHANGELOG 一键同步
 ```
 
-> **开发工作流**：本机只改 `theme-v6.css`，确定效果后再生成 `theme-v6.min.css`；发布时粘贴 `min` 版，正式环境立即生效。
+> **开发工作流**：本机只改 `theme-v6.css`，确定效果后跑一次 `python _dev-tools/bump-version.py -n "改动摘要"` —— 它会同时升版本号、改四份文件头、重建 min 版、往 CHANGELOG 插一行；发布时粘贴 `min` 版，正式环境立即生效。
 
 ## 回滚
 

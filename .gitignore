@@ -17,8 +17,10 @@ preview/_src/
 preview/shot-*.png
 preview/crop-*.png
 *.js
-# Offline validation
-_dev-tools/
+# Offline validation（一次性验证脚本不入库，但发布流程用到的两个保留）
+_dev-tools/*
+!_dev-tools/gen-min.py
+!_dev-tools/bump-version.py
 preview/ref-*.png
 
 # 本地推送凭据（含 token，绝不能提交）

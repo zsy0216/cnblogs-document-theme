@@ -1,5 +1,8 @@
 /* ============================================================
-   主题 v6.0 —— 基于博客园 2026 真实 DOM 重写
+   流苏主题 v6.26 · 2026-11-08
+   最近：回到顶部按钮改 SVG 箭头 + 阅读进度环；列表页分页统一胶囊样式
+   ------------------------------------------------------------
+   主题 v6 —— 基于博客园 2026 真实 DOM 重写
    ------------------------------------------------------------
    真实结构（curl 实测，2026-11-07）：
      body.skin-custom.has-navbar
@@ -1313,13 +1316,15 @@ body.qb-dark .qb-arc-idx-m.on i { color: rgba(13, 17, 23, .7); }
 #footer img { vertical-align: -3px; height: 14px; }
 
 /* ---------- 8. 回到页首按钮 ---------- */
+/* 回到顶部：44px 圆形 + 上箭头 + 阅读进度环 */
 #qb-top {
     position: fixed;
     right: 24px;
     bottom: 32px;
     z-index: 1000;
-    width: 40px;
-    height: 40px;
+    width: 44px;
+    height: 44px;
+    padding: 0;
     border-radius: 50%;
     background: var(--card);
     border: 1px solid var(--line);
@@ -1327,29 +1332,72 @@ body.qb-dark .qb-arc-idx-m.on i { color: rgba(13, 17, 23, .7); }
     cursor: pointer;
     opacity: 0;
     visibility: hidden;
-    transform: translateY(12px);
-    transition: opacity .2s ease, transform .2s ease, visibility .2s ease, box-shadow .2s ease;
+    transform: translateY(10px) scale(.96);
+    transition: opacity .18s ease, transform .18s ease, visibility .18s ease, box-shadow .2s ease, border-color .2s ease, color .2s ease;
     display: flex;
     align-items: center;
     justify-content: center;
+    color: var(--ink);
+    -webkit-tap-highlight-color: transparent;
 }
 #qb-top.show {
     opacity: 1;
     visibility: visible;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
 }
-#qb-top:hover { box-shadow: var(--shadow-hover); }
-#qb-top:hover .qb-top-arrow { border-top-color: var(--accent-deep); }
-#qb-top:active { transform: scale(0.96); }
-#qb-top .qb-top-arrow {
-    width: 10px;
-    height: 10px;
-    border-right: 2px solid var(--ink);
-    border-bottom: 2px solid var(--ink);
-    border-top: 0;
-    border-left: 0;
-    transform: rotate(-45deg);
-    margin-top: 4px;
+#qb-top:hover {
+    color: var(--accent-deep);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-hover);
+}
+#qb-top:active { transform: translateY(0) scale(.94); }
+#qb-top:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+}
+
+#qb-top .qb-top-ico {
+    position: relative;
+    z-index: 1;
+    width: 18px;
+    height: 18px;
+    transition: transform .2s ease;
+}
+#qb-top:hover .qb-top-ico { transform: translateY(-1.5px); }
+
+#qb-top .qb-top-ring {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+    pointer-events: none;
+}
+#qb-top .qb-top-ring circle {
+    fill: none;
+    stroke-width: 2;
+    stroke-linecap: round;
+}
+#qb-top .qb-top-ring-bg { stroke: var(--line); }
+#qb-top .qb-top-ring-fg {
+    stroke: var(--accent);
+    /* r=18.5 的周长；JS 会按实际 r 覆写，这里只为脚本未跑时兜底 */
+    stroke-dasharray: 116.2;
+    stroke-dashoffset: 116.2;
+    transition: stroke-dashoffset .12s linear;
+}
+
+@media (max-width: 640px) {
+    #qb-top { right: 16px; bottom: 20px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #qb-top,
+    #qb-top .qb-top-ico,
+    #qb-top .qb-top-ring-fg { transition: none; }
+    #qb-top.show { transform: none; }
+    #qb-top:hover { transform: none; }
+    #qb-top:hover .qb-top-ico { transform: none; }
 }
 
 /* ============================================================
@@ -1467,6 +1515,7 @@ body.qb-dark #qb-top {
     background: var(--card);
     border-color: var(--line);
 }
+body.qb-dark #qb-top .qb-top-ring-bg { stroke: var(--line); }
 body.qb-dark #blog-sidecolumn #q,
 body.qb-dark #blog-sidecolumn input[type="text"],
 body.qb-dark #blog-sidecolumn input[type="button"] {
@@ -1474,10 +1523,6 @@ body.qb-dark #blog-sidecolumn input[type="button"] {
 }
 body.qb-dark #blog-calendar td,
 body.qb-dark #blog-calendar th { color: var(--body); }
-body.qb-dark #qb-top .qb-top-arrow {
-    border-right-color: var(--ink);
-    border-bottom-color: var(--ink);
-}
 
 /* 图片在暗底上过亮时稍微压一点（GitHub 也这么做） */
 body.qb-dark #post_detail img,

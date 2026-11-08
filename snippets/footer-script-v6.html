@@ -1,8 +1,8 @@
-<!-- 主题 v6.0 页脚 HTML 重要脚本
+<!-- 流苏主题 v6.26 · 2026-11-08 页脚 HTML 重要脚本
      位置：博客园后台 -> 设置 -> 页脚 HTML 代码
      说明：1. 这里的 script 包含全部 DOM 操作逻辑（目录生成、滚动高亮、部件搬运）。2. 粘贴前务必备份原有内容。3. 博客园 HTML 校验器：确保没有未配对的尖括号，所有符号合法。 -->
 <script>
-/* 主题 v6.1 页脚：列表页生成文章列表目录 / 详情页生成文章目录 / 滚动高亮 */
+/* 流苏主题 v6.26 · 2026-11-08 页脚：列表页文章目录 / 详情页文章目录 / 归档时间线 / 分页 / 回到顶部 / 滚动高亮 */
 (function () {
   'use strict';
 
@@ -490,28 +490,87 @@
       if (localStorage) localStorage.setItem('qb-dark', on ? '1' : '0');
     });
   }
+  /* 4b. 回到顶部
+     原来用 border-right + border-bottom 转 -45° 画箭头，那条「拐角」实际并不朝正上，
+     而且只有两个折边、没有竖杆，缩到 10px 看着像个小逗号。现在换成 inline SVG
+     的上箭头（Lucide arrow-up 的路径），外加一圈阅读进度环：
+       - 箭头 17px、stroke-width 2、圆头圆角，小尺寸下依然清晰
+       - 环 r=20、周长 125.7，按 pageYOffset/可滚动高度 实时填充，滚到底刚好闭合
+       - 44px 圆形（WCAG 建议的最小触控尺寸），hover 上浮 2px、箭头变强调色
+       - 语义化 <button> + aria-label + :focus-visible 描边，键盘 Enter/Space 可用
+       - 尊重 prefers-reduced-motion：不播放平滑滚动与位移动画 */
+  var TOP_ARROW_SVG =
+    '<svg class="qb-top-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" ' +
+    'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+    '<path d="M12 19V5"/><path d="M5 12l7-7 7 7"/></svg>' +
+    '<svg class="qb-top-ring" viewBox="0 0 44 44" aria-hidden="true">' +
+    '<circle class="qb-top-ring-bg" cx="22" cy="22" r="18.5"/>' +
+    '<circle class="qb-top-ring-fg" cx="22" cy="22" r="18.5"/></svg>';
+
   function createBackToTop() {
     var btn = document.getElementById('qb-top');
     if (!btn) {
-      btn = mk('div', 'qb-top');
+      btn = document.createElement('button');
+      btn.type = 'button';
       btn.id = 'qb-top';
-      btn.appendChild(mk('div', 'qb-top-arrow'));
+      btn.className = 'qb-top';
       document.body.appendChild(btn);
     }
+    /* 旧版建的是 div + .qb-top-arrow，就地升级成新图标，不用刷新页面 */
+    if (!btn.querySelector('.qb-top-ico')) btn.innerHTML = TOP_ARROW_SVG;
+    if (btn.tagName !== 'BUTTON') {
+      btn.setAttribute('role', 'button');
+      btn.setAttribute('tabindex', '0');
+    }
+    if (!btn.getAttribute('aria-label')) btn.setAttribute('aria-label', '回到顶部');
+    btn.setAttribute('title', '回到顶部');
+
+    var ring = btn.querySelector('.qb-top-ring-fg');
+    /* 周长按 circle 自己的 r 算，改半径不用同步改 JS */
+    var CIRC = 2 * Math.PI * (ring ? parseFloat(ring.getAttribute('r')) || 18.5 : 18.5);
+    if (ring) {
+      ring.style.strokeDasharray = CIRC;
+      ring.style.strokeDashoffset = CIRC;
+    }
+
     var isHidden = true;
-    window.addEventListener('scroll', function () {
+    var ticking = false;
+    function paint() {
+      ticking = false;
+      var doc = document.documentElement;
+      var max = doc.scrollHeight - window.innerHeight;
+      var p = max > 0 ? window.pageYOffset / max : 0;
+      if (p < 0) p = 0;
+      if (p > 1) p = 1;
+      if (ring) ring.style.strokeDashoffset = String(CIRC * (1 - p));
+
       var show = window.pageYOffset > 300;
       if (show === isHidden) {
         isHidden = !show;
-        if (show) { btn.classList.add('show'); } else { btn.classList.remove('show'); }
+        if (show) btn.classList.add('show'); else btn.classList.remove('show');
       }
+    }
+    paint();
+    window.addEventListener('scroll', function () {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(paint);
     }, { passive: true });
+
+    var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     var lock = false;
-    btn.addEventListener('click', function () {
+    function toTop() {
       if (lock) return;
       lock = true;
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      window.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' });
       setTimeout(function () { lock = false; }, 800);
+    }
+    btn.addEventListener('click', toTop);
+    btn.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
+        e.preventDefault();
+        toTop();
+      }
     });
   }
 
