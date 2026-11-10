@@ -17,17 +17,17 @@
 
 ## 二、长什么样
 
-**首页（浅色）**：左中右三栏，左边是全文文章列表，中间是文章卡片，右边是公告和常用链接。
+**首页**：左中右三栏，左边是全文文章列表，中间是文章卡片，右边是公告和常用链接。
 
-![首页浅色效果](https://cdn.jsdelivr.net/gh/zsy0216/cnblogs-document-theme@master/docs/images/home-light.png)
+![首页效果](https://cdn.jsdelivr.net/gh/zsy0216/cnblogs-document-theme@master/docs/images/home-v7.png)
 
-**首页（暗色）**：配色对齐 GitHub Dark —— 底色 `#0d1117`、卡片 `#161b22`、描边 `#30363d`、正文 `#c9d1d9`。不是简单把白底刷黑，而是每个层级都重新定了一套色。
+**文章页**：左边是正文 H1–H4 自动生成的目录，右边是卡片式侧栏，正文独占中栏。
 
-![首页暗色效果](https://cdn.jsdelivr.net/gh/zsy0216/cnblogs-document-theme@master/docs/images/home-dark.png)
+![文章页效果](https://cdn.jsdelivr.net/gh/zsy0216/cnblogs-document-theme@master/docs/images/post-v7.png)
 
-**文章页（暗色）**：左边是正文 H1–H4 自动生成的目录，右边是卡片式侧栏，正文独占中栏。
+**暗色模式**：配色对齐 GitHub Dark —— 底色 `#0d1117`、卡片 `#161b22`、描边 `#30363d`、正文 `#c9d1d9`。不是简单把白底刷黑，而是每个层级都重新定了一套色。右上角 🌙 一键切换，状态存本地，首次访问跟随系统偏好。
 
-![文章页暗色效果](https://cdn.jsdelivr.net/gh/zsy0216/cnblogs-document-theme@master/docs/images/post-dark.png)
+![暗色首页](https://cdn.jsdelivr.net/gh/zsy0216/cnblogs-document-theme@master/docs/images/home-v7-dark.png)
 
 ## 三、都做了哪些事
 
@@ -35,20 +35,23 @@
 
 博客园的 DOM 结构是 `#main` 里塞 `#mainContent` 和 `#sideBar`。想做成三栏，常规做法是 JS 搬节点，但那样每次刷新都会闪一下。
 
-这里用的是 Grid + `display: contents`：
+这里用的是 Grid，而且**一个节点都不搬**：
 
 ```css
 #main {
   display: grid;
   grid-template-columns: 260px minmax(0, 1fr) 292px;
+  gap: 22px;
 }
-#sideBar, #sideBarMain { display: contents; }  /* 侧栏子节点直接变成 grid 项 */
-#leftcontentcontainer { grid-column: 1; }      /* 左：文章列表 / 文章目录 */
-#mainContent         { grid-column: 2; }       /* 中：正文 */
-#qb-right            { grid-column: 3; }       /* 右：公告 + 小部件 */
+#sideBar { display: contents; }   /* 只摊平外面那层壳 */
+#sideBarMain { grid-column: 3; }  /* 博客园自带的侧栏容器，原地当右栏 */
+#qb-left      { grid-column: 1; } /* 左栏由脚本新建：文章列表 / 目录 */
+#mainContent  { grid-column: 2; } /* 中：正文 */
 ```
 
-`display: contents` 会把容器本身「消掉」、让子元素直接参与父级 grid 布局，所以不用改 HTML 也能把侧栏拆到两列去。断点也很好写：≤1024px 收成两栏（隐藏右栏），≤860px 单栏。
+关键在于**不做 DOM 搬运**。早期版本用 JS 把侧栏卡片搬进自建容器，结果每次刷新都要闪一下；现在右栏直接用博客园自己的 `#sideBarMain`，卡片本来就在里面，一个节点都不动。右栏内容晚到只会改变它自己的高度，推不动正文和左栏——这是「切页不抖」的结构性原因。
+
+断点也很好写：≤1024px 收成两栏（隐藏右栏），≤860px 单栏。
 
 ### 2. 左栏目录：按页面类型自动切换
 
@@ -98,39 +101,46 @@ body.qb-dark {
 1. 博客园 `<head>` 里本来就写死了 `favicon_v3_3.ico` 和 `.svg` 两个默认图标，你追加一个，就变成三个图标并存，浏览器爱用哪个用哪个；
 2. 园方脚本在页面加载完几秒后，还会再往 `<head>` 里补一次默认图标。
 
-所以页脚脚本干了三件事：把用户图标搬进 `<head>`、清掉所有非用户图标、用 `MutationObserver` 持续拦截后续插入。搬完 check 一遍，`<head>` 里只剩你设置的那一个。
+所以主题脚本干了三件事：把用户图标搬进 `<head>`、清掉所有非用户图标、用 `MutationObserver` 持续拦截后续插入。搬完 check 一遍，`<head>` 里只剩你设置的那一个。
 
-## 四、怎么装（4 步）
+## 四、怎么装（3 步）
 
 > ⚠️ 第 0 步最重要：**设置 → 皮肤 → 选 `Custom`（自定义）**，否则后面全都不生效。
 
-1. **页面定制 CSS 代码** → 全选替换为 `css/theme-v6.min.css`
-2. **页首 HTML 代码** → 粘贴 `snippets/head-nav-v6.html`
-3. **页脚 HTML 代码** → 清空后粘贴 `snippets/footer-script-v6.html`
-4. **公告** → 粘贴 `snippets/announcement-v6.html`
+样式和逻辑都走托管，后台只填两个字段、传一个文件：
 
-保存后前台 `Ctrl+F5` 强刷。
+1. **页面定制 CSS 代码** → 全选替换为 `dist/paste/样式.css`（33 KB，完整样式 + 首帧标记）
+2. **页首 HTML 代码** → 全选替换为 `dist/paste/页首.html`（2.3 KB，配置 + 加载器）
+3. **文件 → 上传** `dist/document-theme.js`（70 KB），覆盖同名旧文件
 
-顶栏要加/删菜单，只改 `head-nav-v6.html` 里的 `.qb-links` 这一段就行：
+**页脚与公告两个字段保持空白**（公告由配置渲染）。保存后前台 `Ctrl+F5` 强刷。
 
-```html
-<nav class="qb-links">
-  <a class="on" href="https://www.cnblogs.com/你的博客名/">首页</a>
-  <a href="https://www.cnblogs.com/你的博客名/p/archive/">归档</a>
-  <a href="https://www.cnblogs.com/你的博客名/categories">分类</a>
-  <a href="https://www.cnblogs.com/你的博客名/tag">标签</a>
-</nav>
+之后改样式或改逻辑，只需要重传第 3 步那个文件，不用再动后台。
+
+顶栏菜单、公告文案、强调色都不必改源码，页首那段 `window.LS_CONFIG` 里配就行：
+
+```js
+window.LS_CONFIG = {
+  accent: '#d05ce8',
+  nav: {
+    brand: '你的博客名',
+    links: [
+      { t: '首页', h: 'https://www.cnblogs.com/你的博客名/' },
+      { t: '归档', h: '…/p/archive/' },
+      { t: 'GitHub', h: 'https://github.com/zsy0216', b: 1 }   // b:1 = 新窗口
+    ]
+  },
+  notice: { show: true, title: '公告', html: '<p>写点什么</p>' }
+};
 ```
 
-当前页高亮就给对应 `<a>` 加 `class="on"`；不想要顶栏，把整个 `<div class="qb-nav">…</div>` 删掉即可。
-
-**回滚**：清空「页面定制 CSS」「页首 HTML」「页脚 HTML」三个字段，就恢复默认外观。
+**回滚**：清空「页面定制 CSS」「页首 HTML」两个字段、删掉上传的 js，就恢复默认外观。旧版 v6.28 已封存在 tag `v6.28`，需要时从仓库取出重贴。
 
 ## 五、几个设计取舍
 
 **为什么不用框架？** 博客园的自定义代码是直接贴进页面的，没有构建流程。引入 Vue/React 意味着要么上 CDN（多一个外部依赖、多一次阻塞），要么把运行时整个贴进去（几十 KB）。这个主题的交互只有「切暗色」「回顶」「生成目录」三件小事，原生 JS 加起来不到 10KB，没必要。
 
-**为什么 CSS 要分全版和压缩版？** `theme-v6.css` 是带完整注释的开发版，`theme-v6.min.css` 是发布版（体积小 34%）。博客园的 CSS 字段有长度限制，压一下更安全。
+**为什么 CSS 要分全版和压缩版？** `theme-v7.css` 是带完整注释的开发版，`theme-v7.min.css` 是发布版（体积小 34%）。博客园的 CSS 字段有长度限制，压一下更安全。
 
 **为什么强调「对着真实 DOM 写」？** 网上很多博客园美化代码是几年前的，选择器早就失效了，贴上去一半样式不生效，还容易和园方新样式打架。这个主题的每条选择器我都在线上页面验证过。
 
