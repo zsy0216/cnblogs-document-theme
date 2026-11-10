@@ -1,28 +1,33 @@
-# OS files
+# OS / 编辑器
 .DS_Store
 Thumbs.db
-
-# Editor
 *.swp
 *.swo
 *~
 .idea/
 .vscode/
 
-# Build output
-*.pyc
-__pycache__/
+# 依赖与缓存
 node_modules/
+__pycache__/
+*.pyc
+
+# 工具目录：只入库构建脚本与回归脚本；探针、抓包素材、截图产物一律忽略
+_dev-tools/*
+!_dev-tools/*.py
+!_dev-tools/probe-navflash.js
+!_dev-tools/probe-navmove.js
+!_dev-tools/probe-hosted.js
+!_dev-tools/verify-*.js
+
+# preview 中间文件（*-v7.html 正本入库）
 preview/_src/
 preview/shot-*.png
 preview/crop-*.png
-*.js
-# Offline validation（一次性验证脚本不入库，但发布流程用到的两个保留）
-_dev-tools/*
-!_dev-tools/gen-min.py
-!_dev-tools/bump-version.py
-!_dev-tools/gen-footer-min.py
 preview/ref-*.png
 
 # 本地推送凭据（含 token，绝不能提交）
 .git-credentials-local
+
+# 个人待办
+todo.md

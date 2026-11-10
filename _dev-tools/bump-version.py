@@ -4,12 +4,13 @@
 用法
     python _dev-tools/bump-version.py --check           只校验，不改动
     python _dev-tools/bump-version.py -n "改动摘要"       版本 +1 并同步全部
-    python _dev-tools/bump-version.py -v 6.27 -n "摘要"   指定版本号
+    python _dev-tools/bump-version.py -v 7.0 -n "摘要"    指定版本号
+    python _dev-tools/bump-version.py --major -n "摘要"    主版本 +1（6.30 → 7.0）
     python _dev-tools/bump-version.py -n "摘要" --no-changelog
 
 约定
-    所有文件头都用同一个 token：`流苏主题 v6.N · YYYY-MM-DD`
-    版本真源是 css/theme-v6.css 头部那一行；其余文件由本脚本写成一致。
+    所有文件头都用同一个 token：`流苏主题 v7.N · YYYY-MM-DD`
+    版本真源是 css/theme-v7.css 头部那一行；其余文件由本脚本写成一致。
     任何手改版本号都会被 --check 判为不一致。
 """
 
@@ -27,15 +28,15 @@ os.chdir(ROOT)
 TOKEN = re.compile(r'流苏主题\s+(v\d+\.\d+)\s*·\s*(\d{4}-\d{2}-\d{2})')
 
 FILES = [
-    'css/theme-v6.css',
-    'snippets/head-nav-v6.html',
-    'snippets/footer-script-v6.html',
-    'snippets/console-inject.js',
+    'css/theme-v7.css',
+    'snippets/head-nav-v7.html',
+    'snippets/footer-script-v7.html',
 ]
 
 SRC = FILES[0]
-MIN = 'css/theme-v6.min.css'
-MIN_HTML = 'snippets/footer-script-v6.min.html'
+MIN = 'css/theme-v7.min.css'
+MIN_HTML = 'snippets/footer-script-v7.min.html'
+BUNDLE = 'dist/document-theme.js'
 LOG = 'CHANGELOG.md'
 TODAY = datetime.date.today().strftime('%Y-%m-%d')
 
@@ -66,9 +67,12 @@ def current_version(found):
     return hits[0][0]
 
 
-def bump(ver):
-    n = int(ver.split('.')[1]) + 1
-    return 'v6.%d' % n
+def bump(ver, major=False):
+    """默认只加次版本号，主版本号保持不变；major=True 时主版本 +1、次版本归零。"""
+    cur = ver.lstrip('v').split('.')
+    if major:
+        return 'v%d.0' % (int(cur[0]) + 1)
+    return 'v%s.%d' % (cur[0], int(cur[1]) + 1)
 
 
 def check(found, quiet=False):
@@ -93,8 +97,8 @@ def check(found, quiet=False):
         print('✗ 跨文件版本不一致：%s' % ', '.join(sorted(versions)))
         ok = False
 
-    # 两个压缩产物都应带同版本横幅
-    for path in (MIN, MIN_HTML):
+    # 三个生成产物都应带同版本横幅（最后一个是合并托管版）
+    for path in (MIN, MIN_HTML, BUNDLE):
         if not os.path.exists(path):
             print('✗ %-32s 不存在（跑一次生成脚本）' % path)
             ok = False
@@ -135,6 +139,7 @@ def main():
     ap.add_argument('-n', '--note', default='', help='本次改动摘要，写入 CSS 头部「最近：」与 CHANGELOG')
     ap.add_argument('-d', '--date', default=TODAY, help='日期，默认今天')
     ap.add_argument('--check', action='store_true', help='只校验，不改动')
+    ap.add_argument('--major', action='store_true', help='主版本 +1（次版本归零），如 6.30 → 7.0')
     ap.add_argument('--no-changelog', action='store_true', help='不写 CHANGELOG')
     args = ap.parse_args()
 
@@ -145,11 +150,11 @@ def main():
         sys.exit(0 if check(found) else 1)
 
     old = current_version(found)
-    ver = ('v' + args.version.lstrip('v')) if args.version else bump(old)
+    ver = ('v' + args.version.lstrip('v')) if args.version else bump(old, args.major)
     if ver == old:
         sys.exit('✗ 新版本号与当前相同（%s），换一个' % ver)
     if not re.match(r'^v\d+\.\d+$', ver):
-        sys.exit('✗ 版本号格式应为 6.27 或 v6.27')
+        sys.exit('✗ 版本号格式应为 7.0 或 v7.0')
 
     # 1) 文件头 token
     for p in FILES:
@@ -170,6 +175,10 @@ def main():
     subprocess.check_call([sys.executable, '_dev-tools/gen-min.py'])
     print('— 重建页脚压缩版 —')
     subprocess.check_call([sys.executable, '_dev-tools/gen-footer-min.py'])
+    print('— 重建合并托管版 —')
+    subprocess.check_call([sys.executable, '_dev-tools/gen-bundle.py'])
+    print('— 刷新后台粘贴包 —')
+    subprocess.check_call([sys.executable, '_dev-tools/gen-deploy.py'])
 
     # 4) CHANGELOG
     if not args.no_changelog and args.note:

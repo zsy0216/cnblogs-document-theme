@@ -1,0 +1,40 @@
+<!-- 流苏主题 v7.17 · 页首 HTML（全托管）
+     只做三件事：占住顶栏位置、放配置、同步加载样式脚本。
+     菜单与公告由脚本按配置渲染，这里没有任何菜单内容。
+     除非升级版本号，本字段不需要再改。 -->
+
+<script>
+/* 归档页标记：见 CSS 里 html.qb-arc-page 一节 */
+if (/\/(?:p\/)?archive\/\d{4}\/\d{1,2}/.test(location.pathname)) {
+  document.documentElement.className += ' qb-arc-page';
+}
+</script>
+
+<link rel="preconnect" href="https://blog-static.cnblogs.com" />
+<link rel="icon" href="https://images.cnblogs.com/cnblogs_com/blogs/477677/galleries/1560097/t_261107101943_blog-icon.jpeg" />
+
+<!-- 1) 顶栏占位：先给 59px 白条，菜单由紧随其后的脚本填进来 -->
+<div class="qb-nav" id="qb-nav"><div class="qb-nav-inner"></div></div>
+
+<script>
+/* 2) 配置层：以后只改这一个对象，其余都不用动 =====
+   基础  accent:'#d05ce8' 强调色 | dark:'on'|'off'|'auto' | backToTop | pager | archive | archiveTtl
+   顶栏  nav:{ brand:'Ep流苏', home:'…', logo:'…jpg', links:[{ t:'首页', h:'…' }, { t:'GitHub', h:'…', b:1 }] }
+   公告  notice:{ show:true, title:'公告', html:'<p>正文</p>' }
+   以上都不写，则用内置默认（9 个菜单 + 原有公告文案） */
+window.LS_CONFIG = {};
+</script>
+
+<script>
+/* 3) 同步加载：这 4 行是整块脚本，不要改成 createElement + async。
+      · 样式在脚本里（上传的那一个文件同时含 CSS 与 JS），脚本晚到 = 首帧无样式；
+      · 博客园会把页首里的外部脚本标签自动改写成 defer，那样照样晚；
+      · 内联脚本不会被改写，document.write 插入的是「解析期脚本」：阻塞解析、按序立刻
+        执行，于是样式在首次绘制前就注入，脚本里的 MutationObserver 又能在 #main 解析
+        完的那一刻初始化 —— 顶栏、目录、侧栏、公告全部赶在首帧之前就位，切页不再闪。
+      标签名拆开拼，是为了页面上不出现脚本标签的开闭字面量（HTML 校验器会误判）。 */
+(function () {
+  var s = 'script';
+  document.write('<' + s + ' src="https://blog-static.cnblogs.com/files/blogs/477677/document-theme.js?v=7.17"><' + '/' + s + '>');
+})();
+</script>

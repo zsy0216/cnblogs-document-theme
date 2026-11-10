@@ -1,6 +1,6 @@
 /* ============================================================
-   流苏主题 v6.28 · 2026-11-09
-   最近：归档缓存改按篇数校验：新发的文章不再被 24 小时旧快照挡住
+   流苏主题 v7.17 · 2026-11-10
+   最近：切页不闪：顶栏 min-height 防塌陷、body 归零消 8px 位移、CSS 字段给完整样式（首帧即终态）、跨页视图过渡让顶栏原地不动
    ------------------------------------------------------------
    主题 v6 —— 基于博客园 2026 真实 DOM 重写
    ------------------------------------------------------------
@@ -21,6 +21,91 @@
    三栏靠 #sideBar{display:contents} 把子节点提升为 grid 项，
    纯 CSS 实现，不依赖 JS 权限。
    ============================================================ */
+
+/* ---------- 0. 首帧闸门（由生成脚本写进「页面定制 CSS 代码」字段最前面） ----------
+   生成后的样子（531 字节，就在 dist/paste/hosted/4-样式.css 开头）：
+     html:not(.qb-ready) body{opacity:0;animation:qb-unlock 0s linear 2.5s forwards}
+     @keyframes qb-unlock{to{opacity:1}}
+
+   顶栏、文章目录、公告全部由脚本生成，DOM 顺序又是「正文在前、侧栏在后」，
+   放任浏览器随时绘制就必然出现「正文已就位、右栏半秒后冒出一块」。
+   闸门让 body 在结构齐之前保持透明，脚本建完才加 qb-ready 解锁。
+
+   为什么必须是「CSS 字段」而不是本文件、也不是页首字段 —— 两处都实测过：
+   · 放进本文件 = 托管形态下这段 CSS 是脚本注入的，脚本晚到闸门就晚到，
+     那之前浏览器已经按博客园原生皮肤画了一整页（实测 293ms 那一帧 op=1）。
+   · 放进页首字段 = 它在 body 里约 8.7KB 处才被解析，body 从 5KB 处就开始，
+     生效前同样已经画了一帧。
+   · 放进 CSS 字段 = 博客园编译成 head 里的 custom.css，阻塞渲染，
+     首绘前生效。实测第一帧起 op 一直是 0，直到结构齐才放开。
+
+   注意不能用 visibility:hidden：那会让 offsetParent 变 null，建目录时的
+   可见性过滤会把所有标题判为不可见，目录直接建不出来（实测踩过）。
+   兜底 2.5 秒：脚本被拦、报错、无 JS 都不会留白。时长必须晚于脚本里那个
+   1.5 秒的强制解锁，否则 JS 还在等结构时这条纯 CSS 规则先把页面放出来了。 */
+
+/* ---------- 0.1 跨页过渡：切页时顶栏不动、不白闪 ----------
+   点链接换页 = 新文档。浏览器在它首绘前会保留上一页画面（paint holding），
+   但 commit 后一开始解析就会先画一帧空白 —— 实测 1~3 帧纯白，
+   就是「切页刷一下」的观感来源。页面内的任何 CSS/JS 都管不到这一帧，
+   因为它发生在任何内容绘制之前。
+
+   Chromium 126+ / Safari 18+ 的「跨文档视图过渡」能接管这段：
+   旧页截图 → 等新页首绘 → 两张截图做淡入淡出。空白期被截图盖住。
+   给顶栏单独命名后，它在两页位置完全一致，过渡就是对同一张图原地 morph
+   —— 视觉上顶栏一动不动，只有下面的内容在换。
+
+   生效前提（缺一不可）：
+   1. 两页同源（博客园全站都是 www.cnblogs.com ✓）
+   2. 旧页和新页都要有 @view-transition{navigation:auto}，且必须在
+      render-blocking 的样式里。所以它必须写进「页面定制 CSS 代码」字段 ——
+      托管形态下本文件是 js 注入的，新页 js 还没到就已经首绘，声明晚于首绘即无效。
+   3. view-transition-name 在同一页面内唯一（.qb-nav 全页只有一个 ✓）
+
+   不支持的浏览器（Firefox 旧版）直接忽略这几条，退回普通导航，
+   行为与没有这段完全一致，不会更差。 */
+@view-transition { navigation: auto; }
+
+.qb-nav { view-transition-name: qb-nav; }
+
+/* 默认 250ms 偏拖沓，缩到 180ms 更像「只是内容变了」而不是「跳了一页」 */
+::view-transition-group(qb-nav) { animation-duration: .18s; }
+
+/* 顶栏单独处理：两张快照都保持完全不透明，直接叠上去。
+   浏览器默认会给每个命名元素也做一次交叉淡入淡出，实测过渡中间
+   顶栏的 logo 和菜单会整个变淡 —— 用户看到的就是「导航闪了一下」。
+   两页顶栏本来就一模一样，硬叠上去 == 完全静止。 */
+::view-transition-old(qb-nav),
+::view-transition-new(qb-nav) {
+    animation: none;
+    opacity: 1;
+}
+
+/* 关键：只让新页淡入，旧页原地不动。
+   默认是「旧淡出 + 新淡入」同时进行 —— 新页首绘比旧页淡出慢的时候，
+   中间会出现两边都快透明的空洞，实测拍到一帧整屏发白（44KB → 9KB），
+   观感就是「闪一下」。改成旧页留在底层当背景、新页往上淡，
+   任何中间时刻都有画面，永远不会白。 */
+::view-transition-old(root) {
+    animation: none;
+    opacity: 1;
+}
+::view-transition-new(root) {
+    animation: qb-vt-in .16s ease-out both;
+}
+@keyframes qb-vt-in {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+/* 系统开了「减少动态效果」就把过渡压成零时长。
+   注意 @view-transition 是顶层 at-rule，不能写在 @media 里（写了会被整条忽略），
+   所以这里改从伪元素侧归零。 */
+@media (prefers-reduced-motion: reduce) {
+    ::view-transition-group(*),
+    ::view-transition-old(*),
+    ::view-transition-new(*) { animation-duration: 0s !important; }
+}
 
 /* ---------- 0. 设计变量 ---------- */
 :root {
@@ -83,6 +168,23 @@ html, body {
 /* 顶栏是吸顶的，锚点跳转（页内 #hash、目录、评论锚）要预留出它的高度，
    否则目标标题会被压在顶栏下面。74 = 顶栏 59 + 一点呼吸。 */
 html { scroll-padding-top: 74px; }
+
+/* 垂直滚动条常驻。
+   右栏那十张侧栏卡（分类/归档/标签/搜索/最新评论）是博客园自己的 XHR 填的，
+   实测到页面上显示之后约 1 秒才到位，页面高度会从 900px 一下涨到 1800px+。
+   在那之前没有滚动条，到位那一刻滚动条才出现，内容宽度被挤掉 17px ——
+   顶栏、正文、右栏一起横移一下，这就是「抖一下」。
+   常驻滚动条让可用宽度从头到尾恒定，彻底没有这次横移。
+   只在桌面生效：窄屏（<1024）本来就不该占一条滚动槽。 */
+@media (min-width: 1024px) {
+    html {
+        overflow-y: scroll;
+        /* 现代浏览器的精确解法：永久保留滚动条槽位，哪怕当前页面不需要滚动，
+           可用宽度也恒定。overflow-y:scroll 只是老浏览器兜底 —— 部分平台用
+           overlay 滚动条，scroll 并不占宽度。两条一起写，谁生效都对。 */
+        scrollbar-gutter: stable;
+    }
+}
 #home { background: transparent !important; }
 a { text-decoration: none; transition: color .18s ease; }
 
@@ -124,6 +226,13 @@ body.qb-dark .qb-dark-btn:hover { background: var(--accent-soft); }
     /* 用不透明纯色代替毛玻璃：滚动时不再每帧做模糊，低配机器更顺 */
     background: var(--card);
     border-bottom: 1px solid var(--line);
+    /* 关键：锁死最小高度。
+       切页瞬间浏览器边解析边绘制，`.qb-nav` 的开始标签到了、里面的
+       `.qb-nav-inner`（撑开 58px 的那个）还没到，实测这一帧高度是 0 ——
+       顶栏先塌成一条线、下面内容跟着上移，内层到达后再撑回 59px。
+       这就是「顶部导航会动一下」最直接的来源。min-height 让外壳自带高度，
+       内层到达前后总高恒为 59px。 */
+    min-height: 58px;
 }
 .qb-nav-inner {
     max-width: 1320px;
@@ -183,7 +292,24 @@ body.qb-dark .qb-logo .qb-logo-dot { fill: #ff7a5c; }
 .qb-links a:hover { background: var(--accent-soft); color: var(--accent-deep); }
 .qb-links a.on { background: var(--accent-soft); color: var(--accent-deep); font-weight: 600; }
 
-/* ---------- 3. 三栏骨架 ---------- */
+/* ---------- 3. 三栏骨架 ----------
+   DOM 实际顺序是博客园生成的，改不了：
+
+     #main
+       #mainContent                正文
+       #sideBar
+         #sideBarMain
+           #sidebar_news           公告
+           #blog-calendar          日历（隐藏）
+           #leftcontentcontainer
+             #blog-sidecolumn      十张卡片（loadBlogSideColumn 异步填）
+
+   注意 #leftcontentcontainer 名字带 left，装的其实是「右栏」那叠卡。
+   旧实现把它当左栏，再用脚本把 #blog-sidecolumn 搬到自建的 #qb-right ——
+   卡片换列的那一瞬间，就是「内容先在左边跳一下」的来源。
+
+   现在直接把 #sideBarMain 当右栏：公告与卡片本来就在它里面，竖排顺序正好，
+   一个节点都不搬。左栏交给脚本另建的 #qb-left。 */
 #main {
     display: grid !important;
     grid-template-columns: 260px minmax(0, 1fr) 292px;
@@ -197,9 +323,18 @@ body.qb-dark .qb-logo .qb-logo-dot { fill: #ff7a5c; }
     width: auto !important;
 }
 
-/* 把侧栏与侧栏容器"摊平"，让子节点直接成为 #main 的网格项 */
-#sideBar, #sideBarMain {
+/* #sideBar 只是外面一层壳，摊平掉；#sideBarMain 留下当第 3 列的容器 */
+#sideBar {
     display: contents !important;
+}
+
+#sideBarMain {
+    grid-column: 3;
+    grid-row: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-width: 0;
     width: auto !important;
     float: none !important;
     margin: 0 !important;
@@ -218,10 +353,11 @@ body.qb-dark .qb-logo .qb-logo-dot { fill: #ff7a5c; }
     padding: 0 !important;
 }
 
-/* 左：文章目录 / 文章列表 / 分类 / 归档 / 标签
+/* 左：文章目录 / 文章列表 / 分类 / 归档 / 标签 —— 脚本建的 #qb-left。
    整列做成吸顶滚动容器（内部一条细滚动条），
-   避免"目录卡吸顶、分类卡跟着滚"造成两层重叠。 */
-#leftcontentcontainer {
+   避免「目录卡吸顶、分类卡跟着滚」造成两层重叠。
+   js 到达前这一列是空的（260px 宽），正文位置不受影响，所以不会跳。 */
+#qb-left {
     grid-column: 1;
     grid-row: 1;
     min-width: 0;
@@ -237,25 +373,27 @@ body.qb-dark .qb-logo .qb-logo-dot { fill: #ff7a5c; }
     scrollbar-width: thin;
     scrollbar-color: var(--line) transparent;
 }
-#leftcontentcontainer::-webkit-scrollbar { width: 4px; }
-#leftcontentcontainer::-webkit-scrollbar-thumb { background: var(--line); border-radius: 4px; }
-/* 右：公告 + 常用链接 / 随笔档案 / 搜索 / 排行（由页脚脚本搬进来）
-   与左栏相反 —— 右栏跟随页面一起滚动，不做吸顶，也不再内部滚动。 */
-#qb-right {
-    grid-column: 3;
-    grid-row: 1;
-    min-width: 0;
+#qb-left::-webkit-scrollbar { width: 4px; }
+#qb-left::-webkit-scrollbar-thumb { background: var(--line); border-radius: 4px; }
+
+/* #leftcontentcontainer 就待在 #sideBarMain 里当卡片列，不做 grid 定位、
+   不吸顶、不内部滚动（右栏跟随页面一起滚）。 */
+#leftcontentcontainer {
     display: flex;
     flex-direction: column;
     gap: 16px;
+    min-width: 0;
+    width: auto !important;
+    float: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    position: static;
+    max-height: none;
+    overflow: visible;
 }
-/* 搬进容器后，取消原来的网格定位，改由父容器 flex 排列 */
-#qb-right #sidebar_news,
-#qb-right #blog-sidecolumn {
-    grid-column: auto !important;
-    grid-row: auto !important;
-    flex: 0 0 auto;
-}
+
+#sidebar_news { min-width: 0; }
+
 /* 右栏精简：右栏只是辅助信息，这四块高度加起来一千多像素，会把页面拉得很长，
    而且内容都能在别处找到，默认隐藏。
    - 最新随笔：就是左侧「文章列表」那几篇，纯重复
@@ -263,23 +401,39 @@ body.qb-dark .qb-logo .qb-logo-dot { fill: #ff7a5c; }
    - 我的标签：标签云，进任一篇文章的标签区都能看到，且条数会越用越多
    - 分类导航：随笔分类 + 随笔档案 + 站点链接三张卡的合集（见 4.1 节）
    想恢复就把对应的 id 从下面这行删掉（也可以在博客后台「侧边栏设置」里取消勾选）。 */
-#qb-right #sidebar_recentposts,
-#qb-right #sidebar_shortcut,
-#qb-right #sidebar_toptags,
-#qb-right #sidebar_categories {
+#sidebar_recentposts,
+#sidebar_shortcut,
+#sidebar_toptags,
+#sidebar_categories {
     display: none !important;
 }
 
-#sidebar_news {
-    grid-column: 3;
-    grid-row: 1;
-    min-width: 0;
-}
 /* 日历默认隐藏（单行网格下跨行会产生空档）；需要就改成 display:block */
 #blog-calendar { display: none !important; }
 
+/* ---------- 归档页：原生按月列表先别露脸 ---------- */
+/* 归档页的原生内容是按月分组的 .entrylist（本月那几篇）。脚本会把它整段换成
+   「全部归档」时间线（所有月份）。实测原生列表 633ms 就渲染出来了，时间线 884ms
+   才就位 —— 中间那 250ms 用户看到的是「一页普通列表」，然后整体被替换成时间线，
+   这就是归档页那一下闪。页首脚本按路径给 <html> 加 qb-arc-page，这里先不画它，
+   等时间线插入后 .entrylist 被 display:none，这条规则也就无所谓了。
+   兜底 3 秒：页首脚本跑了但主体脚本没跑（被拦/报错）时，原生列表照样会出现。 */
+html.qb-arc-page #mainContent .entrylist {
+    visibility: hidden;
+    animation: qb-arc-unlock 0s linear 3s forwards;
+}
+
+@keyframes qb-arc-unlock {
+    to { visibility: visible; }
+}
+
+/* 时间线是整块插入的，给一次淡入（不位移：它是正文区的主干，动一下就是整页抖） */
+.qb-archive {
+    animation: qb-fade-in .18s ease-out both;
+}
+
 /* ---------- 3. 卡片通用样式 ---------- */
-#leftcontentcontainer > #blog-sidecolumn,
+#blog-sidecolumn,
 #sidebar_news,
 #blog-calendar,
 #post_detail,
@@ -291,6 +445,13 @@ body.qb-dark .qb-logo .qb-logo-dot { fill: #ff7a5c; }
     border-radius: var(--radius);
     box-shadow: var(--shadow);
     box-sizing: border-box;
+}
+
+/* 这十张卡是整块填进来的（一次 XHR，实测从 0 高直接变 1271px），
+   给一次短淡入把它处理成入场。它只影响右栏自身高度：正文与左栏都是独立的
+   grid 项，不会被推走，所以这一下不会变成整页抖。 */
+#blog-sidecolumn {
+    animation: qb-fade-in .16s ease-out both;
 }
 
 /* 左栏：动态加载的侧栏小部件（分类/归档/最新评论/搜索…） */
@@ -343,6 +504,26 @@ body.qb-dark .qb-logo .qb-logo-dot { fill: #ff7a5c; }
     box-sizing: border-box;
     flex: 0 0 auto;
 }
+
+/* 目录 / 公告 / 右栏是脚本建出来的，比首帧晚几十毫秒挂上 DOM。
+   位置和尺寸都不跳（列宽是固定的），唯一可见差异是「空位 → 有内容」。
+   给一次 160ms 淡入，把这次出现处理成入场，而不是"闪一下"。
+   时长必须短：超过 200ms 就会显得页面慢，而不是顺。 */
+@keyframes qb-panel-in {
+    from { opacity: 0; transform: translateY(3px); }
+    to   { opacity: 1; transform: none; }
+}
+/* 整列容器只能淡入、不能位移。
+   #qb-right 是公告 + 下面十几张卡组成的整列（一千多像素高），给它 translateY(3px)
+   等于让整列在 160ms 里向上滑 3px —— 实测公告卡 top 从 86 依次 85/84/83，
+   用户看到的就是「公告下面的内容抖一下」。小卡片单独弹 3px 是无感的，
+   整列一起弹就是抖，所以这里拆成只改透明度。 */
+@keyframes qb-fade-in {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+.qb-panel { animation: qb-panel-in .16s ease-out both; }
+#sideBarMain { animation: qb-fade-in .18s ease-out both; }
 .qb-panel-hd {
     display: flex;
     align-items: center;
@@ -608,6 +789,31 @@ body.qb-dark .qb-logo .qb-logo-dot { fill: #ff7a5c; }
     color: var(--body);
 }
 #sidebar_news_container img { max-width: 100%; border-radius: var(--radius-sm); }
+
+/* 由 LS_CONFIG.notice 渲染的公告（v7.2 起博客园「公告」字段可留空）：
+   颜色全部走变量，暗色模式自动跟随，不必再在正文里写死 #4b5563 这类色值 */
+#qb-notice { font-size: 13px; line-height: 1.85; color: var(--body); }
+#qb-notice p { margin: 0 0 10px; }
+#qb-notice p:last-child { margin-bottom: 0; }
+#qb-notice b,
+#qb-notice strong { color: var(--ink); font-weight: 600; }
+#qb-notice a { color: var(--accent); text-decoration: none; }
+#qb-notice a:hover { color: var(--accent-deep); text-decoration: underline; }
+#qb-notice .qb-notice-tip {
+    padding: 10px 12px;
+    background: var(--accent-soft);
+    border-radius: var(--radius-sm);
+    color: var(--body);
+}
+#qb-notice .qb-notice-links {
+    margin: 0;
+    padding-top: 10px;
+    border-top: 1px solid var(--line);
+    font-size: 12.5px;
+}
+#qb-notice .qb-notice-links a { margin-right: 12px; }
+/* 侧栏还没渲染好时，公告临时挂在右栏面板里，面板自带内边距，这里补一层上间距 */
+.qb-panel > #qb-notice { padding: 2px 2px 2px; }
 #sidebar_news a { color: var(--accent-deep); }
 
 /* 公告底部个人资料（博客园自带 #profile_block）：和正文分开，行距收一点。
@@ -1398,6 +1604,8 @@ body.qb-dark .qb-arc-idx-m.on i { color: rgba(13, 17, 23, .7); }
     #qb-top.show { transform: none; }
     #qb-top:hover { transform: none; }
     #qb-top:hover .qb-top-ico { transform: none; }
+    .qb-panel,
+    #sideBarMain { animation: none; }
 }
 
 /* ============================================================
@@ -1552,7 +1760,7 @@ body.qb-dark #cnblogs_post_body img:hover {
     }
     #mainContent { grid-column: 2; }
     /* 两栏时右栏让位，只留左侧目录 + 正文 */
-    #qb-right, #blog-calendar { display: none !important; }
+    #sideBarMain, #blog-calendar { display: none !important; }
 }
 @media screen and (max-width: 860px) {
     #main {
@@ -1562,19 +1770,21 @@ body.qb-dark #cnblogs_post_body img:hover {
         padding: 14px 14px 4px;
         gap: 14px;
     }
-    #mainContent, #leftcontentcontainer, #sidebar_news, #blog-calendar, #qb-right {
+    #mainContent, #qb-left, #sideBarMain, #blog-calendar {
         grid-column: auto;
         grid-row: auto;
         width: 100%;
     }
     #sideBar, #sideBarMain { display: block !important; }
-    #leftcontentcontainer, #sidebar_news, #qb-right { display: none; }
+    #qb-left, #sideBarMain { display: none; }
     #blog-calendar { display: none; }
     #post_detail { padding: 20px 18px; }
     #post_detail .postTitle { font-size: 21px !important; }
     .day { padding: 16px 16px 12px; }
     /* 小屏顶栏：logo 与字号同步收一档，菜单改为横向滑动，避免挤出行外把暗色按钮顶没 */
     .qb-nav-inner { padding: 0 14px; height: 52px; gap: 10px; }
+    /* 窄屏内层 52px，外壳的 min-height 也要跟着降，否则会多出 6px 空白 */
+    .qb-nav { min-height: 52px; }
     .qb-brand { gap: 7px; font-size: 15px; }
     .qb-logo { width: 24px; height: 24px; flex: 0 0 24px; }
     .qb-links {

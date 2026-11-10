@@ -1,9 +1,12 @@
-<!-- 流苏主题 v6.28 · 2026-11-09 页首 HTML
+<!-- 流苏主题 v7.17 · 2026-11-10 顶栏结构（v7.2 起已不需要粘贴）
      位置：博客园后台 → 设置 → 页首 HTML 代码
      说明：
-     1. 本段只放结构，样式全在「页面定制 CSS 代码」字段里。
-     2. 增删菜单：复制或删除一行 a 标签即可。
-     3. 当前页高亮：给对应 a 标签加 class="on"。
+     1. v7.2 起顶栏由 document-theme.js 按 window.LS_CONFIG.nav 渲染，
+        页首字段里不再需要任何菜单结构；改菜单请改 LS_CONFIG.nav.links。
+     2. 本文件只剩两种用途：
+        a) 脚本彻底挂掉时的手写兜底（把下面 div.qb-nav 整段贴回页首字段）；
+        b) 想完全脱离脚本、手写顶栏的场合。
+     3. 增删菜单：复制或删除一行 a 标签即可；当前页高亮给 a 加 class="on"。
      4. 注意：博客园的 HTML 校验器不跳过注释与脚本，
         所以本文件内除真实标签外，不得出现任何未配对的尖括号。
 -->
@@ -26,14 +29,16 @@
   <div class="qb-nav-inner">
     <!-- 品牌区：logo + 文字。
          换图只改 img 的 src；尺寸由 CSS 的 .qb-logo 控制（默认 30px）。
+         注意：img / svg 必须带 width/height 属性 —— 博客园会给 <script src> 自动加 defer，
+         样式晚到时若没有属性，SVG 会按默认尺寸渲染成巨图闪一帧。
          注意：博客园校验器不跳过注释，所以本段注释里不要出现真实的成对标签。 -->
     <a class="qb-brand" href="https://www.cnblogs.com/zhangshuaiyin/">
       <span class="qb-logo">
-        <img src="https://images.cnblogs.com/cnblogs_com/blogs/477677/galleries/1560097/t_261107102128_QQ%E5%9B%BE%E7%89%8720201122102348.jpg" alt="Ep流苏" />
+        <img src="https://images.cnblogs.com/cnblogs_com/blogs/477677/galleries/1560097/t_261107102128_QQ%E5%9B%BE%E7%89%8720201122102348.jpg" alt="Ep流苏" width="30" height="30" />
       </span>
       <span class="qb-brand-text">Ep流苏</span>
       <span class="qb-logo" aria-hidden="true">
-        <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+        <svg width="30" height="30" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
           <g fill="none" stroke="currentColor" stroke-width="7.4" stroke-linecap="round">
             <path d="M9.8 9.8 L22.2 22.2" />
             <path d="M22.2 9.8 L9.8 22.2" />

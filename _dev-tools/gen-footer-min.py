@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""把页脚脚本压成发布版 footer-script-v6.min.html。
+"""把页脚脚本压成发布版 footer-script-v7.min.html。
 
 为什么只压页脚：CSS 已经有 min 版（31KB），页脚 HTML 一直是 42KB 原文直接贴进
 博客园后台，是唯一没压缩过的发布产物。
@@ -20,8 +20,8 @@ import io
 import re
 import sys
 
-SRC = 'snippets/footer-script-v6.html'
-OUT = 'snippets/footer-script-v6.min.html'
+SRC = 'snippets/footer-script-v7.html'
+OUT = 'snippets/footer-script-v7.min.html'
 
 src = io.open(SRC, encoding='utf-8').read()
 
@@ -140,7 +140,7 @@ assert '</script' not in body, '正文里出现 </script，会截断脚本'
 banner = (
     '<!-- 流苏主题 %s · %s 页脚 HTML（压缩版）\n'
     '     位置：博客园后台 -> 设置 -> 页脚 HTML 代码（粘贴前先清空）\n'
-    '     说明：本文件由 _dev-tools/gen-footer-min.py 从 footer-script-v6.html 生成，\n'
+    '     说明：本文件由 _dev-tools/gen-footer-min.py 从 footer-script-v7.html 生成，\n'
     '           功能完全一致，只删注释与缩进。要改逻辑请改源文件后重新生成，不要改这里。 -->\n'
 ) % (ver, day)
 

@@ -1,10 +1,128 @@
-<!-- 流苏主题 v6.28 · 2026-11-09 页脚 HTML 重要脚本
+<!-- 流苏主题 v7.17 · 2026-11-10 页脚 HTML 重要脚本
      位置：博客园后台 -> 设置 -> 页脚 HTML 代码
      说明：1. 这里的 script 包含全部 DOM 操作逻辑（目录生成、滚动高亮、部件搬运）。2. 粘贴前务必备份原有内容。3. 博客园 HTML 校验器：确保没有未配对的尖括号，所有符号合法。 -->
 <script>
-/* 流苏主题 v6.28 · 2026-11-09 页脚：列表页文章目录 / 详情页文章目录 / 归档时间线 / 分页 / 回到顶部 / 滚动高亮 */
+/* 流苏主题 v7.17 · 2026-11-10 页脚：列表页文章目录 / 详情页文章目录 / 归档时间线 / 分页 / 回到顶部 / 滚动高亮 */
 (function () {
   'use strict';
+
+  /* 0. 配置层
+     优先级：内置默认值 < window.LS_CONFIG < localStorage 里的手动选择（仅暗色一项）。
+     默认值就是此前的硬编码行为，不写配置时表现与旧版逐项一致。
+     内联粘贴版（后台两个字段）与合并托管版（dist/document-theme.js）共用这一份逻辑，
+     区别只在分发方式，不存在两份实现。
+
+     用法：在页脚最前面先赋值 window.LS_CONFIG，再引入本脚本，例如
+       window.LS_CONFIG = { accent: '#d05ce8', dark: 'on' };
+
+     命名：LS = 流苏（LiuSu）的拼音首字母。v6.29 及以前叫 QB_CONFIG，
+     纯属历史遗留；两个名字等价，同时写时 LS_CONFIG 优先。 */
+  var HOME = 'https://www.cnblogs.com/zhangshuaiyin/';
+
+  /* 公告默认文案：以前写在博客园「公告」字段里，现在内置成默认值，
+     想改就改 LS_CONFIG.notice.html，不必再动后台字段。 */
+  var NOTICE_HTML =
+    '<p>你好，我是 <b>EP流苏</b></p>' +
+    '<p>记录 Java 后端、中间件与工具排错的笔记。<br>多为实践中踩坑后的整理，欢迎交流</p>' +
+    '<p class="qb-notice-tip">文章均为个人实践总结，转载请注明出处</p>' +
+    '<p class="qb-notice-links">' +
+    '<a href="https://github.com/zsy0216" target="_blank" rel="noopener">GitHub</a>' +
+    '<a href="' + HOME + 'rss" target="_blank" rel="noopener">RSS</a>' +
+    '<a href="https://msg.cnblogs.com/send/Ep%E6%B5%81%E8%8B%8F">留言</a>' +
+    '</p>';
+
+  var CFG = (function () {
+    var d = {
+      accent: '',        /* 强调色，空 = 沿用 :root 里的值；deep / soft 自动派生 */
+      dark: 'auto',      /* auto 跟随系统 | on 默认暗色 | off 默认浅色 */
+      backToTop: true,   /* 右下角回到顶部按钮 */
+      pager: true,       /* 列表页分页整理 */
+      archive: true,     /* 归档页聚合成全站时间线 */
+      archiveTtl: 24,    /* 归档单月缓存有效期（小时） */
+      /* 首帧闸门：true = 结构全部就位之前不显示页面（切页零中间态，推荐）。
+         false = 边解析边显示（和 6.x 一样，内容逐渐出现，但可能看到右侧栏后补）。
+         觉得「点开后要等一下」就设 false。 */
+      gate: true,
+
+      /* 顶栏导航：全部由脚本按配置渲染，页首 HTML 里不再放任何菜单结构。
+         不配置就用这里的默认值；配置了按配置渲染（links 整体替换，其余逐项覆盖）。
+         写法：nav: { brand: 'Ep流苏', links: [{ t: '首页', h: '/' }, …] }
+         单条链接字段：t 文字 | h 地址 | b:1 新窗口打开 | on:1 强制高亮 */
+      nav: {
+        brand: 'Ep流苏',
+        home: HOME,
+        logo: 'https://images.cnblogs.com/cnblogs_com/blogs/477677/galleries/1560097/t_261107102128_QQ%E5%9B%BE%E7%89%8720201122102348.jpg',
+        mark: true,      /* 品牌区右侧的十字图形 */
+        dark: true,      /* 是否显示暗色切换按钮 */
+        links: [
+          { t: '首页', h: HOME },
+          { t: '归档', h: HOME + 'p/archive/2026/11' },
+          { t: '分类', h: HOME + 'categories' },
+          { t: '标签', h: HOME + 'tag' },
+          { t: '留言', h: 'https://msg.cnblogs.com/send/Ep%E6%B5%81%E8%8B%8F' },
+          { t: 'GitHub', h: 'https://github.com/zsy0216', b: 1 },
+          { t: 'RSS', h: HOME + 'rss', b: 1 },
+          { t: '主页', h: 'https://home.cnblogs.com/u/zhangshuaiyin' },
+          { t: '管理', h: 'https://i.cnblogs.com/settings/', b: 1 }
+        ]
+      },
+
+      /* 公告：show:false 隐藏；title 改标题；html 改正文（支持标签）。
+         html 为空字符串时退回博客园「公告」字段的原文。 */
+      notice: {
+        show: true,
+        title: '公告',
+        html: NOTICE_HTML
+      }
+    };
+    /* LS_CONFIG 为正式名；QB_CONFIG 是 v6.29 及以前的旧名，保留兼容不删。
+       两者要合并而不是二选一：页面上若已有 window.LS_CONFIG = {}（空对象也是真值），
+       二选一会把旧名里的配置整个吞掉。合并后同名键以 LS_CONFIG 为准。 */
+    var u = {};
+    [window.QB_CONFIG, window.LS_CONFIG].forEach(function (src) {
+      if (!src || typeof src !== 'object') return;
+      for (var k in src) {
+        if (Object.prototype.hasOwnProperty.call(src, k)) u[k] = src[k];
+      }
+    });
+    /* 逐层合并：nav / notice 支持只写想改的那几项，不必整块抄一遍 */
+    (function merge(dst, src, depth) {
+      for (var k in dst) {
+        if (!Object.prototype.hasOwnProperty.call(dst, k)) continue;
+        var sv = src ? src[k] : undefined;
+        if (sv === undefined || sv === null) continue;
+        var dv = dst[k];
+        if (depth < 2 && dv && typeof dv === 'object' && !(dv instanceof Array) &&
+            sv && typeof sv === 'object' && !(sv instanceof Array)) {
+          merge(dv, sv, depth + 1);
+        } else {
+          dst[k] = sv;
+        }
+      }
+    })(d, u, 0);
+    /* 强调色只改 CSS 变量，不动任何一条样式规则。
+       必须连 .qb-dark 一起写：暗色下 html/body 各自重定义了 --accent，
+       只写给 :root 会被暗色那两条覆盖回去。 */
+    var hex = /^#?([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(String(d.accent || '').trim());
+    if (hex) {
+      var h = hex[1];
+      if (h.length === 3) h = h[0] + h[0] + h[1] + h[1] + h[2] + h[2];
+      var r = parseInt(h.slice(0, 2), 16);
+      var g = parseInt(h.slice(2, 4), 16);
+      var b = parseInt(h.slice(4, 6), 16);
+      var deep = '#' + [r, g, b].map(function (v) {
+        return ('0' + Math.max(0, Math.round(v * 0.82)).toString(16)).slice(-2);
+      }).join('');
+      try {
+        var st = document.createElement('style');
+        st.id = 'qb-cfg-accent';
+        st.textContent = ':root,html.qb-dark,body.qb-dark{--accent:#' + h +
+          ';--accent-deep:' + deep + ';--accent-soft:rgba(' + r + ',' + g + ',' + b + ',.13)}';
+        (document.head || document.documentElement).appendChild(st);
+      } catch (e) { /* 无 head 时忽略，配色退回默认 */ }
+    }
+    return d;
+  })();
 
   function mk(tag, cls, text) {
     var d = document.createElement(tag);
@@ -20,6 +138,140 @@
     if (extra) hd.appendChild(mk('span', 'qb-count', extra));
     panel.appendChild(hd);
     return panel;
+  }
+
+  /* ============ 0b. 顶栏导航：按 CFG.nav 渲染，页首 HTML 不再含任何菜单结构 ============
+     以前顶栏是 3.6KB 静态 HTML，粘在「页首 HTML 代码」里，改一个菜单要回后台整段重贴。
+     现在结构由脚本生成：改菜单只改 LS_CONFIG.nav.links，页首字段一个字都不用动。
+     渲染时机是本脚本执行时（同步、解析期），所以顶栏从第一帧起就带样式。 */
+  var LOGO_SVG =
+    '<svg width="30" height="30" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">' +
+    '<g fill="none" stroke="currentColor" stroke-width="7.4" stroke-linecap="round">' +
+    '<path d="M9.8 9.8 L22.2 22.2"/><path d="M22.2 9.8 L9.8 22.2"/></g>' +
+    '<circle class="qb-logo-dot" cx="4.9" cy="27.1" r="3.1"/></svg>';
+
+  function renderNav() {
+    if (!document.body) return null;
+    var explicit = !!((window.LS_CONFIG && window.LS_CONFIG.nav) ||
+                      (window.QB_CONFIG && window.QB_CONFIG.nav));
+    var nav = document.querySelector('.qb-nav');
+    /* 三种情况：
+       a) 不存在            → 新建；
+       b) 存在但没有品牌区   → 视作页首里预留的空壳，直接往里填（首帧就有 59px 白条，插入内容不跳）；
+       c) 存在且内容完整     → 旧版静态顶栏：用户没配 nav 就原样保留，配了就重建。 */
+    var shell = !!nav && !nav.querySelector('.qb-brand');
+    if (nav && !shell && !explicit) return nav;
+    if (!nav || !shell) {
+      nav = mk('div', 'qb-nav');
+      nav.id = 'qb-nav';
+      document.body.insertBefore(nav, document.body.firstChild);
+    } else {
+      nav.innerHTML = '';
+      /* 空壳可能被博客园塞在 #page_begin_html 容器里，立即提到 body 首位，
+         吸附范围才等于整页（否则 sticky 没有行程，滚一屏就跟着滚走） */
+      if (nav.parentNode !== document.body) document.body.insertBefore(nav, document.body.firstChild);
+    }
+
+    var n = CFG.nav || {};
+    var links = n.links instanceof Array ? n.links : [];
+    var brand = n.brand || '';
+
+    var inner = mk('div', 'qb-nav-inner');
+
+    var brandA = mk('a', 'qb-brand');
+    brandA.href = n.home || '/';
+    if (n.logo) {
+      var lbox = mk('span', 'qb-logo');
+      var img = document.createElement('img');
+      img.src = n.logo;
+      img.alt = brand;
+      /* 属性写死宽高：样式万一晚到，也不会把图撑成整屏 */
+      img.width = 30;
+      img.height = 30;
+      lbox.appendChild(img);
+      brandA.appendChild(lbox);
+    }
+    if (brand) brandA.appendChild(mk('span', 'qb-brand-text', brand));
+    if (n.mark !== false) {
+      var mbox = mk('span', 'qb-logo');
+      mbox.setAttribute('aria-hidden', 'true');
+      mbox.innerHTML = LOGO_SVG;
+      brandA.appendChild(mbox);
+    }
+    inner.appendChild(brandA);
+
+    if (links.length) {
+      var wrap = mk('nav', 'qb-links');
+      links.forEach(function (it) {
+        if (!it) return;
+        var txt = it.t || it.text;
+        if (!txt) return;
+        var a = mk('a', it.on ? 'on' : null, txt);
+        a.href = it.h || it.href || '#';
+        if (it.b || it.blank) {
+          a.target = '_blank';
+          a.rel = 'noopener';
+        }
+        wrap.appendChild(a);
+      });
+      inner.appendChild(wrap);
+    }
+
+    if (n.dark !== false) {
+      var btn = mk('a', 'qb-dark-btn');
+      btn.id = 'qb-dark-toggle';
+      btn.href = 'javascript:void(0)';
+      btn.title = '切换暗色模式';
+      btn.setAttribute('rel', 'nofollow noopener');
+      var icon = mk('i', null, '🌙');
+      icon.id = 'qb-dark-icon';
+      btn.appendChild(icon);
+      inner.appendChild(btn);
+    }
+
+    nav.appendChild(inner);
+    /* 只有一个元素在它前面时才搬，避免每次刷新都无谓重排 */
+    if (document.body.firstElementChild !== nav) {
+      document.body.insertBefore(nav, document.body.firstElementChild);
+    }
+    /* 注意：这里不解锁首帧闸门。顶栏就绪 ≠ 页面就绪 ——
+       右栏与公告还在解析，过早解锁就会看到「正文齐了、右栏后补」的闪动。
+       解锁统一由 boot 末尾的 unlock() 负责（见下方 7. 启动时机）。 */
+    return nav;
+  }
+
+  /* ============ 0c. 公告：同样按配置渲染 ============
+     配置了 notice.html 就接管，并把博客园「公告」字段渲染出来的原生容器藏掉，避免重复；
+     没配（html 为空）就完全交给后台字段，行为与旧版一致。 */
+  function renderNotice() {
+    var c = CFG.notice;
+    if (!c || c.show === false) return;
+    var html = c.html || '';
+    if (!html) return;
+    if (document.getElementById('qb-notice')) return;
+
+    var host = document.getElementById('sidebar_news');
+    if (host) {
+      var h3 = host.querySelector('h3');
+      if (h3 && c.title) h3.textContent = c.title;
+      var native = document.getElementById('blog-news');
+      if (native) native.style.display = 'none';
+      var box = mk('div', 'sidebar-news');
+      box.id = 'qb-notice';
+      box.innerHTML = html;
+      host.appendChild(box);
+      return;
+    }
+    /* 侧栏容器还没解析出来（分块传输时会遇到）：先挂到右栏顶上，
+       boot 里的定时器会反复补，等 #sidebar_news 出现在 DOM 后走上面的分支。 */
+    var right = document.getElementById('sideBarMain');
+    if (!right || right.querySelector('#qb-notice')) return;
+    var panel = makePanel(c.title || '公告');
+    var bd = mk('div', null);
+    bd.id = 'qb-notice';
+    bd.innerHTML = html;
+    panel.appendChild(bd);
+    right.insertBefore(panel, right.firstChild);
   }
 
   /* 1. 详情页：正文标题 -> 文章目录 */
@@ -159,24 +411,16 @@
     window.addEventListener('load', upd);
   }
 
-  /* 3. 侧栏下方的常用链接 / 随笔档案 / 搜索 / 排行 -> 右栏公告下方 */
-  function moveSideWidgets() {
-    var home = document.getElementById('sideBarMain') || document.getElementById('sideBar');
-    if (!home) return;
-    var news = document.getElementById('sidebar_news');
+  /* 3. 侧栏小部件留在原地，一个节点都不搬。
+     旧版把 #sidebar_news 与 #blog-sidecolumn 从 #leftcontentcontainer 搬进
+     自建的 #qb-right —— 搬的那一帧卡片整列换列，就是「内容在左边跳一下」。
+     现在 #sideBarMain 本身就是右栏容器（CSS 第 3 节），公告与卡片天然在里面竖排；
+     冗余的那几张卡由 CSS 直接 display:none。留空函数只为旧调用点不报错。 */
+  function moveSideWidgets() {}
 
-    var right = document.getElementById('qb-right');
-    if (!right) {
-      right = mk('div', 'qb-right');
-      right.id = 'qb-right';
-      if (news && news.parentNode === home) home.insertBefore(right, news);
-      else home.appendChild(right);
-    }
-    if (news && news.parentNode !== right) right.appendChild(news);
-
-    var side = document.getElementById('blog-sidecolumn');
-    if (side && side.parentNode !== right) right.appendChild(side);
-  }
+  /* #blog-sidecolumn 每填一次都会让右栏变高，但它现在就在自己的列里，
+     不会推动正文与左栏，所以「搬家监视器」整套都不需要了。 */
+  function watchSideColumn() {}
 
   /* 4. 正文图片懒加载：前两张留在首屏，其余延后，减少首屏并发 */
   function lazyImages() {
@@ -474,12 +718,23 @@
       if (body) body.classList.remove('qb-dark');
     }
   }
+  /* 该不该用暗色：用户手动切过（localStorage）> LS_CONFIG.dark > 系统偏好。
+     单独抽出来是因为「加类」必须赶在第一次绘制之前做，而绑定按钮要等顶栏建好。 */
+  function darkPref() {
+    var v = null;
+    try { v = localStorage && localStorage.getItem('qb-dark'); } catch (e) { /* 隐私模式 */ }
+    if (v === '1') return true;
+    if (v === '0') return false;
+    if (CFG.dark === 'on') return true;
+    if (CFG.dark === 'off') return false;
+    return !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  }
+
   function initDarkMode() {
     var btn = document.getElementById('qb-dark-toggle');
     var icon = document.getElementById('qb-dark-icon');
     if (!btn) return;
-    var dark = localStorage && localStorage.getItem('qb-dark');
-    var on = (dark === '1') || (dark === null && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    var on = darkPref();
     syncDarkClass(on);
     if (icon) icon.textContent = on ? '☀️' : '🌙';
     btn.addEventListener('click', function (e) {
@@ -625,7 +880,7 @@
 
      key 带 v3：v2 条目没有 n 字段，读到时必然判为不一致而重抓一次；
      clearArcCacheOld() 顺手删掉 v1/v2 的键，避免 localStorage 里堆几份过期快照。 */
-  var ARC_TTL = 24 * 3600 * 1000;
+  var ARC_TTL = (CFG.archiveTtl || 24) * 3600 * 1000;
   var ARC_PREFIX = 'qb-arc-v3:';
 
   function arcSiteKey() {
@@ -851,6 +1106,7 @@
 
   /* 条件补齐后重建（也用于「已经回退过、后来又读到月份」的自愈） */
   function retryFullArchive(left) {
+    if (!CFG.archive) return false;
     if (!left || document.querySelector('.qb-archive')) return false;
     if (!/\/p\/archive\/\d{4}\/\d{1,2}/.test(location.pathname)) return false;
     if (readArchiveMonths().length < 2) return false;
@@ -875,21 +1131,39 @@
       left.insertBefore(ph, left.firstChild);
     }
 
-    var tries = 0;
-    var timer = setInterval(function () {
+    var tries = 0, timer = null, mo = null;
+
+    function isReady() {
+      return !!(document.querySelector('#mainContent .entrylist') && readArchiveMonths().length >= 2);
+    }
+    function stop() {
+      if (timer) { clearInterval(timer); timer = null; }
+      if (mo) { mo.disconnect(); mo = null; }
+      ARC_WAITING = 0;
+    }
+    /* 返回 true = 处理完毕（建成时间线，或已存在），可以停止观察 */
+    function done() {
+      if (document.querySelector('.qb-archive')) { stop(); return true; }
+      if (!isReady()) return false;
+      stop();
+      retryFullArchive(left);
+      syncArchiveNav();
+      return true;
+    }
+
+    /* 月份索引来自博客园侧栏 XHR（#sidebar_postarchive）。原来只靠 200ms 轮询，
+       平均要多等半个周期；归档页的原生列表又被预隐藏了，这多等的 100~180ms 全都
+       体现在"页面停着不动"。用观察器在节点插入的那一刻（微任务）就判断，能提前一拍。 */
+    if ('MutationObserver' in window) {
+      mo = new MutationObserver(function () { done(); });
+      mo.observe(document.documentElement, { childList: true, subtree: true });
+    }
+
+    timer = setInterval(function () {
       tries += 1;
-      if (document.querySelector('.qb-archive')) { clearInterval(timer); ARC_WAITING = 0; return; }
-      var ready = document.querySelector('#mainContent .entrylist') && readArchiveMonths().length >= 2;
-      if (ready) {
-        clearInterval(timer);
-        ARC_WAITING = 0;
-        retryFullArchive(left);
-        syncArchiveNav();
-        return;
-      }
+      if (done()) return;
       if (tries >= 60) {   /* 约 12 秒：确实没有月份索引，回退成博客园单月列表 */
-        clearInterval(timer);
-        ARC_WAITING = 0;
+        stop();
         if (document.querySelector('.qb-archive')) return;
         [].forEach.call(left.querySelectorAll('.qb-panel'), function (p) {
           if (p.parentNode) p.parentNode.removeChild(p);
@@ -996,52 +1270,261 @@
     if (location.pathname.indexOf('/p/archive/') > -1) link.classList.add('on');
   }
 
-  function boot() {
-    var left = document.getElementById('leftcontentcontainer');
-    var body = document.getElementById('cnblogs_post_body');
+  /* 页首若放了 loading 遮罩（合并托管版推荐放，见 snippets/loading-v7.html），
+     样式与结构到位后淡出。内联版没放遮罩时这里直接返回，无副作用。 */
+  function dropLoading() {
+    var l = document.getElementById('loading');
+    if (!l) return;
+    l.style.transition = 'opacity .3s';
+    l.style.opacity = '0';
+    setTimeout(function () {
+      if (l.parentNode) l.parentNode.removeChild(l);
+    }, 350);
+  }
 
+  /* ============ 6.9 就绪闸门与侧栏同步 ============
+     侧栏相关加工集中到 syncSide()：首次 boot、侧栏节点到达、低频兜底轮询都调它。
+     每一步都是幂等的（建过就跳过），多调几次没有副作用，所以不必担心重复。 */
+  function syncSide(left) {
+    splitDayGroups();
+    if (CFG.pager) enhancePager();
+    moveSideWidgets();
+    watchSideColumn();
+    renderNotice();
+    /* 侧栏比脚本晚到时补建归档；已经回退过也能在这里自愈。
+       syncArchiveNav 一起补：否则顶栏「归档」还停在该死的旧月份上 */
+    retryFullArchive(left);
+    syncArchiveNav();
+  }
+
+  /* 结构够不够开工：必须等 #sideBarMain 解析出来。
+     只等 #mainContent 会放行得太早 —— DOM 顺序是「正文 → 侧栏」，#mainContent 一出现
+     就开始建左栏，buildLeft 返回 true，settle 立刻松闸，而 #sideBar 还差几 KB 没解析。
+     实测：773ms 放行时 #sideBarMain 还是 null，825ms 右栏才出现 —— 用户看到的就是
+     「页面出来了，右边空着，50ms 后补上一整列」。
+     #sideBarMain 是右栏容器，等它才算真的齐。博客园后台把侧栏全关掉时它不存在，
+     由 settle 的帧上限兜底。 */
+  function sideReady() {
+    /* 等 #leftcontentcontainer，而不是它的祖先 #sideBar / #sideBarMain ——
+       祖先的开放标签一出现 getElementById 就能拿到，那时子节点还差几 KB 没解析。
+       #leftcontentcontainer 是 #sideBarMain 的最后一个子节点，它出现 = 右栏整段解析完。 */
+    return !!(document.getElementById('main') &&
+              document.getElementById('mainContent') &&
+              document.getElementById('leftcontentcontainer'));
+  }
+
+  /* 左栏容器：脚本自建，插在 #mainContent 之前。
+     绝不能借用 #leftcontentcontainer —— 那个名字带 left，里面装的却是右栏那叠卡，
+     借用它会逼着脚本把卡片再搬一次，搬运就是抖动的来源。
+     grid 用显式列位，DOM 顺序只影响 Tab 键顺序。 */
+  function leftBox() {
+    var box = document.getElementById('qb-left');
+    if (box) return box;
+    var main = document.getElementById('main');
+    if (!main) return null;
+    box = mk('div', 'qb-left');
+    box.id = 'qb-left';
+    var mc = document.getElementById('mainContent');
+    if (mc && mc.parentNode === main) main.insertBefore(box, mc);
+    else main.insertBefore(box, main.firstChild);
+    return box;
+  }
+
+  var unlocked = false;
+  /* 闸门是否还压着。只有 settle 判定「可以显示」时才松开。
+     不能让别人随便调 unlock()：DOMContentLoaded 和 load 都比右栏那叠卡
+     （博客园 JS 动态插入的 #blog-sidecolumn）早 100ms 以上，无条件放行就等于
+     把「页面先出现、右栏后长出来」放回来 —— 那正是用户说的"抖一下"。 */
+  var gateHold = true;
+  /* 解锁首帧闸门（css 里的 html:not(.qb-ready) body）。只允许一次。
+     用 classList 而不是 className +=：bundle 的样式注入段也在同一个 <html> 上操作，
+     拼字符串会写出 "qb-ready qb-ready" 这种重复类名。 */
+  function unlock(force) {
+    if (unlocked || !document.documentElement) return;
+    if (gateHold && !force) return;
+    unlocked = true;
+    var de = document.documentElement;
+    /* 归档页若最终没建出时间线（只有一个月、月份索引一直没到），把预隐藏解开。
+       否则原生按月列表要等 CSS 里那 3 秒兜底才出现，正文会一直空着 —— 比闪更糟。 */
+    if (de.className.indexOf('qb-arc-page') >= 0 && !document.querySelector('.qb-archive')) {
+      de.className = de.className.replace(/\s*qb-arc-page\b/, '');
+    }
+    if (de.classList) de.classList.add('qb-ready');
+    else de.className += ' qb-ready';
+  }
+
+  /* 左栏一次建成，返回 false 表示「正文还没解析够」。
+     分块传输时 #cnblogs_post_body 的开放标签先到、标题后到；如果这时就退回
+     「文章列表」，详情页会先出现一块错误的列表、随后又跳成目录 —— 就是那一跳。
+     所以标题不足时宁可等下一帧，也不要急着 fallback。 */
+  var leftDone = false;
+  function buildLeft() {
+    if (leftDone) return true;
+    var left = leftBox();
+    if (!left) return false;
+    var body = document.getElementById('cnblogs_post_body');
+    if (body) {
+      if (body.querySelectorAll('h1, h2, h3, h4').length < 2 &&
+          document.readyState === 'loading') return false;
+      if (buildToc(body, left)) { leftDone = true; return true; }
+    }
+    if (CFG.archive && buildFullArchive(left)) { leftDone = true; return true; }
+    if (buildPostList(left)) { leftDone = true; return true; }
+    return false;
+  }
+
+  /* 逐帧等结构齐（最多 12 帧 ≈ 200ms），齐了立即解锁首帧闸门。
+     闸门挡着绘制，所以这几帧用户看不到任何东西；一旦齐了整页一次出现。
+     超时或解析结束后无条件解锁，保证不会停留白屏。 */
+  function settle(left, n) {
+    var ok = sideReady() && buildLeft();
+    if (ok) syncSide(left);
+
+    var de = document.documentElement;
+    var readyToShow = ok || n >= 12 || document.readyState !== 'loading';
+
+    /* 到了该放行的时候，但还有两样东西在路上，就再等一两帧：
+       ① 右栏那十张卡（分类/归档/标签/搜索/最新评论）是博客园 XHR 填的，
+          实测比结构就位晚约 100ms。不等它，页面会先出现、100ms 后右栏忽然长出一块。
+       ② 归档页的时间线没建好前不能放行：原生按月列表已被 qb-arc-page 藏住，
+          提前放出去只能是「空正文」或「原生列表」，两种之后都要再跳一次。
+       上限不同：侧栏卡约 100ms 就到，给 30 帧（500ms）足够；归档时间线要等月份
+       索引 XHR，实测 300~400ms，给 60 帧（1 秒）才稳。有些页面在博客园后台关掉了
+       这些侧栏部件，容器永远为空，所以不能用同一个上限死等；
+       unlock 里会顺手解开归档页的预隐藏，退回原生列表。 */
+    /* 归档页要等到「时间线壳 + 第一个月的条目」都在位才能放行。
+       只判 .qb-archive 存在不够：壳是同步插的，里面每个月的文章是异步 XHR 填的，
+       实测壳 600ms 就在、条目 750ms 才齐 —— 中间那一秒用户看到的是骨架和「加载中…」，
+       然后内容一路填进来，观感就是归档页在闪。 */
+    var arcBox = document.querySelector('.qb-archive');
+    var arcPending = de.className.indexOf('qb-arc-page') >= 0 &&
+                     (!arcBox || !arcBox.querySelector('li:not(.qb-arc-tip)'));
+    /* 右栏那叠卡仍要等。它不影响正文与左栏的位置（三栏各占各的列），
+       但它决定右栏自己的高度：不等它，放行时右栏是 0 高的一片空白，
+       用户看着卡片一张张填进来 —— 这就是「右栏内容晚到」的观感。
+       容器可能整个不存在（后台关掉了全部侧栏部件），所以用帧上限兜底。 */
+    var col = document.getElementById('blog-sidecolumn');
+    var colPending = !col || !col.children.length;
+    if ((arcPending && n < 60) || (colPending && n < 30)) {
+      requestAnimationFrame(function () { settle(left, n + 1); });
+      return;
+    }
+
+    if (readyToShow) {
+      /* 到这里就是「该显示而且没有 pending」或「已经等到上限」——松闸 */
+      gateHold = false;
+      unlock();
+      return;
+    }
+    requestAnimationFrame(function () { settle(left, n + 1); });
+  }
+
+  function boot() {
     /* 顶栏吸顶修复：必须最先做，否则后续按视口测量的位置全是错的 */
     hoistNav();
 
     /* 先把「同日多篇」拆成一篇一卡，再建目录（目录要按拆完的顺序取文章） */
     splitDayGroups();
-    enhancePager();
+    if (CFG.pager) enhancePager();
 
-    if (left) {
-      var done = false;
-      if (body) { done = buildToc(body, left); }
-      /* 归档页优先做全量时间线（内部失败会自行回退到 buildPostList） */
-      if (!done) { done = buildFullArchive(left); }
-      if (!done) { buildPostList(left); }
-    }
-    moveSideWidgets();
+    buildLeft();
+    var left = document.getElementById('qb-left');
+    syncSide(left);
+
     lazyImages();
     markNav();
-    syncArchiveNav();
     initFavicon();
     initDarkMode();
-    createBackToTop();
+    if (CFG.backToTop) createBackToTop();
 
-    /* 博客园侧栏是异步加载的，加载完可能重排节点，这里兜底复位一次；
-       顺带再拆一遍「同日多篇」（防分页/懒加载后追加进来的新分组） */
+    /* 结构齐了才解锁首帧闸门；没齐就逐帧补，最多 12 帧后无条件解锁 */
+    settle(left, 0);
+
+    /* 兜底轮询：博客园侧栏里还有异步追加的节点（排行榜、积分、最新评论），
+       它们到位后可能重排，隔 500ms 复位一次共 12 次（6 秒），之后不再打扰。
+       注意它不负责「首次建右栏」—— 那已由 waitSide 负责，所以不会再有半秒空窗。 */
     var tries = 0;
     var timer = setInterval(function () {
       tries += 1;
-      splitDayGroups();
-      enhancePager();
-      moveSideWidgets();
-      /* 侧栏比脚本晚到时补建归档；已经回退过也能在这里自愈。
-         syncArchiveNav 一起补：否则顶栏「归档」还停在该死的旧月份上 */
-      retryFullArchive(left);
-      syncArchiveNav();
+      syncSide(left);
       if (tries > 12) clearInterval(timer);
     }, 500);
+
+    dropLoading();
   }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', boot);
-  } else {
+  /* 顶栏在解析期就渲染：包内样式先于本脚本注入，所以首帧画出来就是带样式的顶栏。
+     A 内联方案（CSS 在「页面定制 CSS 代码」、脚本在页脚）也能用，只是顶栏会晚一拍。 */
+  if (document.body) renderNav();
+  /* 暗色必须在第一次绘制之前就应用：闸门期间画出来的是页面底色，
+     晚一步的话暗色用户会先看到一帧亮底再变黑 —— 那一下白就是这个。 */
+  syncDarkClass(darkPref());
+  /* 关掉闸门时立刻解锁：页面从解析起就可见，和 6.x 一样边解析边显示 */
+  /* gate:false = 明确要求「边解析边显示」（内联版的默认值），这时不解锁没意义 */
+  if (CFG.gate === false) { gateHold = false; unlock(); }
+  window.__QB_READY__ = true;
+
+  /* ============ 7. 启动时机：抢在首帧之前 ============
+     页首用 document.write 同步加载本文件时，执行点在 <body> 最前面 —— 此时 #main 还
+     没解析出来，等 DOMContentLoaded 就太晚了：首帧早就画完，目录 / 侧栏 / 公告会在
+     200ms 后"啪"地出现，观感就是切页闪一下（v7.3 实测：首帧 344ms，侧栏 792ms）。
+     MutationObserver 在解析器每次插入节点后以微任务触发，比下一帧还早，所以一看到
+     #mainContent 出现就 boot，整套 DOM 加工能在样式表到齐、首帧渲染之前完成。
+     A 方案（脚本放页脚）执行时 DOM 已完整，第一次判断就能直接 boot。 */
+  var booted = false;
+  function bootOnce() {
+    if (booted) return true;
+    if (!document.getElementById('mainContent')) return false;
+    /* 页面还在解析、侧栏节点未到时先不 boot：那一刻正文子节点也不全，
+       建出来的目录会缺章节，只能等后面补建 —— 而补建就是"跳一下"。
+       闸门挡着绘制，boot 晚几十毫秒没有视觉代价，换来一次建成。 */
+    if (document.readyState === 'loading' && !sideReady()) return false;
+    booted = true;
     boot();
+    return true;
   }
+
+  if (!bootOnce()) {
+    var mo = new MutationObserver(function () {
+      if (bootOnce()) mo.disconnect();
+    });
+    mo.observe(document.documentElement, { childList: true, subtree: true });
+    document.addEventListener('DOMContentLoaded', function () {
+      if (bootOnce()) mo.disconnect();
+    });
+    /* 兜底：极端情况（脚本在 head 执行、观察器被摘掉）也不会永远不初始化 */
+    setTimeout(function () { bootOnce(); mo.disconnect(); }, 1500);
+  }
+
+  /* 补一次内容构建：网络慢 / 分块传输时早期 boot 可能空手而归。
+     DCL 时若左栏仍然空着就再建一次；已经有面板说明建过了，直接跳过。
+     注意这里不能直接 unlock()：DCL 通常比右栏那叠卡（博客园 XHR）早 200ms，
+     无条件放行就把「页面先出现、右栏后长出来」的老问题又带回来了。
+     交给 settle 判断，它会在 pending 结束或到达上限时放行。 */
+  document.addEventListener('DOMContentLoaded', function () {
+    if (!booted) return;
+    if (!leftDone) buildLeft();
+    var lc = document.getElementById('qb-left');
+    syncSide(lc);
+    settle(lc, 12);
+  });
+
+  /* 闸门兜底：boot 因为结构异常没跑起来时，这里补跑一次（而不是直接 unlock）。
+     直接 unlock 会绕过 settle 的等待条件，等于把「右栏后长出来」放回来。
+     load 时再无条件解锁一次，作为最后一道保险 —— 那时图片/脚本都到齐了。 */
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function () { bootOnce(); });
+  } else {
+    bootOnce();
+  }
+  /* load 只补跑 boot，不直接解锁：load 实测比 #blog-sidecolumn 出现还早，
+     在这里放行等于白等。真要保底，交给下面那 1.2 秒。 */
+  window.addEventListener('load', function () { bootOnce(); });
+
+  /* 绝对兜底：1.5 秒后不管什么原因还没放行，强制显示 ——
+     宁可右栏晚一点，也不能让页面停在不可见状态。
+     实测最慢的页面（首页冷启动）到 1.13s 才齐，所以留到 1.5s；
+     CSS 里另有一条 2.5 秒的纯 CSS 兜底，专门用于脚本完全没跑起来的情况。 */
+  setTimeout(function () { unlock(true); }, 1500);
 })();
 </script>

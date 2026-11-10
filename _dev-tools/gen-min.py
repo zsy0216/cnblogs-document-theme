@@ -1,8 +1,8 @@
 import io
 import re
 
-SRC = 'css/theme-v6.css'
-OUT = 'css/theme-v6.min.css'
+SRC = 'css/theme-v7.css'
+OUT = 'css/theme-v7.min.css'
 
 src = io.open(SRC, encoding='utf-8').read()
 
@@ -13,7 +13,7 @@ m = re.search(r'流苏主题\s+(v\d+\.\d+)\s*·\s*(\d{4}-\d{2}-\d{2})', src)
 if not m:
     raise SystemExit('未在 %s 头部找到版本行（格式应为「流苏主题 v6.N · YYYY-MM-DD」）' % SRC)
 ver, day = m.group(1), m.group(2)
-banner = '/* 流苏主题 %s · %s · 压缩版，源码见 theme-v6.css */\n' % (ver, day)
+banner = '/* 流苏主题 %s · %s · 压缩版，源码见 theme-v7.css */\n' % (ver, day)
 
 body = re.sub(r'/\*[\s\S]*?\*/', '', src)
 body = body.replace('\n', ' ').replace('\t', ' ')
