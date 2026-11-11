@@ -28,6 +28,3 @@ preview/ref-*.png
 
 # 本地推送凭据（含 token，绝不能提交）
 .git-credentials-local
-
-# 个人待办
-todo.md
