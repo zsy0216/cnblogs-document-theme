@@ -19,15 +19,15 @@
 
 **首页**：左中右三栏，左边是全文文章列表，中间是文章卡片，右边是公告和常用链接。
 
-![首页效果](https://cdn.jsdelivr.net/gh/zsy0216/cnblogs-document-theme@master/docs/images/home-v7.png)
+![首页效果](https://gcore.jsdelivr.net/gh/zsy0216/cnblogs-document-theme@master/docs/images/home-v7.png)
 
 **文章页**：左边是正文 H1–H4 自动生成的目录，右边是卡片式侧栏，正文独占中栏。
 
-![文章页效果](https://cdn.jsdelivr.net/gh/zsy0216/cnblogs-document-theme@master/docs/images/post-v7.png)
+![文章页效果](https://gcore.jsdelivr.net/gh/zsy0216/cnblogs-document-theme@master/docs/images/post-v7.png)
 
 **暗色模式**：配色对齐 GitHub Dark —— 底色 `#0d1117`、卡片 `#161b22`、描边 `#30363d`、正文 `#c9d1d9`。不是简单把白底刷黑，而是每个层级都重新定了一套色。右上角 🌙 一键切换，状态存本地，首次访问跟随系统偏好。
 
-![暗色首页](https://cdn.jsdelivr.net/gh/zsy0216/cnblogs-document-theme@master/docs/images/home-v7-dark.png)
+![暗色首页](https://gcore.jsdelivr.net/gh/zsy0216/cnblogs-document-theme@master/docs/images/home-v7-dark.png)
 
 ## 三、都做了哪些事
 
