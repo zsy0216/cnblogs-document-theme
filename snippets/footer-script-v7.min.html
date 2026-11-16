@@ -1,4 +1,4 @@
-<!-- 流苏主题 v7.23 · 2026-11-16 页脚 HTML（压缩版）
+<!-- 流苏主题 v7.24 · 2026-11-16 页脚 HTML（压缩版）
      位置：博客园后台 -> 设置 -> 页脚 HTML 代码（粘贴前先清空）
      说明：本文件由 _dev-tools/gen-footer-min.py 从 footer-script-v7.html 生成，
            功能完全一致，只删注释与缩进。要改逻辑请改源文件后重新生成，不要改这里。 -->
@@ -1060,10 +1060,6 @@ links.forEach(function (a) {
 var h = document.getElementById(a.getAttribute('data-t'));
 if (h) heads.push({ h: h, a: a });
 });
-links.forEach(function (a) {
-var h = document.getElementById(a.getAttribute('data-t'));
-if (h) heads.push({ h: h, a: a });
-});
 function spy() {
 lock = false;
 if (!heads.length) return;
@@ -1087,6 +1083,84 @@ if (lock) return;
 lock = true;
 requestAnimationFrame(spy);
 }, { passive: true });
+}
+function initMobileMenu() {
+var links = document.querySelector('.qb-links');
+var inner = document.querySelector('.qb-nav-inner');
+var actions = document.querySelector('.qb-actions');
+if (!links || !inner || document.getElementById('qb-mmenu')) return;
+var items = [].slice.call(links.querySelectorAll('a'));
+if (!items.length) return;
+var btn = mk('button', 'qb-burger');
+btn.type = 'button';
+btn.id = 'qb-burger';
+btn.setAttribute('aria-label', '打开导航菜单');
+btn.setAttribute('aria-expanded', 'false');
+btn.innerHTML =
+'<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" ' +
+'stroke-width="2" stroke-linecap="round"><path d="M4 7h16"/><path d="M4 12h16"/>' +
+'<path d="M4 17h16"/></svg>';
+(actions || inner).appendChild(btn);
+var root = mk('div', 'qb-mmenu');
+root.id = 'qb-mmenu';
+root.setAttribute('aria-hidden', 'true');
+var mask = mk('div', 'qb-mmenu-mask');
+var panel = mk('div', 'qb-mmenu-panel');
+panel.setAttribute('role', 'dialog');
+panel.setAttribute('aria-modal', 'true');
+panel.setAttribute('aria-label', '站点导航');
+var hd = mk('div', 'qb-mmenu-hd');
+hd.appendChild(mk('span', 'qb-mmenu-title', '导航'));
+var x = mk('button', 'qb-mmenu-x');
+x.type = 'button';
+x.setAttribute('aria-label', '关闭导航');
+x.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" ' +
+'stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12"/><path d="M18 6L6 18"/></svg>';
+hd.appendChild(x);
+var list = mk('ul', 'qb-mmenu-list');
+items.forEach(function (src) {
+var li = mk('li');
+var a = mk('a', src.className || null, src.textContent);
+a.href = src.href;
+if (src.target) { a.target = src.target; a.rel = 'noopener'; }
+li.appendChild(a);
+list.appendChild(li);
+});
+panel.appendChild(hd);
+panel.appendChild(list);
+root.appendChild(mask);
+root.appendChild(panel);
+document.body.appendChild(root);
+function open() {
+root.classList.add('open');
+root.setAttribute('aria-hidden', 'false');
+btn.setAttribute('aria-expanded', 'true');
+document.documentElement.classList.add('qb-mmenu-lock');
+}
+function close() {
+if (!root.classList.contains('open')) return;
+root.classList.remove('open');
+root.setAttribute('aria-hidden', 'true');
+btn.setAttribute('aria-expanded', 'false');
+document.documentElement.classList.remove('qb-mmenu-lock');
+}
+btn.addEventListener('click', function () {
+if (root.classList.contains('open')) close(); else open();
+});
+mask.addEventListener('click', close);
+x.addEventListener('click', close);
+list.addEventListener('click', function (e) {
+var a = e.target.closest ? e.target.closest('a') : null;
+if (a) close();
+});
+document.addEventListener('keydown', function (e) {
+if (e.key === 'Escape') close();
+});
+var mq = window.matchMedia('(max-width: 860px)');
+var onMq = function () { if (!mq.matches) close(); };
+if (mq.addEventListener) mq.addEventListener('change', onMq);
+else if (mq.addListener) mq.addListener(onMq);
+document.documentElement.classList.add('qb-mnav');
 }
 function posKey() { return 'qb-pos:' + location.pathname; }
 var posPruned = false;
@@ -1705,6 +1779,7 @@ enhanceTables();
 enhanceMarkdown();
 enhancePost();
 initMobileToc();
+initMobileMenu();
 markNav();
 initFavicon();
 initDarkMode();
@@ -1751,6 +1826,7 @@ enhanceTables();
 enhanceMarkdown();
 enhancePost();
 initMobileToc();
+initMobileMenu();
 var lc = document.getElementById('qb-left');
 syncSide(lc);
 settle(lc, 12);

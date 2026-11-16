@@ -1,8 +1,8 @@
-<!-- 流苏主题 v7.23 · 2026-11-16 页脚 HTML 重要脚本
+<!-- 流苏主题 v7.24 · 2026-11-16 页脚 HTML 重要脚本
      位置：博客园后台 -> 设置 -> 页脚 HTML 代码
      说明：1. 这里的 script 包含全部 DOM 操作逻辑（目录生成、滚动高亮、部件搬运）。2. 粘贴前务必备份原有内容。3. 博客园 HTML 校验器：确保没有未配对的尖括号，所有符号合法。 -->
 <script>
-/* 流苏主题 v7.23 · 2026-11-16 页脚：列表页文章目录 / 详情页文章目录 / 归档时间线 / 分页 / 回到顶部 / 滚动高亮 */
+/* 流苏主题 v7.24 · 2026-11-16 页脚：列表页文章目录 / 详情页文章目录 / 归档时间线 / 分页 / 回到顶部 / 滚动高亮 */
 (function () {
   'use strict';
 
@@ -1470,10 +1470,6 @@
       var h = document.getElementById(a.getAttribute('data-t'));
       if (h) heads.push({ h: h, a: a });
     });
-    links.forEach(function (a) {
-      var h = document.getElementById(a.getAttribute('data-t'));
-      if (h) heads.push({ h: h, a: a });
-    });
     function spy() {
       lock = false;
       if (!heads.length) return;
@@ -1498,6 +1494,106 @@
       lock = true;
       requestAnimationFrame(spy);
     }, { passive: true });
+  }
+
+  /* ============ 7.3 移动端导航抽屉（v7.24） ============
+     <860px 顶栏菜单只能露出前三四项：实测可视宽 188px、内容宽 517px，
+     64% 的条目藏在横向滚动里 —— 手机上等于没有导航。
+     做法：汉堡按钮 + 右侧滑出抽屉，条目从 .qb-links 克隆，与桌面共用同一份
+     LS_CONFIG.nav，不另起一套菜单数据。
+
+     只在抽屉真建好后给 <html> 挂 qb-mnav，CSS 才据此隐藏横滑菜单：
+     脚本没跑（或建抽屉条件不满足）时保持横滑，至少还有导航入口。 */
+  function initMobileMenu() {
+    var links = document.querySelector('.qb-links');
+    var inner = document.querySelector('.qb-nav-inner');
+    var actions = document.querySelector('.qb-actions');
+    if (!links || !inner || document.getElementById('qb-mmenu')) return;
+    var items = [].slice.call(links.querySelectorAll('a'));
+    if (!items.length) return;
+
+    var btn = mk('button', 'qb-burger');
+    btn.type = 'button';
+    btn.id = 'qb-burger';
+    btn.setAttribute('aria-label', '打开导航菜单');
+    btn.setAttribute('aria-expanded', 'false');
+    btn.innerHTML =
+      '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" ' +
+      'stroke-width="2" stroke-linecap="round"><path d="M4 7h16"/><path d="M4 12h16"/>' +
+      '<path d="M4 17h16"/></svg>';
+    /* 挂进 .qb-actions 而不是直接挂 .qb-nav-inner：后者是 space-between，
+       多一个直接子项会把品牌、菜单、按钮三段的间距重新均分，顶栏会散开 */
+    (actions || inner).appendChild(btn);
+
+    var root = mk('div', 'qb-mmenu');
+    root.id = 'qb-mmenu';
+    root.setAttribute('aria-hidden', 'true');
+
+    var mask = mk('div', 'qb-mmenu-mask');
+    var panel = mk('div', 'qb-mmenu-panel');
+    panel.setAttribute('role', 'dialog');
+    panel.setAttribute('aria-modal', 'true');
+    panel.setAttribute('aria-label', '站点导航');
+
+    var hd = mk('div', 'qb-mmenu-hd');
+    hd.appendChild(mk('span', 'qb-mmenu-title', '导航'));
+    var x = mk('button', 'qb-mmenu-x');
+    x.type = 'button';
+    x.setAttribute('aria-label', '关闭导航');
+    x.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" ' +
+      'stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12"/><path d="M18 6L6 18"/></svg>';
+    hd.appendChild(x);
+
+    var list = mk('ul', 'qb-mmenu-list');
+    items.forEach(function (src) {
+      var li = mk('li');
+      var a = mk('a', src.className || null, src.textContent);
+      a.href = src.href;
+      if (src.target) { a.target = src.target; a.rel = 'noopener'; }
+      li.appendChild(a);
+      list.appendChild(li);
+    });
+
+    panel.appendChild(hd);
+    panel.appendChild(list);
+    root.appendChild(mask);
+    root.appendChild(panel);
+    document.body.appendChild(root);
+
+    function open() {
+      root.classList.add('open');
+      root.setAttribute('aria-hidden', 'false');
+      btn.setAttribute('aria-expanded', 'true');
+      document.documentElement.classList.add('qb-mmenu-lock');
+    }
+    function close() {
+      if (!root.classList.contains('open')) return;
+      root.classList.remove('open');
+      root.setAttribute('aria-hidden', 'true');
+      btn.setAttribute('aria-expanded', 'false');
+      document.documentElement.classList.remove('qb-mmenu-lock');
+    }
+
+    btn.addEventListener('click', function () {
+      if (root.classList.contains('open')) close(); else open();
+    });
+    mask.addEventListener('click', close);
+    x.addEventListener('click', close);
+    list.addEventListener('click', function (e) {
+      var a = e.target.closest ? e.target.closest('a') : null;
+      if (a) close();
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') close();
+    });
+    /* 转到桌面宽度时抽屉被 CSS 藏起来了，滚动锁必须一起解开 */
+    var mq = window.matchMedia('(max-width: 860px)');
+    var onMq = function () { if (!mq.matches) close(); };
+    if (mq.addEventListener) mq.addEventListener('change', onMq);
+    else if (mq.addListener) mq.addListener(onMq);
+
+    /* 最后一步再挂类：CSS 只在有 qb-mnav 时隐藏横滑菜单 */
+    document.documentElement.classList.add('qb-mnav');
   }
 
   /* ============ 7.2 续读记忆（v7.21） ============
@@ -2342,7 +2438,10 @@
     enhancePost();
     /* 目录抽屉依赖 buildLeft 的产物，必须排在它后面 */
     initMobileToc();
+    /* 导航抽屉要克隆 .qb-links 的 a，必须排在 markNav 之后 ——
+       否则克隆出来的是还没打上 .on 的那份，抽屉里当前页不会高亮 */
     markNav();
+    initMobileMenu();
     initFavicon();
     initDarkMode();
     initTheme();
@@ -2425,6 +2524,7 @@
     enhanceMarkdown();
     enhancePost();
     initMobileToc();
+    initMobileMenu();
     var lc = document.getElementById('qb-left');
     syncSide(lc);
     settle(lc, 12);
