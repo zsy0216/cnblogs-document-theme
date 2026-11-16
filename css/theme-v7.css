@@ -1,6 +1,6 @@
 /* ============================================================
-   流苏主题 v7.19 · 2026-11-16
-   最近：代码块加行号、语言标签与复制，暗色适配
+   流苏主题 v7.20 · 2026-11-16
+   最近：feat(v7.20): 顶栏主题色选择、阅读时长、标题锚点、文末版权
    ------------------------------------------------------------
    主题 v6 —— 基于博客园 2026 真实 DOM 重写
    ------------------------------------------------------------
@@ -221,6 +221,69 @@ body.qb-dark #qb-dark-toggle,
 body.qb-dark .qb-dark-btn { color: var(--accent-deep); }
 body.qb-dark #qb-dark-toggle:hover,
 body.qb-dark .qb-dark-btn:hover { background: var(--accent-soft); }
+
+/* 主题色按钮 + 取色面板（v7.20）
+   命名一律带 qb-theme 前缀：状态类叫 qb-dark，按钮若同名会被那条 36px 规则压扁。 */
+.qb-actions {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    flex: 0 0 auto;
+}
+.qb-theme { position: relative; display: flex; align-items: center; flex: 0 0 auto; }
+.qb-theme-btn {
+    display: flex; align-items: center; justify-content: center;
+    width: 36px; height: 36px; padding: 0;
+    border: 0; border-radius: 50%; background: none;
+    color: var(--body); cursor: pointer;
+    transition: background .2s ease, color .2s ease;
+}
+.qb-theme-btn svg { width: 18px; height: 18px; display: block; }
+.qb-theme-btn:hover,
+.qb-theme-btn[aria-expanded="true"] { background: var(--accent-soft); color: var(--accent-deep); }
+body.qb-dark .qb-theme-btn { color: var(--accent-deep); }
+.qb-theme-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.qb-theme-pop {
+    position: absolute;
+    /* 13px = 顶栏内边距 11 + 半个按钮 18 - 16，面板上缘正好落在顶栏下边框外，
+       不再压住顶栏那条细线 */
+    top: calc(100% + 13px);
+    right: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 10px 12px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-hover);
+}
+/* 必须显式写：下面的 display:flex 会盖掉浏览器对 [hidden] 的默认 display:none */
+.qb-theme-pop[hidden] { display: none; }
+.qb-theme-dot {
+    width: 20px; height: 20px; padding: 0;
+    border: 0; border-radius: 50%;
+    background: var(--d);
+    box-shadow: inset 0 0 0 1px rgba(15, 23, 42, .12);
+    cursor: pointer;
+    transition: transform .15s ease, box-shadow .15s ease;
+}
+body.qb-dark .qb-theme-dot {
+    background: var(--d2);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .16);
+}
+.qb-theme-dot:hover { transform: scale(1.14); }
+/* 选中态用「双环」：内环是卡片底色，外环是色点自己 ——
+   单纯加粗边框在深色底上会糊成一团 */
+.qb-theme-dot.on {
+    box-shadow: 0 0 0 2px var(--card), 0 0 0 4px var(--d);
+}
+body.qb-dark .qb-theme-dot.on {
+    box-shadow: 0 0 0 2px var(--card), 0 0 0 4px var(--d2);
+}
+.qb-theme-dot:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 .qb-nav {
     position: sticky;
     top: 0;
@@ -1567,6 +1630,83 @@ body.qb-dark .qb-arc-idx-m.on i { color: rgba(13, 17, 23, .7); }
 /* 关掉行号时只留左侧留白，代码不贴边 */
 #cnblogs_post_body .qb-code.no-line-numbers .qb-cl { padding-left: 18px; }
 #cnblogs_post_body .qb-code.no-line-numbers .qb-cl::before { display: none; }
+
+/* 6.6 阅读时长（v7.20 起由页脚脚本插在标题与正文之间）
+   一行小字，不占视觉重量：正文前面已经有标题和目录，再放一块卡片会把正文推下去。 */
+#post_detail .qb-readtime {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    margin: -2px 0 20px;
+    font-size: 12.5px;
+    color: var(--meta);
+    letter-spacing: .01em;
+}
+#post_detail .qb-readtime .qb-rt-sep { color: var(--line); }
+
+/* 6.7 标题锚点（hover 出 #）
+   锚点的 # 用 ::before 画：文字直接写进 <a> 会被目录的 textContent 抓走，
+   目录每条后面就都多一个井号。 */
+#cnblogs_post_body h2,
+#cnblogs_post_body h3 { position: relative; }
+#cnblogs_post_body .qb-hanchor {
+    margin-left: 8px;
+    font-weight: 400;
+    color: var(--meta);
+    text-decoration: none;
+    opacity: 0;
+    transition: opacity .15s ease, color .15s ease;
+}
+#cnblogs_post_body .qb-hanchor::before { content: '#'; }
+#cnblogs_post_body h2:hover .qb-hanchor,
+#cnblogs_post_body h3:hover .qb-hanchor,
+#cnblogs_post_body .qb-hanchor:focus-visible { opacity: .5; }
+#cnblogs_post_body .qb-hanchor:hover { opacity: 1; color: var(--accent-deep); }
+/* 触屏没有 hover，永远等不到 opacity:1，直接给个半透明的常驻态 */
+@media (hover: none) {
+    #cnblogs_post_body .qb-hanchor { opacity: .38; }
+}
+
+/* 6.8 文末版权块（脚本插在正文末尾）
+   虚线框 + 背景色，一眼能看出「这是附加信息」，不会和正文最后一段混在一起。 */
+#cnblogs_post_body .qb-copyright {
+    margin: 2.4em 0 0;
+    padding: 15px 18px 14px;
+    /* --line 在浅色下是 #ecedf0，和 --bg 的 #f4f5f7 几乎同色，虚线等于看不见。
+       这里单独给一档更实的描边色，暗色再换回来。 */
+    border: 1px dashed rgba(31, 35, 41, .16);
+    border-radius: var(--radius-sm);
+    background: var(--bg);
+    font-size: 12.5px;
+    line-height: 1.95;
+    color: var(--meta);
+}
+#cnblogs_post_body .qb-copyright p { margin: 0; }
+#cnblogs_post_body .qb-copyright .qb-cr-h {
+    margin-bottom: 3px;
+    font-weight: 600;
+    color: var(--body);
+    letter-spacing: .02em;
+}
+#cnblogs_post_body .qb-copyright a {
+    color: var(--body);
+    text-decoration: none;
+    border-bottom: 1px dotted var(--line);
+    word-break: break-all;
+}
+#cnblogs_post_body .qb-copyright a:hover {
+    color: var(--accent-deep);
+    border-bottom-color: var(--accent);
+}
+#cnblogs_post_body .qb-copyright .qb-cr-tip { color: var(--meta); }
+body.qb-dark #cnblogs_post_body .qb-copyright { border-color: rgba(255, 255, 255, .16); }
+
+/* 博客园会给每个标题塞一个「显示目录导航」按钮（.cnblogs-toc-button）。
+   桌面端左栏本来就有目录，这个按钮只会让标题变成「标题 ≡ #」，藏掉；
+   小屏左栏是隐藏的，那个按钮反而有用，所以只在 ≥861px 生效。 */
+@media screen and (min-width: 861px) {
+    #cnblogs_post_body .cnblogs-toc-button { display: none !important; }
+}
 #cnblogs_post_body table {
     width: 100%;
     border-collapse: collapse;
@@ -1934,4 +2074,9 @@ body.qb-dark #cnblogs_post_body img:hover {
     }
     .qb-links::-webkit-scrollbar { display: none; }
     #qb-dark-toggle { flex: 0 0 36px; }
+    /* 两个外观按钮都不能被横向滑动的菜单挤小 */
+    #qb-theme-toggle { flex: 0 0 36px; }
+    .qb-theme { flex: 0 0 36px; }
+    /* 面板贴着按钮右缘会离屏幕边只剩 14px，这里往回带一点，六颗色点在小屏也放得下 */
+    .qb-theme-pop { right: -4px; gap: 8px; padding: 9px 11px; }
 }

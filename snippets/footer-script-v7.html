@@ -1,8 +1,8 @@
-<!-- 流苏主题 v7.19 · 2026-11-16 页脚 HTML 重要脚本
+<!-- 流苏主题 v7.20 · 2026-11-16 页脚 HTML 重要脚本
      位置：博客园后台 -> 设置 -> 页脚 HTML 代码
      说明：1. 这里的 script 包含全部 DOM 操作逻辑（目录生成、滚动高亮、部件搬运）。2. 粘贴前务必备份原有内容。3. 博客园 HTML 校验器：确保没有未配对的尖括号，所有符号合法。 -->
 <script>
-/* 流苏主题 v7.19 · 2026-11-16 页脚：列表页文章目录 / 详情页文章目录 / 归档时间线 / 分页 / 回到顶部 / 滚动高亮 */
+/* 流苏主题 v7.20 · 2026-11-16 页脚：列表页文章目录 / 详情页文章目录 / 归档时间线 / 分页 / 回到顶部 / 滚动高亮 */
 (function () {
   'use strict';
 
@@ -87,7 +87,7 @@
         home: HOME,
         /* 默认不放头像：以前写死作者自己的图，别人的站会顶着别人的头像。 */
         logo: '',
-        mark: true,      /* 品牌区右侧的十字图形 */
+        mark: null,      /* 品牌区右侧的十字图形：null = 没设 logo 才画（两个都上会像关不掉的 ×） */
         dark: true,      /* 是否显示暗色切换按钮 */
         links: [
           { t: '首页', h: HOME },
@@ -190,10 +190,19 @@
     /* 三种情况：
        a) 不存在            → 新建；
        b) 存在但没有品牌区   → 视作页首里预留的空壳，直接往里填（首帧就有 59px 白条，插入内容不跳）；
-       c) 存在且内容完整     → 旧版静态顶栏：用户没配 nav 就原样保留，配了就重建。 */
+       c) 存在且内容完整     → 旧版静态顶栏：用户没配 nav 就原样保留，配了就清空重建。 */
     var shell = !!nav && !nav.querySelector('.qb-brand');
     if (nav && !shell && !explicit) return nav;
-    if (!nav || !shell) {
+
+    /* 多出来的 .qb-nav 一律清掉。旧版页首里那段静态顶栏 + 新版空壳同时存在时（升级过渡期、
+       页首字段还没换），页面上会出现两条同 id 顶栏，而且旧的那条排在后面、盖住新顶栏里的
+       取色面板 —— 点色点会点到「管理」链接上。 */
+    var dup = document.querySelectorAll('.qb-nav');
+    for (var j = dup.length - 1; j >= 0; j--) {
+      if (dup[j] !== nav && dup[j].parentNode) dup[j].parentNode.removeChild(dup[j]);
+    }
+
+    if (!nav) {
       nav = mk('div', 'qb-nav');
       nav.id = 'qb-nav';
       document.body.insertBefore(nav, document.body.firstChild);
@@ -224,7 +233,10 @@
       brandA.appendChild(lbox);
     }
     if (brand) brandA.appendChild(mk('span', 'qb-brand-text', brand));
-    if (n.mark !== false) {
+    /* 十字图形默认只在「没有 logo」时顶上：两个一起上，品牌区就是「头像 Ep流苏 ×」，
+       那个 × 看起来像关不掉的按钮（v7.18 起一直如此）。想同时要就显式写 mark:true。 */
+    var markOn = (n.mark === false) ? false : (n.mark === true ? true : !n.logo);
+    if (markOn) {
       var mbox = mk('span', 'qb-logo');
       mbox.setAttribute('aria-hidden', 'true');
       mbox.innerHTML = LOGO_SVG;
@@ -249,6 +261,16 @@
       inner.appendChild(wrap);
     }
 
+    /* 两个外观按钮必须裹进同一个容器再插进顶栏：
+       .qb-nav-inner 是 space-between，多一个直接子项会把空白重新均分 ——
+       顶栏变成「品牌 | 菜单 | 取色 …… 暗色」四处散开，两个按钮之间空出一大段。
+       包成一组等于回到三项布局，菜单与按钮的相对位置跟 v7.19 完全一致。 */
+    var actions = mk('div', 'qb-actions');
+
+    /* 主题色放在明暗按钮左边：两个都是「外观」按钮，同侧排开；暗色按钮仍留在最右角。
+       取色面板由 renderThemeUi 建好，点击逻辑在 initTheme（boot 里绑）。 */
+    renderThemeUi(actions);
+
     if (n.dark !== false) {
       var btn = mk('a', 'qb-dark-btn');
       btn.id = 'qb-dark-toggle';
@@ -258,8 +280,10 @@
       var icon = mk('i', null, '🌙');
       icon.id = 'qb-dark-icon';
       btn.appendChild(icon);
-      inner.appendChild(btn);
+      actions.appendChild(btn);
     }
+
+    if (actions.children.length) inner.appendChild(actions);
 
     nav.appendChild(inner);
     /* 只有一个元素在它前面时才搬，避免每次刷新都无谓重排 */
@@ -939,6 +963,291 @@
       if (localStorage) localStorage.setItem('qb-dark', on ? '1' : '0');
     });
   }
+  /* ============ 6.1 主题色：顶栏取色面板（v7.20） ============
+     为什么不做成配置项：配色是「读者当下想看什么」，不是站长的固定设置。
+     读者点一下就该立刻变，刷新还得记住 —— 所以走 localStorage，和暗色一个层级，
+     不占 LS_CONFIG 的位置。站长想固定品牌色仍然用 accent。
+
+     优先级：localStorage 里的手动选择 > LS_CONFIG.accent > 样式表默认（紫）。
+     默认项（紫）不注入任何样式，直接把选择权交回给 accent —— 选了「默认」却发现
+     颜色没回到站长配色，那是更糟的体验。
+
+     每套色给两个值：浅色底用一个饱和的，暗色底用一个提亮的。
+     同一个色值在 #0d1117 上会发闷（对比度不够），不能一套色走到底。 */
+  var THEMES = [
+    { k: 'purple', n: '紫（默认）', l: '#d05ce8', d: '#d98bf0' },
+    { k: 'blue',   n: '蓝',        l: '#3b82f6', d: '#58a6ff' },
+    { k: 'teal',   n: '青',        l: '#0d9488', d: '#2dd4bf' },
+    { k: 'orange', n: '橙',        l: '#ea580c', d: '#fb923c' },
+    { k: 'green',  n: '绿',        l: '#16a34a', d: '#4ade80' },
+    { k: 'rose',   n: '玫红',      l: '#e11d48', d: '#fb7185' }
+  ];
+
+  /* 图标用「一滴颜料」而不是半明半暗的圆：
+     后者在 18px 下会被读成「对比度」按钮，跟旁边的月亮撞语义。
+     液滴是唯一一个「颜色」方向的常见隐喻，且单色描边就够，不依赖彩色。 */
+  var PALETTE_SVG =
+    '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" ' +
+    'stroke-width="1.9" stroke-linejoin="round">' +
+    '<path d="M12 3.4c3.5 3.7 6.1 6.7 6.1 9.9a6.1 6.1 0 0 1-12.2 0c0-3.2 2.6-6.2 6.1-9.9z"/>' +
+    '<path d="M9.3 13.4a2.7 2.7 0 0 0 2.7 2.7" stroke-linecap="round"/></svg>';
+
+  function themePref() {
+    var v = null;
+    try { v = localStorage && localStorage.getItem('qb-theme'); } catch (e) { /* 隐私模式 */ }
+    for (var i = 0; i < THEMES.length; i++) {
+      if (THEMES[i].k === v) return v;
+    }
+    return 'purple';
+  }
+
+  /* 浅色底要压暗（hover 文字），暗色底要提亮（深底上的深色字看不清） */
+  function rgbOf(h) {
+    var m = /^#?([0-9a-f]{6})$/i.exec(h);
+    if (!m) return [0, 0, 0];
+    var v = m[1];
+    return [parseInt(v.slice(0, 2), 16), parseInt(v.slice(2, 4), 16), parseInt(v.slice(4, 6), 16)];
+  }
+  function shade(h, f) {
+    return '#' + rgbOf(h).map(function (v) {
+      return ('0' + Math.max(0, Math.min(255, Math.round(v * f))).toString(16)).slice(-2);
+    }).join('');
+  }
+  function tint(h, f) {
+    return '#' + rgbOf(h).map(function (v) {
+      return ('0' + Math.max(0, Math.min(255, Math.round(v + (255 - v) * f))).toString(16)).slice(-2);
+    }).join('');
+  }
+
+  function applyTheme(k) {
+    var t = null, i;
+    for (i = 0; i < THEMES.length; i++) {
+      if (THEMES[i].k === k) t = THEMES[i];
+    }
+    var old = document.getElementById('qb-theme-sel');
+    if (old && old.parentNode) old.parentNode.removeChild(old);
+    /* 默认色 = 不注入：让 LS_CONFIG.accent（如果设了）继续生效 */
+    if (!t || t.k === 'purple') return;
+
+    var lr = rgbOf(t.l).join(','), dr = rgbOf(t.d).join(',');
+    try {
+      var st = document.createElement('style');
+      st.id = 'qb-theme-sel';
+      /* 三个选择器必须并列：暗色下 html/body 各自重定义了 --accent，只写 :root 会被盖回去 */
+      st.textContent =
+        ':root{--accent:' + t.l + ';--accent-deep:' + shade(t.l, .82) +
+        ';--accent-soft:rgba(' + lr + ',.11)}' +
+        'html.qb-dark,body.qb-dark{--accent:' + t.d + ';--accent-deep:' + tint(t.d, .2) +
+        ';--accent-soft:rgba(' + dr + ',.16)}';
+      (document.head || document.documentElement).appendChild(st);
+    } catch (e) { /* 无 head 时忽略，配色退回默认 */ }
+  }
+
+  function renderThemeUi(inner) {
+    var wrap = mk('div', 'qb-theme');
+
+    var btn = mk('button', 'qb-theme-btn');
+    btn.type = 'button';
+    btn.id = 'qb-theme-toggle';
+    btn.title = '主题色';
+    btn.setAttribute('aria-label', '切换主题色');
+    btn.setAttribute('aria-haspopup', 'true');
+    btn.setAttribute('aria-expanded', 'false');
+    btn.innerHTML = PALETTE_SVG;
+
+    /* 面板里的按钮必须写在 DOM 里而不是每次点开重建：
+       重建会让「当前选中」的描边和焦点状态丢一次，看上去像闪了一下 */
+    var pop = mk('div', 'qb-theme-pop');
+    pop.id = 'qb-theme-pop';
+    pop.setAttribute('role', 'menu');
+    pop.hidden = true;
+    THEMES.forEach(function (t) {
+      var d = mk('button', 'qb-theme-dot');
+      d.type = 'button';
+      d.setAttribute('role', 'menuitemradio');
+      d.setAttribute('data-theme', t.k);
+      d.setAttribute('aria-label', t.n);
+      d.title = t.n;
+      /* 色点用行内变量给，面板里不出现任何硬编码颜色，暗色由 CSS 换 --d2 */
+      d.style.setProperty('--d', t.l);
+      d.style.setProperty('--d2', t.d);
+      pop.appendChild(d);
+    });
+
+    wrap.appendChild(btn);
+    wrap.appendChild(pop);
+    inner.appendChild(wrap);
+    return wrap;
+  }
+
+  function markTheme(k) {
+    var dots = document.querySelectorAll('.qb-theme-dot');
+    for (var i = 0; i < dots.length; i++) {
+      var on = dots[i].getAttribute('data-theme') === k;
+      if (on) { dots[i].classList.add('on'); } else { dots[i].classList.remove('on'); }
+      dots[i].setAttribute('aria-checked', on ? 'true' : 'false');
+    }
+  }
+
+  function initTheme() {
+    var btn = document.getElementById('qb-theme-toggle');
+    var pop = document.getElementById('qb-theme-pop');
+    if (!btn || !pop) return;
+    markTheme(themePref());
+
+    function close() {
+      pop.hidden = true;
+      btn.setAttribute('aria-expanded', 'false');
+    }
+    function open() {
+      markTheme(themePref());
+      pop.hidden = false;
+      btn.setAttribute('aria-expanded', 'true');
+    }
+
+    btn.addEventListener('click', function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      if (pop.hidden) { open(); } else { close(); }
+    });
+
+    pop.addEventListener('click', function (e) {
+      var d = e.target.closest ? e.target.closest('.qb-theme-dot') : null;
+      if (!d) return;
+      e.preventDefault();
+      var k = d.getAttribute('data-theme');
+      applyTheme(k);
+      try { if (localStorage) localStorage.setItem('qb-theme', k); } catch (err) { /* 忽略 */ }
+      markTheme(k);
+      close();
+      btn.focus();
+    });
+
+    /* 点面板外面收起。用 document 而不是遮罩层：
+       遮罩层会挡住顶栏其它按钮的第一次点击，得点两下才生效。 */
+    document.addEventListener('click', function (e) {
+      if (pop.hidden) return;
+      if (pop.contains(e.target) || btn.contains(e.target)) return;
+      close();
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key !== 'Escape' || pop.hidden) return;
+      close();
+      btn.focus();
+    });
+  }
+
+  /* ============ 6.2 文章页增强：阅读时长 / 标题锚点 / 文末版权（v7.20） ============
+     三样都只依赖正文 DOM，零请求，放到闸门放行前做完，首帧就是终态。
+
+     两个容易踩的点：
+       1) 锚点里不能有文本。目录 buildToc 取的是 h.textContent，锚点写字进去，
+          目录每条后面都会多一个「#」。所以锚点的 # 用 CSS ::before 画。
+       2) 版权块必须在算完字数之后插。先插就把版权声明也算进正文字数了。 */
+
+  var CJK_RE = /[\u4e00-\u9fa5\u3000-\u303f\uff00-\uffef]/g;
+
+  function postChars(body) {
+    /* 克隆一份再取文本：原节点上做删除会闪一下（哪怕下一帧就补回来） */
+    var c = body.cloneNode(true);
+    var junk = c.querySelectorAll('script, style, .qb-copyright, .qb-readtime, .qb-code-bar');
+    for (var i = 0; i < junk.length; i++) junk[i].parentNode.removeChild(junk[i]);
+    var t = (c.textContent || '').replace(/\s+/g, '');
+    var cjk = (t.match(CJK_RE) || []).length;
+    /* 英文/代码按词算：非中日韩字符里每 6 个算一个「字」，
+       否则一篇纯代码的文章会被算成几千字、阅读时长离谱 */
+    var other = t.length - cjk;
+    return { chars: t.length, units: cjk + Math.round(other / 6) };
+  }
+
+  function fmtNum(n) {
+    var s = String(n), out = '';
+    for (var i = 0; i < s.length; i++) {
+      if (i && (s.length - i) % 3 === 0) out += ',';
+      out += s.charAt(i);
+    }
+    return out;
+  }
+
+  function buildReadTime(body) {
+    if (document.querySelector('.qb-readtime')) return;
+    var st = postChars(body);
+    if (st.chars < 80) return;          /* 太短不显示：一句话的通知不需要「1 分钟」 */
+    var min = Math.max(1, Math.round(st.units / 350));
+    var el = mk('div', 'qb-readtime');
+    el.appendChild(mk('span', 'qb-rt-min', '约 ' + min + ' 分钟'));
+    el.appendChild(mk('span', 'qb-rt-sep', '·'));
+    el.appendChild(mk('span', 'qb-rt-word', fmtNum(st.chars) + ' 字'));
+    /* 插在标题区之后、正文之前：.postBody 的父节点就是 .post */
+    var pb = body.parentNode;
+    if (pb && pb.parentNode) pb.parentNode.insertBefore(el, pb);
+  }
+
+  function buildAnchors(body) {
+    var hs = body.querySelectorAll('h2, h3');
+    for (var i = 0; i < hs.length; i++) {
+      var h = hs[i];
+      if (h.querySelector('.qb-hanchor')) continue;
+      if (!h.id) h.id = 'qb-sec-' + i;
+      var a = mk('a', 'qb-hanchor');
+      a.href = '#' + h.id;
+      a.title = '本节链接';
+      a.setAttribute('aria-label', '本节链接');
+      h.appendChild(a);
+    }
+  }
+
+  function buildCopyright(body) {
+    if (document.querySelector('.qb-copyright')) return;
+
+    var author = '';
+    var pa = document.querySelector('#post_detail .postDesc a[href^="http"]');
+    if (pa && pa.textContent && pa.textContent.trim().length < 24) author = pa.textContent.trim();
+    if (!author) author = SITE_NAME || '博主';
+
+    var dateEl = document.getElementById('post-date');
+    /* 只取日期，不带时分：#post-date 的文本是「2021-07-23 17:15」，
+       版权块写「首发：2021-07-23」就够，带时间反而像日志 */
+    var date = dateEl ? (dateEl.textContent || '').trim().split(/\s+/)[0] : '';
+
+    /* 用 location 而不是 canonical：博客园详情页没有 rel=canonical，
+       去掉 query 与 hash 就是文章永久地址 */
+    var url = location.origin + location.pathname;
+
+    var box = mk('div', 'qb-copyright');
+    box.appendChild(mk('p', 'qb-cr-h', '版权声明'));
+
+    var p1 = mk('p', 'qb-cr-line');
+    p1.appendChild(mk('span', null, '本文作者：'));
+    var aa = mk('a', null, author);
+    aa.href = HOME;
+    p1.appendChild(aa);
+    if (date) {
+      p1.appendChild(mk('span', null, '　首发：' + date));
+    }
+    box.appendChild(p1);
+
+    var p2 = mk('p', 'qb-cr-line');
+    p2.appendChild(mk('span', null, '原文链接：'));
+    var al = mk('a', null, url);
+    al.href = url;
+    p2.appendChild(al);
+    box.appendChild(p2);
+
+    box.appendChild(mk('p', 'qb-cr-tip', '文章均为个人实践总结，转载请注明作者与原文链接。'));
+
+    body.appendChild(box);
+  }
+
+  function enhancePost() {
+    var body = document.getElementById('cnblogs_post_body');
+    if (!body) return;
+    /* 顺序固定：先算字数，再插版权 */
+    buildReadTime(body);
+    buildAnchors(body);
+    buildCopyright(body);
+  }
+
   /* 4b. 回到顶部
      原来用 border-right + border-bottom 转 -45° 画箭头，那条「拐角」实际并不朝正上，
      而且只有两个折边、没有竖杆，缩到 10px 看着像个小逗号。现在换成 inline SVG
@@ -1637,9 +1946,13 @@
     lazyImages();
     /* 代码块放在闸门放行前：行号要在首帧就是齐的，晚一步会看到代码先铺开、行号后插入 */
     if (CFG.code) enhanceCode();
+    /* 阅读时长 / 锚点 / 版权同样要在放行前做完，否则会看到正文先出现、
+       版权块随后「长出来」。放在 buildLeft 之后：目录可能已经给标题写过 id，直接复用。 */
+    enhancePost();
     markNav();
     initFavicon();
     initDarkMode();
+    initTheme();
     if (CFG.backToTop) createBackToTop();
 
     /* 结构齐了才解锁首帧闸门；没齐就逐帧补，最多 12 帧后无条件解锁 */
@@ -1664,6 +1977,9 @@
   /* 暗色必须在第一次绘制之前就应用：闸门期间画出来的是页面底色，
      晚一步的话暗色用户会先看到一帧亮底再变黑 —— 那一下白就是这个。 */
   syncDarkClass(darkPref());
+  /* 主题色同理：晚一步就会看到强调色先紫一下再变蓝。
+     必须在 CFG.accent 那个 style 之后执行，后插入的同名变量才压得住它。 */
+  applyTheme(themePref());
   /* 关掉闸门时立刻解锁：页面从解析起就可见，和 6.x 一样边解析边显示 */
   /* gate:false = 明确要求「边解析边显示」（内联版的默认值），这时不解锁没意义 */
   if (CFG.gate === false) { gateHold = false; unlock(); }
@@ -1709,6 +2025,8 @@
   document.addEventListener('DOMContentLoaded', function () {
     if (!booted) return;
     if (!leftDone) buildLeft();
+    /* 正文后到时补一次。三件事都带「已存在就跳过」的判据，重复调用安全 */
+    enhancePost();
     var lc = document.getElementById('qb-left');
     syncSide(lc);
     settle(lc, 12);

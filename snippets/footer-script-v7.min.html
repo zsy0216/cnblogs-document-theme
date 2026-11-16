@@ -1,4 +1,4 @@
-<!-- 流苏主题 v7.19 · 2026-11-16 页脚 HTML（压缩版）
+<!-- 流苏主题 v7.20 · 2026-11-16 页脚 HTML（压缩版）
      位置：博客园后台 -> 设置 -> 页脚 HTML 代码（粘贴前先清空）
      说明：本文件由 _dev-tools/gen-footer-min.py 从 footer-script-v7.html 生成，
            功能完全一致，只删注释与缩进。要改逻辑请改源文件后重新生成，不要改这里。 -->
@@ -41,7 +41,7 @@ nav: {
 brand: SITE_NAME,
 home: HOME,
 logo: '',
-mark: true,
+mark: null,
 dark: true,
 links: [
 { t: '首页', h: HOME },
@@ -124,7 +124,11 @@ var explicit = !!((window.LS_CONFIG && window.LS_CONFIG.nav) ||
 var nav = document.querySelector('.qb-nav');
 var shell = !!nav && !nav.querySelector('.qb-brand');
 if (nav && !shell && !explicit) return nav;
-if (!nav || !shell) {
+var dup = document.querySelectorAll('.qb-nav');
+for (var j = dup.length - 1; j >= 0; j--) {
+if (dup[j] !== nav && dup[j].parentNode) dup[j].parentNode.removeChild(dup[j]);
+}
+if (!nav) {
 nav = mk('div', 'qb-nav');
 nav.id = 'qb-nav';
 document.body.insertBefore(nav, document.body.firstChild);
@@ -149,7 +153,8 @@ lbox.appendChild(img);
 brandA.appendChild(lbox);
 }
 if (brand) brandA.appendChild(mk('span', 'qb-brand-text', brand));
-if (n.mark !== false) {
+var markOn = (n.mark === false) ? false : (n.mark === true ? true : !n.logo);
+if (markOn) {
 var mbox = mk('span', 'qb-logo');
 mbox.setAttribute('aria-hidden', 'true');
 mbox.innerHTML = LOGO_SVG;
@@ -172,6 +177,8 @@ wrap.appendChild(a);
 });
 inner.appendChild(wrap);
 }
+var actions = mk('div', 'qb-actions');
+renderThemeUi(actions);
 if (n.dark !== false) {
 var btn = mk('a', 'qb-dark-btn');
 btn.id = 'qb-dark-toggle';
@@ -181,8 +188,9 @@ btn.setAttribute('rel', 'nofollow noopener');
 var icon = mk('i', null, '🌙');
 icon.id = 'qb-dark-icon';
 btn.appendChild(icon);
-inner.appendChild(btn);
+actions.appendChild(btn);
 }
+if (actions.children.length) inner.appendChild(actions);
 nav.appendChild(inner);
 if (document.body.firstElementChild !== nav) {
 document.body.insertBefore(nav, document.body.firstElementChild);
@@ -671,6 +679,221 @@ syncDarkClass(on);
 if (icon) icon.textContent = on ? '☀️' : '🌙';
 if (localStorage) localStorage.setItem('qb-dark', on ? '1' : '0');
 });
+}
+var THEMES = [
+{ k: 'purple', n: '紫（默认）', l: '#d05ce8', d: '#d98bf0' },
+{ k: 'blue', n: '蓝', l: '#3b82f6', d: '#58a6ff' },
+{ k: 'teal', n: '青', l: '#0d9488', d: '#2dd4bf' },
+{ k: 'orange', n: '橙', l: '#ea580c', d: '#fb923c' },
+{ k: 'green', n: '绿', l: '#16a34a', d: '#4ade80' },
+{ k: 'rose', n: '玫红', l: '#e11d48', d: '#fb7185' }
+];
+var PALETTE_SVG =
+'<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" ' +
+'stroke-width="1.9" stroke-linejoin="round">' +
+'<path d="M12 3.4c3.5 3.7 6.1 6.7 6.1 9.9a6.1 6.1 0 0 1-12.2 0c0-3.2 2.6-6.2 6.1-9.9z"/>' +
+'<path d="M9.3 13.4a2.7 2.7 0 0 0 2.7 2.7" stroke-linecap="round"/></svg>';
+function themePref() {
+var v = null;
+try { v = localStorage && localStorage.getItem('qb-theme'); } catch (e) { }
+for (var i = 0; i < THEMES.length; i++) {
+if (THEMES[i].k === v) return v;
+}
+return 'purple';
+}
+function rgbOf(h) {
+var m = /^#?([0-9a-f]{6})$/i.exec(h);
+if (!m) return [0, 0, 0];
+var v = m[1];
+return [parseInt(v.slice(0, 2), 16), parseInt(v.slice(2, 4), 16), parseInt(v.slice(4, 6), 16)];
+}
+function shade(h, f) {
+return '#' + rgbOf(h).map(function (v) {
+return ('0' + Math.max(0, Math.min(255, Math.round(v * f))).toString(16)).slice(-2);
+}).join('');
+}
+function tint(h, f) {
+return '#' + rgbOf(h).map(function (v) {
+return ('0' + Math.max(0, Math.min(255, Math.round(v + (255 - v) * f))).toString(16)).slice(-2);
+}).join('');
+}
+function applyTheme(k) {
+var t = null, i;
+for (i = 0; i < THEMES.length; i++) {
+if (THEMES[i].k === k) t = THEMES[i];
+}
+var old = document.getElementById('qb-theme-sel');
+if (old && old.parentNode) old.parentNode.removeChild(old);
+if (!t || t.k === 'purple') return;
+var lr = rgbOf(t.l).join(','), dr = rgbOf(t.d).join(',');
+try {
+var st = document.createElement('style');
+st.id = 'qb-theme-sel';
+st.textContent =
+':root{--accent:' + t.l + ';--accent-deep:' + shade(t.l, .82) +
+';--accent-soft:rgba(' + lr + ',.11)}' +
+'html.qb-dark,body.qb-dark{--accent:' + t.d + ';--accent-deep:' + tint(t.d, .2) +
+';--accent-soft:rgba(' + dr + ',.16)}';
+(document.head || document.documentElement).appendChild(st);
+} catch (e) { }
+}
+function renderThemeUi(inner) {
+var wrap = mk('div', 'qb-theme');
+var btn = mk('button', 'qb-theme-btn');
+btn.type = 'button';
+btn.id = 'qb-theme-toggle';
+btn.title = '主题色';
+btn.setAttribute('aria-label', '切换主题色');
+btn.setAttribute('aria-haspopup', 'true');
+btn.setAttribute('aria-expanded', 'false');
+btn.innerHTML = PALETTE_SVG;
+var pop = mk('div', 'qb-theme-pop');
+pop.id = 'qb-theme-pop';
+pop.setAttribute('role', 'menu');
+pop.hidden = true;
+THEMES.forEach(function (t) {
+var d = mk('button', 'qb-theme-dot');
+d.type = 'button';
+d.setAttribute('role', 'menuitemradio');
+d.setAttribute('data-theme', t.k);
+d.setAttribute('aria-label', t.n);
+d.title = t.n;
+d.style.setProperty('--d', t.l);
+d.style.setProperty('--d2', t.d);
+pop.appendChild(d);
+});
+wrap.appendChild(btn);
+wrap.appendChild(pop);
+inner.appendChild(wrap);
+return wrap;
+}
+function markTheme(k) {
+var dots = document.querySelectorAll('.qb-theme-dot');
+for (var i = 0; i < dots.length; i++) {
+var on = dots[i].getAttribute('data-theme') === k;
+if (on) { dots[i].classList.add('on'); } else { dots[i].classList.remove('on'); }
+dots[i].setAttribute('aria-checked', on ? 'true' : 'false');
+}
+}
+function initTheme() {
+var btn = document.getElementById('qb-theme-toggle');
+var pop = document.getElementById('qb-theme-pop');
+if (!btn || !pop) return;
+markTheme(themePref());
+function close() {
+pop.hidden = true;
+btn.setAttribute('aria-expanded', 'false');
+}
+function open() {
+markTheme(themePref());
+pop.hidden = false;
+btn.setAttribute('aria-expanded', 'true');
+}
+btn.addEventListener('click', function (e) {
+e.preventDefault();
+e.stopPropagation();
+if (pop.hidden) { open(); } else { close(); }
+});
+pop.addEventListener('click', function (e) {
+var d = e.target.closest ? e.target.closest('.qb-theme-dot') : null;
+if (!d) return;
+e.preventDefault();
+var k = d.getAttribute('data-theme');
+applyTheme(k);
+try { if (localStorage) localStorage.setItem('qb-theme', k); } catch (err) { }
+markTheme(k);
+close();
+btn.focus();
+});
+document.addEventListener('click', function (e) {
+if (pop.hidden) return;
+if (pop.contains(e.target) || btn.contains(e.target)) return;
+close();
+});
+document.addEventListener('keydown', function (e) {
+if (e.key !== 'Escape' || pop.hidden) return;
+close();
+btn.focus();
+});
+}
+var CJK_RE = /[\u4e00-\u9fa5\u3000-\u303f\uff00-\uffef]/g;
+function postChars(body) {
+var c = body.cloneNode(true);
+var junk = c.querySelectorAll('script, style, .qb-copyright, .qb-readtime, .qb-code-bar');
+for (var i = 0; i < junk.length; i++) junk[i].parentNode.removeChild(junk[i]);
+var t = (c.textContent || '').replace(/\s+/g, '');
+var cjk = (t.match(CJK_RE) || []).length;
+var other = t.length - cjk;
+return { chars: t.length, units: cjk + Math.round(other / 6) };
+}
+function fmtNum(n) {
+var s = String(n), out = '';
+for (var i = 0; i < s.length; i++) {
+if (i && (s.length - i) % 3 === 0) out += ',';
+out += s.charAt(i);
+}
+return out;
+}
+function buildReadTime(body) {
+if (document.querySelector('.qb-readtime')) return;
+var st = postChars(body);
+if (st.chars < 80) return;
+var min = Math.max(1, Math.round(st.units / 350));
+var el = mk('div', 'qb-readtime');
+el.appendChild(mk('span', 'qb-rt-min', '约 ' + min + ' 分钟'));
+el.appendChild(mk('span', 'qb-rt-sep', '·'));
+el.appendChild(mk('span', 'qb-rt-word', fmtNum(st.chars) + ' 字'));
+var pb = body.parentNode;
+if (pb && pb.parentNode) pb.parentNode.insertBefore(el, pb);
+}
+function buildAnchors(body) {
+var hs = body.querySelectorAll('h2, h3');
+for (var i = 0; i < hs.length; i++) {
+var h = hs[i];
+if (h.querySelector('.qb-hanchor')) continue;
+if (!h.id) h.id = 'qb-sec-' + i;
+var a = mk('a', 'qb-hanchor');
+a.href = '#' + h.id;
+a.title = '本节链接';
+a.setAttribute('aria-label', '本节链接');
+h.appendChild(a);
+}
+}
+function buildCopyright(body) {
+if (document.querySelector('.qb-copyright')) return;
+var author = '';
+var pa = document.querySelector('#post_detail .postDesc a[href^="http"]');
+if (pa && pa.textContent && pa.textContent.trim().length < 24) author = pa.textContent.trim();
+if (!author) author = SITE_NAME || '博主';
+var dateEl = document.getElementById('post-date');
+var date = dateEl ? (dateEl.textContent || '').trim().split(/\s+/)[0] : '';
+var url = location.origin + location.pathname;
+var box = mk('div', 'qb-copyright');
+box.appendChild(mk('p', 'qb-cr-h', '版权声明'));
+var p1 = mk('p', 'qb-cr-line');
+p1.appendChild(mk('span', null, '本文作者：'));
+var aa = mk('a', null, author);
+aa.href = HOME;
+p1.appendChild(aa);
+if (date) {
+p1.appendChild(mk('span', null, '　首发：' + date));
+}
+box.appendChild(p1);
+var p2 = mk('p', 'qb-cr-line');
+p2.appendChild(mk('span', null, '原文链接：'));
+var al = mk('a', null, url);
+al.href = url;
+p2.appendChild(al);
+box.appendChild(p2);
+box.appendChild(mk('p', 'qb-cr-tip', '文章均为个人实践总结，转载请注明作者与原文链接。'));
+body.appendChild(box);
+}
+function enhancePost() {
+var body = document.getElementById('cnblogs_post_body');
+if (!body) return;
+buildReadTime(body);
+buildAnchors(body);
+buildCopyright(body);
 }
 var TOP_ARROW_SVG =
 '<svg class="qb-top-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" ' +
@@ -1175,9 +1398,11 @@ var left = document.getElementById('qb-left');
 syncSide(left);
 lazyImages();
 if (CFG.code) enhanceCode();
+enhancePost();
 markNav();
 initFavicon();
 initDarkMode();
+initTheme();
 if (CFG.backToTop) createBackToTop();
 settle(left, 0);
 var tries = 0;
@@ -1190,6 +1415,7 @@ dropLoading();
 }
 if (document.body) renderNav();
 syncDarkClass(darkPref());
+applyTheme(themePref());
 if (CFG.gate === false) { gateHold = false; unlock(); }
 window.__QB_READY__ = true;
 var booted = false;
@@ -1214,6 +1440,7 @@ setTimeout(function () { bootOnce(); mo.disconnect(); }, 1500);
 document.addEventListener('DOMContentLoaded', function () {
 if (!booted) return;
 if (!leftDone) buildLeft();
+enhancePost();
 var lc = document.getElementById('qb-left');
 syncSide(lc);
 settle(lc, 12);
