@@ -27,16 +27,17 @@
 
 > ⚠️ **第 0 步（最重要）**：设置 → 皮肤 → 选择 **`Custom`（自定义）**，否则后续全部不生效。
 
-托管版：后台贴**两个**字段（CSS 32 KB + 页首 4.6 KB），再上传**一个** js（70 KB）。
-之后改配色、改目录逻辑、改菜单，**只替换那个 js，不用再进后台**。
+托管版：后台贴**两个**字段（CSS 50 KB + 页首 6 KB），再传**一个** js（107 KB）。
+之后改配色、改目录逻辑、改菜单，**只替换那个 js，不用再进后台**；连 js 也可以不传 ——
+页首里那段加载器优先从 GitHub 镜像取，镜像不可用时自动回落到博客园文件（见第 4 步）。
 
 | 贴哪 | 用哪个文件 | 大小 |
 |:---|:---|---:|
-| 设置 → **页面定制 CSS 代码** | `dist/paste/样式.css` | 32 KB |
-| 设置 → **页首 HTML 代码** | `dist/paste/页首.html` | 4.6 KB |
+| 设置 → **页面定制 CSS 代码** | `dist/paste/样式.css` | 50 KB |
+| 设置 → **页首 HTML 代码** | `dist/paste/页首.html` | 6.2 KB |
 | 设置 → **页脚 HTML 代码** | **全选删除，必须清空** | — |
 | 设置 → **公告** | 全选删除（公告由配置渲染） | — |
-| 文件 → 上传 | `dist/document-theme.js` | 70 KB |
+| 文件 → 上传 | `dist/document-theme.js` | 107 KB |
 
 ### 四个步骤
 
@@ -44,19 +45,21 @@
    两个字段都 `Ctrl+A` → `Delete` → 保存。⚠️ 不能省：页脚里若残留旧版内联脚本，
    它会自己建一套右栏，和新版同时跑，怎么贴都不对。
 
-2. **贴 CSS（32 KB）**
+2. **贴 CSS（50 KB）**
    页面定制 CSS 代码 → 全选删除 → 粘贴 `样式.css` 全文 → 保存。
    首行是 `html{--qb-field:1}`（给 js 的标记，别删），后面是完整主题样式。
    这份样式会在 `<head>` 里阻塞渲染，**首帧就是最终外观**，不会先画一遍博客园原生皮肤。
 
-3. **贴页首（4.6 KB）**
+3. **贴页首（6.2 KB）**
    页首 HTML 代码 → 全选删除 → 粘贴 `页首.html` 全文 → 保存。
-   内容是：归档页标记、顶栏外壳占位、`window.LS_CONFIG`、一行同步加载 js 的代码。
+   内容是：归档页标记、顶栏外壳占位、`window.LS_CONFIG`、一段双源加载脚本。
 
-4. **上传 js**
-   我的博客 → 文件 → 上传 `document-theme.js`，覆盖同名旧文件。
-   直链固定为 `https://blog-static.cnblogs.com/files/blogs/<你的博客ID>/document-theme.js`，
-   页首里那行 `document.write` 指向它。换了博客就同步改这一行。
+4. **传 js（两种都行）**
+   - 走镜像：把仓库 push 到 GitHub，别的不做 —— 页首默认先从
+     `gcore.jsdelivr.net/gh/<你的账号>/<仓库>@master/dist/document-theme.js` 取。
+   - 走博客园：我的博客 → 文件 → 上传 `document-theme.js`，直链为
+     `https://blog-static.cnblogs.com/files/blogs/<你的博客ID>/document-theme.js`。
+   两个地址都写在加载器里，前面那个失败会自动落到后面那个，换博客要一起改。
 
 最后前台 `Ctrl + F5` 强刷。
 
@@ -68,7 +71,7 @@
 |:---|:---|
 | `--qb-field` | 1 处（第 1 行） |
 | `@view-transition` | 1 处 |
-| `document-theme.js` | 1 处（在 `document.write` 里） |
+| `document-theme.js` | 2 处（镜像 + 兜底各一处） |
 | `qb-right` | **0 处**（有的话说明页脚旧脚本没清干净） |
 
 页面上看：左栏有内容、右栏有公告和搜索/积分/排行榜、顶栏 59px。逐项验收清单与排错表见[安装-详解](docs/安装-详解.md)。

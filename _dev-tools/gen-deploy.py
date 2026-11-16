@@ -46,6 +46,10 @@ DEFAULT_OUT = os.path.join(ROOT, 'dist', 'paste')
 
 # 合并版在博客园文件空间的直链。换账号 / 换文件名时改这一行。
 BUNDLE_URL = 'https://blog-static.cnblogs.com/files/blogs/477677/document-theme.js'
+# GitHub 仓库镜像（jsDelivr），页首优先取它。改版只要 push，不必再登后台传文件；
+# 缺点在国际线路，所以页首里配了 onerror 兜底回 BUNDLE_URL。
+MIRROR_URL = ('https://gcore.jsdelivr.net/gh/zsy0216/cnblogs-document-theme'
+              '@master/dist/document-theme.js')
 CSS_URL = 'https://blog-static.cnblogs.com/files/blogs/477677/theme-v7.min.css'
 ICON_URL = ('https://images.cnblogs.com/cnblogs_com/blogs/477677/galleries/1560097/'
             't_261107101943_blog-icon.jpeg')
@@ -165,6 +169,7 @@ HEAD_TOP = '''<!-- 流苏主题 __VER__ · 页首 HTML（全托管）
 
 __ARC__
 <link rel="preconnect" href="https://blog-static.cnblogs.com" />
+<link rel="preconnect" href="https://gcore.jsdelivr.net" crossorigin />
 <link rel="icon" href="__ICON__" />
 
 <!-- 1) 顶栏占位：先给 59px 白条，菜单由紧随其后的脚本填进来 -->
@@ -176,16 +181,43 @@ __CFG__
 </script>
 
 <script>
-/* 3) 同步加载：这 4 行是整块脚本，不要改成 createElement + async。
-      · 样式在脚本里（上传的那一个文件同时含 CSS 与 JS），脚本晚到 = 首帧无样式；
-      · 博客园会把页首里的外部脚本标签自动改写成 defer，那样照样晚；
-      · 内联脚本不会被改写，document.write 插入的是「解析期脚本」：阻塞解析、按序立刻
-        执行，于是样式在首次绘制前就注入，脚本里的 MutationObserver 又能在 #main 解析
-        完的那一刻初始化 —— 顶栏、目录、侧栏、公告全部赶在首帧之前就位，切页不再闪。
-      标签名拆开拼，是为了页面上不出现脚本标签的开闭字面量（HTML 校验器会误判）。 */
+/* 3) 同步加载：镜像优先，博客园文件兜底。
+     · 镜像 = GitHub 仓库（jsDelivr）：改版只要 push，不必再登后台传文件；
+     · 兜底 = 博客园文件空间：国内 CDN 稳，镜像抽风时由 onerror 自动接管；
+     · 镜像失败过就 1 小时内直接走博客园，免得每次进站都等一遍超时（记 localStorage，
+       不写 cookie，换设备互不影响，也不会把失败态永久钉死）；
+     · 仍然必须是 document.write：博客园会把页首里的外部 <script src> 改写成 defer，
+       那样样式就排到首帧之后；内联脚本不会被改写，document.write 插入的是「解析期
+       脚本」—— 阻塞解析、按序立刻执行，顶栏/目录/侧栏/公告全部赶在首帧之前就位。
+     · 标签名拆开拼，是为了页面上不出现脚本标签的开闭字面量（HTML 校验器会误判）。 */
 (function () {
-  var s = 'script';
-  document.write('<' + s + ' src="__BUNDLE__?v=__NUM__"><' + '/' + s + '>');
+  var s = 'script', V = '__NUM__';
+  var MIRROR = '__MIRROR__?v=' + V;
+  var ORIGIN = '__BUNDLE__?v=' + V;
+  var KEY = 'qb-src-fail', TTL = 3600000;
+
+  function recentlyFailed() {
+    try {
+      var t = +localStorage.getItem(KEY) || 0;
+      return t > 0 && Date.now() - t < TTL;
+    } catch (e) { return false; }
+  }
+
+  function write(url, tag) {
+    document.write('<' + s + ' src="' + url + '"' + (tag || '') + '><' + '/' + s + '>');
+  }
+
+  /* 镜像挂了：记下时间，再异步补一份博客园的文件。
+     这里不能用 document.write —— 失败事件可能已经晚于解析期，再写会清空文档。 */
+  window.__qbSrcFail = function () {
+    try { localStorage.setItem(KEY, Date.now()); } catch (e) {}
+    var e = document.createElement(s);
+    e.src = ORIGIN;
+    (document.head || document.documentElement).appendChild(e);
+  };
+
+  if (recentlyFailed()) write(ORIGIN, '');
+  else write(MIRROR, ' onerror="window.__qbSrcFail()"');
 })();
 </script>
 '''
@@ -326,6 +358,7 @@ def build(ver, mode='hosted'):
     head = (HEAD_TOP.replace('__VER__', ver)
                    .replace('__ICON__', ICON_URL)
                    .replace('__BUNDLE__', BUNDLE_URL)
+                   .replace('__MIRROR__', MIRROR_URL)
                    .replace('__CSS__', CSS_URL)
                    .replace('__ARC__', ARC_FLAG)
                    .replace('__CFG__', CFG_BLOCK)
