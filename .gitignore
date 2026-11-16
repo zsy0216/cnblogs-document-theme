@@ -28,3 +28,6 @@ preview/ref-*.png
 
 # 本地推送凭据（含 token，绝不能提交）
 .git-credentials-local
+
+# 临时产物（截图、探针输出、提交信息草稿）：只在本地产出，不入库
+_tmp_*
