@@ -1,35 +1,56 @@
-<!-- 流苏主题 v7.17 · 2026-11-10 页脚 HTML 重要脚本
+<!-- 流苏主题 v7.18 · 2026-11-16 页脚 HTML 重要脚本
      位置：博客园后台 -> 设置 -> 页脚 HTML 代码
      说明：1. 这里的 script 包含全部 DOM 操作逻辑（目录生成、滚动高亮、部件搬运）。2. 粘贴前务必备份原有内容。3. 博客园 HTML 校验器：确保没有未配对的尖括号，所有符号合法。 -->
 <script>
-/* 流苏主题 v7.17 · 2026-11-10 页脚：列表页文章目录 / 详情页文章目录 / 归档时间线 / 分页 / 回到顶部 / 滚动高亮 */
+/* 流苏主题 v7.18 · 2026-11-16 页脚：列表页文章目录 / 详情页文章目录 / 归档时间线 / 分页 / 回到顶部 / 滚动高亮 */
 (function () {
   'use strict';
 
   /* 0. 配置层
      优先级：内置默认值 < window.LS_CONFIG < localStorage 里的手动选择（仅暗色一项）。
-     默认值就是此前的硬编码行为，不写配置时表现与旧版逐项一致。
      内联粘贴版（后台两个字段）与合并托管版（dist/document-theme.js）共用这一份逻辑，
      区别只在分发方式，不存在两份实现。
 
-     用法：在页脚最前面先赋值 window.LS_CONFIG，再引入本脚本，例如
+     用法：在页首最前面先赋值 window.LS_CONFIG，再加载本脚本，例如
        window.LS_CONFIG = { accent: '#d05ce8', dark: 'on' };
 
      命名：LS = 流苏（LiuSu）的拼音首字母。v6.29 及以前叫 QB_CONFIG，
      纯属历史遗留；两个名字等价，同时写时 LS_CONFIG 优先。 */
-  var HOME = 'https://www.cnblogs.com/zhangshuaiyin/';
 
-  /* 公告默认文案：以前写在博客园「公告」字段里，现在内置成默认值，
-     想改就改 LS_CONFIG.notice.html，不必再动后台字段。 */
-  var NOTICE_HTML =
-    '<p>你好，我是 <b>EP流苏</b></p>' +
-    '<p>记录 Java 后端、中间件与工具排错的笔记。<br>多为实践中踩坑后的整理，欢迎交流</p>' +
-    '<p class="qb-notice-tip">文章均为个人实践总结，转载请注明出处</p>' +
-    '<p class="qb-notice-links">' +
-    '<a href="https://github.com/zsy0216" target="_blank" rel="noopener">GitHub</a>' +
-    '<a href="' + HOME + 'rss" target="_blank" rel="noopener">RSS</a>' +
-    '<a href="https://msg.cnblogs.com/send/Ep%E6%B5%81%E8%8B%8F">留言</a>' +
-    '</p>';
+  /* 站点标识 / 根路径：从当前地址推导，不写死任何人的博客。
+     博客园地址形如 /<app>/、/<app>/p/123.html、/<app>/categories，第一段即站点标识；
+     自定义域名下地址是 /p/123.html 这类，第一段是保留路径，此时退回域名根。
+     v7.18 之前的默认值把 HOME 写死成作者博客，换人使用会指向别人的站。 */
+  var RESERVED = { p: 1, categories: 1, tag: 1, rss: 1, archive: 1, admin: 1, sitemap: 1 };
+  var APP = (function () {
+    var seg = String(location.pathname || '/').split('/').filter(Boolean);
+    if (!seg.length) return '';
+    return RESERVED[seg[0].toLowerCase()] ? '' : seg[0];
+  })();
+  var HOME = location.origin + '/' + (APP ? APP + '/' : '');
+
+  /* 博客名：博客园 title 固定是「页面名 - 博客名 - 博客园」或「博客名 - 博客园」，
+     摘掉末尾的「博客园」再取最后一段即为博客名（文章标题里的 " - " 不影响，取的是倒数第一段）。
+     取不到就留空，顶栏只显示图形标记，不会显示别人的名字。 */
+  var SITE_NAME = (function () {
+    var parts = String(document.title || '').split(' - ').map(function (s) { return s.trim(); });
+    while (parts.length && /^博客园$/.test(parts[parts.length - 1])) parts.pop();
+    return parts.length ? parts[parts.length - 1] : '';
+  })();
+
+  /* 归档默认指向「当前年月」：/<app>/p/archive/ 根路径实测 404，必须带年月。
+     配置里写死的年月下个月就失效，所以链接支持占位符 —— 见 resolveHref。 */
+  var NOW = new Date();
+
+  /* 链接占位符：{ym} → 2026/11，{y} → 2026，{m} → 11。
+     归档这类带年月的地址写死会过期，用 {ym} 让它每次渲染都跟上当前月份。 */
+  function resolveHref(h) {
+    return String(h == null ? '' : h).replace(/\{(ym|y|m)\}/g, function (_, k) {
+      if (k === 'y') return String(NOW.getFullYear());
+      if (k === 'm') return String(NOW.getMonth() + 1);
+      return NOW.getFullYear() + '/' + (NOW.getMonth() + 1);
+    });
+  }
 
   var CFG = (function () {
     var d = {
@@ -46,33 +67,33 @@
 
       /* 顶栏导航：全部由脚本按配置渲染，页首 HTML 里不再放任何菜单结构。
          不配置就用这里的默认值；配置了按配置渲染（links 整体替换，其余逐项覆盖）。
-         写法：nav: { brand: 'Ep流苏', links: [{ t: '首页', h: '/' }, …] }
+         v7.18 起默认值改为「按当前站点推导」：站点根路径取 location，博客名取 title，
+         归档指向当前年月。换任何人安装，默认顶栏指向的都是自己的博客。
+         写法：nav: { brand: '我的博客', links: [{ t: '首页', h: '/' }, …] }
          单条链接字段：t 文字 | h 地址 | b:1 新窗口打开 | on:1 强制高亮 */
       nav: {
-        brand: 'Ep流苏',
+        brand: SITE_NAME,
         home: HOME,
-        logo: 'https://images.cnblogs.com/cnblogs_com/blogs/477677/galleries/1560097/t_261107102128_QQ%E5%9B%BE%E7%89%8720201122102348.jpg',
+        /* 默认不放头像：以前写死作者自己的图，别人的站会顶着别人的头像。 */
+        logo: '',
         mark: true,      /* 品牌区右侧的十字图形 */
         dark: true,      /* 是否显示暗色切换按钮 */
         links: [
           { t: '首页', h: HOME },
-          { t: '归档', h: HOME + 'p/archive/2026/11' },
+          { t: '归档', h: HOME + 'p/archive/{ym}' },
           { t: '分类', h: HOME + 'categories' },
           { t: '标签', h: HOME + 'tag' },
-          { t: '留言', h: 'https://msg.cnblogs.com/send/Ep%E6%B5%81%E8%8B%8F' },
-          { t: 'GitHub', h: 'https://github.com/zsy0216', b: 1 },
-          { t: 'RSS', h: HOME + 'rss', b: 1 },
-          { t: '主页', h: 'https://home.cnblogs.com/u/zhangshuaiyin' },
-          { t: '管理', h: 'https://i.cnblogs.com/settings/', b: 1 }
+          { t: 'RSS', h: HOME + 'rss', b: 1 }
         ]
       },
 
       /* 公告：show:false 隐藏；title 改标题；html 改正文（支持标签）。
-         html 为空字符串时退回博客园「公告」字段的原文。 */
+         html 为空字符串时退回博客园「公告」字段的原文 —— v7.18 起这就是默认行为，
+         不再内置作者本人的公告文案（以前别的站会显示作者写的公告）。 */
       notice: {
         show: true,
         title: '公告',
-        html: NOTICE_HTML
+        html: ''
       }
     };
     /* LS_CONFIG 为正式名；QB_CONFIG 是 v6.29 及以前的旧名，保留兼容不删。
@@ -179,7 +200,7 @@
     var inner = mk('div', 'qb-nav-inner');
 
     var brandA = mk('a', 'qb-brand');
-    brandA.href = n.home || '/';
+    brandA.href = resolveHref(n.home || '/');
     if (n.logo) {
       var lbox = mk('span', 'qb-logo');
       var img = document.createElement('img');
@@ -207,7 +228,7 @@
         var txt = it.t || it.text;
         if (!txt) return;
         var a = mk('a', it.on ? 'on' : null, txt);
-        a.href = it.h || it.href || '#';
+        a.href = resolveHref(it.h || it.href || '#');
         if (it.b || it.blank) {
           a.target = '_blank';
           a.rel = 'noopener';

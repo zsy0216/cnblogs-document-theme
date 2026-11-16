@@ -1,19 +1,29 @@
-<!-- 流苏主题 v7.17 · 2026-11-10 页脚 HTML（压缩版）
+<!-- 流苏主题 v7.18 · 2026-11-16 页脚 HTML（压缩版）
      位置：博客园后台 -> 设置 -> 页脚 HTML 代码（粘贴前先清空）
      说明：本文件由 _dev-tools/gen-footer-min.py 从 footer-script-v7.html 生成，
            功能完全一致，只删注释与缩进。要改逻辑请改源文件后重新生成，不要改这里。 -->
 <script>(function () {
 'use strict';
-var HOME = 'https://www.cnblogs.com/zhangshuaiyin/';
-var NOTICE_HTML =
-'<p>你好，我是 <b>EP流苏</b></p>' +
-'<p>记录 Java 后端、中间件与工具排错的笔记。<br>多为实践中踩坑后的整理，欢迎交流</p>' +
-'<p class="qb-notice-tip">文章均为个人实践总结，转载请注明出处</p>' +
-'<p class="qb-notice-links">' +
-'<a href="https://github.com/zsy0216" target="_blank" rel="noopener">GitHub</a>' +
-'<a href="' + HOME + 'rss" target="_blank" rel="noopener">RSS</a>' +
-'<a href="https://msg.cnblogs.com/send/Ep%E6%B5%81%E8%8B%8F">留言</a>' +
-'</p>';
+var RESERVED = { p: 1, categories: 1, tag: 1, rss: 1, archive: 1, admin: 1, sitemap: 1 };
+var APP = (function () {
+var seg = String(location.pathname || '/').split('/').filter(Boolean);
+if (!seg.length) return '';
+return RESERVED[seg[0].toLowerCase()] ? '' : seg[0];
+})();
+var HOME = location.origin + '/' + (APP ? APP + '/' : '');
+var SITE_NAME = (function () {
+var parts = String(document.title || '').split(' - ').map(function (s) { return s.trim(); });
+while (parts.length && /^博客园$/.test(parts[parts.length - 1])) parts.pop();
+return parts.length ? parts[parts.length - 1] : '';
+})();
+var NOW = new Date();
+function resolveHref(h) {
+return String(h == null ? '' : h).replace(/\{(ym|y|m)\}/g, function (_, k) {
+if (k === 'y') return String(NOW.getFullYear());
+if (k === 'm') return String(NOW.getMonth() + 1);
+return NOW.getFullYear() + '/' + (NOW.getMonth() + 1);
+});
+}
 var CFG = (function () {
 var d = {
 accent: '',
@@ -24,27 +34,23 @@ archive: true,
 archiveTtl: 24,
 gate: true,
 nav: {
-brand: 'Ep流苏',
+brand: SITE_NAME,
 home: HOME,
-logo: 'https://images.cnblogs.com/cnblogs_com/blogs/477677/galleries/1560097/t_261107102128_QQ%E5%9B%BE%E7%89%8720201122102348.jpg',
+logo: '',
 mark: true,
 dark: true,
 links: [
 { t: '首页', h: HOME },
-{ t: '归档', h: HOME + 'p/archive/2026/11' },
+{ t: '归档', h: HOME + 'p/archive/{ym}' },
 { t: '分类', h: HOME + 'categories' },
 { t: '标签', h: HOME + 'tag' },
-{ t: '留言', h: 'https://msg.cnblogs.com/send/Ep%E6%B5%81%E8%8B%8F' },
-{ t: 'GitHub', h: 'https://github.com/zsy0216', b: 1 },
-{ t: 'RSS', h: HOME + 'rss', b: 1 },
-{ t: '主页', h: 'https://home.cnblogs.com/u/zhangshuaiyin' },
-{ t: '管理', h: 'https://i.cnblogs.com/settings/', b: 1 }
+{ t: 'RSS', h: HOME + 'rss', b: 1 }
 ]
 },
 notice: {
 show: true,
 title: '公告',
-html: NOTICE_HTML
+html: ''
 }
 };
 var u = {};
@@ -127,7 +133,7 @@ var links = n.links instanceof Array ? n.links : [];
 var brand = n.brand || '';
 var inner = mk('div', 'qb-nav-inner');
 var brandA = mk('a', 'qb-brand');
-brandA.href = n.home || '/';
+brandA.href = resolveHref(n.home || '/');
 if (n.logo) {
 var lbox = mk('span', 'qb-logo');
 var img = document.createElement('img');
@@ -153,7 +159,7 @@ if (!it) return;
 var txt = it.t || it.text;
 if (!txt) return;
 var a = mk('a', it.on ? 'on' : null, txt);
-a.href = it.h || it.href || '#';
+a.href = resolveHref(it.h || it.href || '#');
 if (it.b || it.blank) {
 a.target = '_blank';
 a.rel = 'noopener';

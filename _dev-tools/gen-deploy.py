@@ -101,6 +101,58 @@ def field_css(css):
     return FIELD_MARK + css + '\n'
 
 
+# 页首字段里的配置块 —— 三份模板共用一份，避免三处写法各说各话。
+# 这里的默认值是作者本站的实际配置（贴上去与 v7.17 的外观一致）；
+# 整段删掉则回落到脚本内置的「按当前站点推导」，不会指向任何人的博客。
+CFG_BLOCK = '''/* ===== 配置区：整个主题只有这一处要改，改完保存就生效 =====
+   ① 每个键都可以删。删光会按「当前站点」自动生成：首页 / 归档（当月）/ 分类 / 标签 / RSS，
+      品牌名取页面标题里的博客名，公告取后台「公告」字段原文。
+   ② 只写想改的键即可：nav、notice 逐项覆盖，links 整体替换。
+   ③ 字段速查
+      基础  accent 强调色 | dark 'auto'|'on'|'off' | backToTop | pager | archive | archiveTtl | gate
+      顶栏  nav { brand 博客名, home 首页, logo 头像图, mark 十字标记, dark 暗色按钮,
+                  links [{ t 文字, h 地址, b 1=新窗口, on 1=强制高亮 }] }
+      公告  notice { show 是否显示, title 标题, html 正文（支持 HTML，留空则用后台公告字段） }
+   ④ 地址里的 {ym} 会展开成当前年月（归档必须带年月，根路径实测 404），不用每月手改。
+   ⑤ 换成自己的站：改 nav.home 与 links 里的域名即可。 */
+window.LS_CONFIG = {
+  /* 强调色：留空 = 主题默认；填 '#3b82f6' 这类色值可整体换色 */
+  accent: '',
+
+  /* 顶栏导航 */
+  nav: {
+    brand: 'Ep流苏',
+    home: 'https://www.cnblogs.com/zhangshuaiyin/',
+    logo: 'https://images.cnblogs.com/cnblogs_com/blogs/477677/galleries/1560097/t_261107102128_QQ%E5%9B%BE%E7%89%8720201122102348.jpg',
+    links: [
+      { t: '首页', h: 'https://www.cnblogs.com/zhangshuaiyin/' },
+      { t: '归档', h: 'https://www.cnblogs.com/zhangshuaiyin/p/archive/{ym}' },
+      { t: '分类', h: 'https://www.cnblogs.com/zhangshuaiyin/categories' },
+      { t: '标签', h: 'https://www.cnblogs.com/zhangshuaiyin/tag' },
+      { t: '留言', h: 'https://msg.cnblogs.com/send/Ep%E6%B5%81%E8%8B%8F' },
+      { t: 'GitHub', h: 'https://github.com/zsy0216', b: 1 },
+      { t: 'RSS', h: 'https://www.cnblogs.com/zhangshuaiyin/rss', b: 1 },
+      { t: '主页', h: 'https://home.cnblogs.com/u/zhangshuaiyin' },
+      { t: '管理', h: 'https://i.cnblogs.com/settings/', b: 1 }
+    ]
+  },
+
+  /* 公告（右栏第一张卡） */
+  notice: {
+    show: true,
+    title: '公告',
+    html: '<p>你好，我是 <b>EP流苏</b></p>'
+        + '<p>记录 Java 后端、中间件与工具排错的笔记。<br>多为实践中踩坑后的整理，欢迎交流</p>'
+        + '<p class="qb-notice-tip">文章均为个人实践总结，转载请注明出处</p>'
+        + '<p class="qb-notice-links">'
+        + '<a href="https://github.com/zsy0216" target="_blank" rel="noopener">GitHub</a>'
+        + '<a href="https://www.cnblogs.com/zhangshuaiyin/rss" target="_blank" rel="noopener">RSS</a>'
+        + '<a href="https://msg.cnblogs.com/send/Ep%E6%B5%81%E8%8B%8F">留言</a>'
+        + '</p>'
+  }
+};'''
+
+
 HEAD_TOP = '''<!-- 流苏主题 __VER__ · 页首 HTML（全托管）
      只做三件事：占住顶栏位置、放配置、同步加载样式脚本。
      菜单与公告由脚本按配置渲染，这里没有任何菜单内容。
@@ -114,12 +166,8 @@ __ARC__
 <div class="qb-nav" id="qb-nav"><div class="qb-nav-inner"></div></div>
 
 <script>
-/* 2) 配置层：以后只改这一个对象，其余都不用动 =====
-   基础  accent:'#d05ce8' 强调色 | dark:'on'|'off'|'auto' | backToTop | pager | archive | archiveTtl
-   顶栏  nav:{ brand:'Ep流苏', home:'…', logo:'…jpg', links:[{ t:'首页', h:'…' }, { t:'GitHub', h:'…', b:1 }] }
-   公告  notice:{ show:true, title:'公告', html:'<p>正文</p>' }
-   以上都不写，则用内置默认（9 个菜单 + 原有公告文案） */
-window.LS_CONFIG = {};
+// 2) 配置层 —— 本字段里唯一需要改的就是下面这一块
+__CFG__
 </script>
 
 <script>
@@ -154,16 +202,11 @@ __ARC__
 <link rel="icon" href="__ICON__" />
 
 <script>
-/* 配置层：以后只改这一个对象 =====
-   基础  accent:'#d05ce8' 强调色 | dark:'on'|'off'|'auto' | backToTop | pager | archive | archiveTtl
-   顶栏  nav:{ brand:'Ep流苏', home:'…', logo:'…jpg', links:[{ t:'首页', h:'…' }, { t:'GitHub', h:'…', b:1 }] }
-   公告  notice:{ show:true, title:'公告', html:'<p>正文</p>' }
-   以上都不写，则用内置默认（9 个菜单 + 原有公告文案）
-
-   闸门保持开启（gate 默认 true）：脚本在页脚跑完、右栏那十张卡到位后才让页面可见。
+// 配置层 —— 本字段里唯一需要改的就是下面这一块
+/* 闸门保持开启（gate 默认 true）：脚本在页脚跑完、右栏那十张卡到位后才让页面可见。
    实测关掉闸门反而更差 —— 园方会在右栏还是空的时候把 body 淡入，
    用户看到的是「公告下面一路长出来」。开启闸门后，可见第一帧右栏就是满的。 */
-window.LS_CONFIG = { gate: true };
+__CFG__
 </script>
 '''
 
@@ -198,13 +241,9 @@ __ARC__
 __NAV__
 
 <script>
-/* 配置层：以后只改这一个对象，其余都不用动 =====
-   基础  accent:'#d05ce8' 强调色 | dark:'on'|'off'|'auto' | backToTop | pager | archive | archiveTtl
-   顶栏  nav:{ brand:'Ep流苏', home:'…', logo:'…jpg', links:[{ t:'首页', h:'…' }, { t:'GitHub', h:'…', b:1 }] }
-   公告  notice:{ show:true, title:'公告', html:'<p>正文</p>' }
-   以上都不写，则用内置默认（9 个菜单 + 原有公告文案）。
-   写了 nav 会覆盖上面的静态顶栏。 */
-window.LS_CONFIG = {};
+// 配置层 —— 本字段里唯一需要改的就是下面这一块
+/* 混合版上面的静态顶栏只作首帧兜底：一旦这里写了 nav，静态顶栏会被按配置重建的顶栏取代。 */
+__CFG__
 </script>
 
 <script>
@@ -253,6 +292,7 @@ def build(ver, mode='hosted'):
         foot = read(os.path.join(SNIP, 'footer-script-v7.min.html')).strip()
         head = (HEAD_INLINE.replace('__VER__', ver).replace('__ICON__', ICON_URL)
                           .replace('__ARC__', ARC_FLAG)
+                          .replace('__CFG__', CFG_BLOCK)
 )
         return {
             '1-页首.html': head,
@@ -270,6 +310,7 @@ def build(ver, mode='hosted'):
                            .replace('__NAV__', navsrc[i:].strip())
                            .replace('__BUNDLE__', BUNDLE_URL)
                            .replace('__ARC__', ARC_FLAG)
+                           .replace('__CFG__', CFG_BLOCK)
                            .replace('__NUM__', ver.lstrip('v')))
         return {
             '1-页首.html': head,
@@ -282,6 +323,7 @@ def build(ver, mode='hosted'):
                    .replace('__BUNDLE__', BUNDLE_URL)
                    .replace('__CSS__', CSS_URL)
                    .replace('__ARC__', ARC_FLAG)
+                   .replace('__CFG__', CFG_BLOCK)
                    .replace('__NUM__', ver.lstrip('v')))
     return {
         '样式.css': field_css(css),
