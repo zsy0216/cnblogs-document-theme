@@ -110,14 +110,19 @@ CFG_BLOCK = '''/* ===== 配置区：整个主题只有这一处要改，改完�
    ② 只写想改的键即可：nav、notice 逐项覆盖，links 整体替换。
    ③ 字段速查
       基础  accent 强调色 | dark 'auto'|'on'|'off' | backToTop | pager | archive | archiveTtl | gate
+      代码块 code { lineNumbers 行号, copy 复制按钮 }，写 code: false 整块关掉
       顶栏  nav { brand 博客名, home 首页, logo 头像图, mark 十字标记, dark 暗色按钮,
                   links [{ t 文字, h 地址, b 1=新窗口, on 1=强制高亮 }] }
       公告  notice { show 是否显示, title 标题, html 正文（支持 HTML，留空则用后台公告字段） }
    ④ 地址里的 {ym} 会展开成当前年月（归档必须带年月，根路径实测 404），不用每月手改。
    ⑤ 换成自己的站：改 nav.home 与 links 里的域名即可。 */
 window.LS_CONFIG = {
-  /* 强调色：留空 = 主题默认；填 '#3b82f6' 这类色值可整体换色 */
-  accent: '',
+  /* 下面两项默认就够用，所以留成注释而不是写死值。
+     原因：本对象里的键会盖掉旧名 window.QB_CONFIG 的同名键 ——
+     写死 accent: '' 就等于把 QB_CONFIG 里设的强调色整个吞掉。
+     要用时去掉行首的两个斜杠即可。 */
+  // accent: '#3b82f6',
+  // code: { lineNumbers: false, copy: false },
 
   /* 顶栏导航 */
   nav: {

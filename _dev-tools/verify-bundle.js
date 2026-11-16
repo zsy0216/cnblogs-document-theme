@@ -125,7 +125,15 @@ async function run(browser, url, variant) {
     await page.evaluate(cleanup);
     await page.evaluate(BUNDLE);
   } else {
-    await page.evaluate((cfg) => { window.QB_CONFIG = cfg; }, CFG);
+    /* C 想验证的是「QB_CONFIG 本身生效」。线上页首里那段 LS_CONFIG 会盖掉同名键
+       （v7.18 起页首显式写了 accent:''），属环境噪声，先摘掉同名项再注入，
+       否则测出来的是页首配置而不是 QB_CONFIG。 */
+    await page.evaluate((cfg) => {
+      window.QB_CONFIG = cfg;
+      if (window.LS_CONFIG) {
+        ['accent', 'dark', 'backToTop'].forEach((k) => { delete window.LS_CONFIG[k]; });
+      }
+    }, CFG);
     await page.evaluate(cleanup);
     await page.evaluate(BUNDLE);
   }

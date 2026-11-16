@@ -1,6 +1,6 @@
 /* ============================================================
-   流苏主题 v7.18 · 2026-11-16
-   最近：顶栏/公告默认值改为按当前站点推导，页首配置块显式化
+   流苏主题 v7.19 · 2026-11-16
+   最近：代码块加行号、语言标签与复制，暗色适配
    ------------------------------------------------------------
    主题 v6 —— 基于博客园 2026 真实 DOM 重写
    ------------------------------------------------------------
@@ -128,6 +128,8 @@
     --pre-bg:        #161b22;
     --pre-ink:       #e6edf3;
     --pre-line:      #30363d;
+    --pre-num:       #7d8590;   /* 代码行号 / 工具条文字；比 GitHub 的 #6e7681 提一档，空行行号也看得清 */
+    --pre-hover:     #1c2129;   /* 行 hover，= pre-bg 叠 10% 的 #6e7681 */
     --num:           #c3c9d2;
 }
 
@@ -1442,6 +1444,129 @@ body.qb-dark .qb-arc-idx-m.on i { color: rgba(13, 17, 23, .7); }
     line-height: 1.7;
 }
 #cnblogs_post_body pre code { background: none; color: inherit; padding: 0; }
+
+/* 6.5 代码块：语言标签 + 行号 + 复制（v7.19 起，由页脚脚本生成结构）
+   脚本产出：
+     <div class="qb-code">
+       <div class="qb-code-bar"><span class="qb-code-lang">java</span><button…>复制</button></div>
+       <pre><code><span class="qb-cl">每行</span>…</code></pre>
+     </div>
+   脚本没跑（旧产物 / 被拦）时页面里还是原来的裸 <pre><code>，上面那段样式照旧生效，
+   不会变成无样式白块。行号宽度由脚本按最大行号位数写进 --qb-ln-w。 */
+#cnblogs_post_body .qb-code {
+    margin: 1.35em 0;
+    border: 1px solid var(--pre-line);
+    border-radius: var(--radius-sm);
+    background: var(--pre-bg);
+    overflow: hidden;
+}
+/* 圆角与内边距交给外层容器，pre 只负责横向滚动。
+   左内边距必须为 0：行号用 position:sticky 贴左，pre 有 padding 的话
+   横向滚动时代码会从行号左侧那条缝里露出来。 */
+#cnblogs_post_body .qb-code > pre {
+    margin: 0 !important;
+    padding: 14px 0 16px !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    /* 园方 Prism 的行号容器是 absolute，包含块必须是 pre */
+    position: relative;
+    scrollbar-width: thin;
+    scrollbar-color: #3b434d transparent;
+}
+/* 园方 Prism 行号（prism-line-numbers）：容器是
+     position:absolute; left:-3.8em; width:3em
+   完全靠 pre 的 padding-left 留位置。左边距必须正好 3.8em ——
+   少了会被 .qb-code 的 overflow:hidden 裁掉，这就是「后台开了行号却不显示」的根因；
+   多了行号和代码之间会空一大块。 */
+#cnblogs_post_body .qb-code > pre.line-numbers { padding-left: 3.8em !important; }
+#cnblogs_post_body .qb-code .line-numbers-rows {
+    border-right: 1px solid var(--pre-line);
+    color: var(--pre-num);
+}
+#cnblogs_post_body .qb-code .line-numbers-rows > span::before { color: var(--pre-num); }
+/* 关掉行号时连园方那套一起收掉，别只关自己画的那套 */
+#cnblogs_post_body .qb-code.no-line-numbers > pre.line-numbers { padding-left: 0 !important; }
+#cnblogs_post_body .qb-code.no-line-numbers .line-numbers-rows { display: none; }
+#cnblogs_post_body .qb-code > pre::-webkit-scrollbar { height: 9px; }
+#cnblogs_post_body .qb-code > pre::-webkit-scrollbar-track { background: transparent; }
+#cnblogs_post_body .qb-code > pre::-webkit-scrollbar-thumb {
+    background: #3b434d;
+    border-radius: 9px;
+}
+#cnblogs_post_body .qb-code > pre::-webkit-scrollbar-thumb:hover { background: #4b545f; }
+
+#cnblogs_post_body .qb-code-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 5px 10px 5px 14px;
+    border-bottom: 1px solid var(--pre-line);
+    background: rgba(255, 255, 255, .035);
+    font-family: "JetBrains Mono", Consolas, Monaco, monospace;
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--pre-num);
+}
+#cnblogs_post_body .qb-code-lang {
+    font-size: 11px;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    color: var(--pre-num);
+}
+#cnblogs_post_body .qb-code-copy {
+    appearance: none;
+    padding: 3px 9px;
+    border: 0;
+    border-radius: 5px;
+    background: transparent;
+    font: inherit;
+    color: var(--pre-num);
+    cursor: pointer;
+    transition: background .15s, color .15s;
+}
+#cnblogs_post_body .qb-code-copy:hover {
+    background: rgba(255, 255, 255, .09);
+    color: var(--pre-ink);
+}
+#cnblogs_post_body .qb-code-copy.done { color: #3fb950; }
+
+#cnblogs_post_body .qb-code > pre > code {
+    display: block;
+    counter-reset: qb-ln;
+    background: none;
+    color: var(--pre-ink);
+    padding: 0;
+}
+/* 一行一个 block：行号靠 CSS 计数器，不往 DOM 里写数字，
+   选中复制时行号不会被带走（伪元素内容不进剪贴板）。 */
+#cnblogs_post_body .qb-cl {
+    display: block;
+    min-height: 1.7em;      /* 空行也占满一行，否则整段行号会错位 */
+    padding-right: 18px;
+}
+#cnblogs_post_body .qb-cl::before {
+    counter-increment: qb-ln;
+    content: counter(qb-ln);
+    position: sticky;       /* 横向滚动时行号留在左边，代码从它下面过 */
+    left: 0;
+    display: inline-block;
+    box-sizing: content-box;
+    width: var(--qb-ln-w, 2ch);
+    margin-right: .9em;
+    padding: 0 .7em 0 14px;
+    text-align: right;
+    color: var(--pre-num);
+    background: var(--pre-bg);
+    user-select: none;
+    -webkit-user-select: none;
+}
+#cnblogs_post_body .qb-cl:hover { background: rgba(110, 118, 129, .10); }
+#cnblogs_post_body .qb-cl:hover::before { background: var(--pre-hover); }
+/* 关掉行号时只留左侧留白，代码不贴边 */
+#cnblogs_post_body .qb-code.no-line-numbers .qb-cl { padding-left: 18px; }
+#cnblogs_post_body .qb-code.no-line-numbers .qb-cl::before { display: none; }
 #cnblogs_post_body table {
     width: 100%;
     border-collapse: collapse;
@@ -1769,17 +1894,30 @@ body.qb-dark #cnblogs_post_body img:hover {
         grid-template-columns: none;
         padding: 14px 14px 4px;
         gap: 14px;
+        /* 必须覆盖全局的 align-items:start：flex 纵向时 cross 轴就是宽度，
+           start 会让子项取 fit-content，正文里一条长代码就能把整列撑到 1499px，
+           整页横向滚动。stretch 才是「按容器宽铺满、内部自己滚」。 */
+        align-items: stretch;
     }
     #mainContent, #qb-left, #sideBarMain, #blog-calendar {
         grid-column: auto;
         grid-row: auto;
         width: 100%;
+        /* #mainContent 全局带 width:auto !important，会把上面这条 width:100% 盖掉，
+           这里补 max-width 兜底：即使宽度算成 fit-content，也不会超过容器。 */
+        max-width: 100%;
     }
     #sideBar, #sideBarMain { display: block !important; }
     #qb-left, #sideBarMain { display: none; }
     #blog-calendar { display: none; }
     #post_detail { padding: 20px 18px; }
     #post_detail .postTitle { font-size: 21px !important; }
+    /* 小屏代码块：正文一窄，13px 一行只能放下三四十个字符，
+       字号降到 12px、行号留白收紧，尽量多留有效宽度。 */
+    #cnblogs_post_body .qb-code > pre { font-size: 12px !important; }
+    #cnblogs_post_body .qb-cl::before { padding: 0 .45em 0 10px; }
+    #cnblogs_post_body .qb-cl { padding-right: 12px; }
+    #cnblogs_post_body .qb-code-bar { padding: 4px 8px 4px 10px; }
     .day { padding: 16px 16px 12px; }
     /* 小屏顶栏：logo 与字号同步收一档，菜单改为横向滑动，避免挤出行外把暗色按钮顶没 */
     .qb-nav-inner { padding: 0 14px; height: 52px; gap: 10px; }

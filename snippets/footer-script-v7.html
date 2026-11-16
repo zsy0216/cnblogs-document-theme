@@ -1,8 +1,8 @@
-<!-- 流苏主题 v7.18 · 2026-11-16 页脚 HTML 重要脚本
+<!-- 流苏主题 v7.19 · 2026-11-16 页脚 HTML 重要脚本
      位置：博客园后台 -> 设置 -> 页脚 HTML 代码
      说明：1. 这里的 script 包含全部 DOM 操作逻辑（目录生成、滚动高亮、部件搬运）。2. 粘贴前务必备份原有内容。3. 博客园 HTML 校验器：确保没有未配对的尖括号，所有符号合法。 -->
 <script>
-/* 流苏主题 v7.18 · 2026-11-16 页脚：列表页文章目录 / 详情页文章目录 / 归档时间线 / 分页 / 回到顶部 / 滚动高亮 */
+/* 流苏主题 v7.19 · 2026-11-16 页脚：列表页文章目录 / 详情页文章目录 / 归档时间线 / 分页 / 回到顶部 / 滚动高亮 */
 (function () {
   'use strict';
 
@@ -64,6 +64,17 @@
          false = 边解析边显示（和 6.x 一样，内容逐渐出现，但可能看到右侧栏后补）。
          觉得「点开后要等一下」就设 false。 */
       gate: true,
+
+      /* 代码块：行号 + 语言标签 + 复制按钮。
+         整块关掉：code: false
+         只要代码不要行号：code: { lineNumbers: false }
+         不要复制按钮：code: { copy: false }
+         富文本「插入代码」的表格代码块不加工（园方自己带行号），
+         已由高亮插件上色的代码块也不加工（拆行会丢颜色）。 */
+      code: {
+        lineNumbers: true,
+        copy: true
+      },
 
       /* 顶栏导航：全部由脚本按配置渲染，页首 HTML 里不再放任何菜单结构。
          不配置就用这里的默认值；配置了按配置渲染（links 整体替换，其余逐项覆盖）。
@@ -601,6 +612,168 @@
       });
       if (!vis.length) bar.setAttribute('data-qb-empty', '1');
     });
+  }
+
+  /* 5.9 代码块：语言标签 / 复制 / 行号
+     这里有个容易踩空的前提：博客园**自带 Prism.js 和 prism-line-numbers**，
+     客户端把 <pre><code class="language-x">纯文本</code></pre> 重新渲染成
+     <pre class="line-numbers highlighter-prismjs"><code><span class="token">…</span></code>
+     <span class="line-numbers-rows"><span></span>…</span></pre>
+
+     所以行号有两种来源，必须先分清，否则两套打架：
+       A 园方 Prism 行号（页面上引了 prism-line-numbers 脚本）—— 让位给园方。
+         园方行号容器是 position:absolute; left:-3.8em，完全依赖 pre 的
+         padding-left 留位。主题原来把 padding-left 压到 18px（甚至 0），
+         容器被 .qb-code 的 overflow:hidden 裁掉 —— 这就是「后台开了行号却不显示」。
+       B 没有 Prism 行号时 —— 自己按 \n 拆行，用 CSS counter 画行号（下面 .qb-cl 那套）。
+
+     跳过的两类：
+       1) .cnblogs_code —— 富文本「插入代码」的表格结构，园方自己画了行号
+       2) 已加工过的（data-qb-code）—— boot 与 DCL 兜底会各跑一次
+
+     配置：code:false 全关 | { lineNumbers:false } 只去行号 | { copy:false } 只去复制 */
+  var LANG_RE = /(?:^|\s)(?:language|lang)-([\w+#.-]+)/i;
+
+  /* 等 load 之后再决定要不要自己画行号的块。
+     为什么不能当场判：博客园的 prism-line-numbers 是客户端加载的，
+     boot 在解析期跑，那时脚本标签还没解析到、<pre class="line-numbers"> 也还没加上。
+     当场判会得出"没有园方行号"的错误结论，抢先拆行，随后被 Prism 整个重写覆盖，
+     连行号容器的行数都会被算成 1 行。 */
+  var CODE_PENDING = [];
+
+  function legacyCopy(t) {
+    var ta = document.createElement('textarea');
+    ta.value = t;
+    ta.setAttribute('readonly', '');
+    ta.style.cssText = 'position:fixed;top:-1000px;left:0;opacity:0';
+    document.body.appendChild(ta);
+    ta.select();
+    var ok = false;
+    try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+    document.body.removeChild(ta);
+    return ok;
+  }
+
+  /* 复制优先走剪贴板 API（博客园是 https，可用）；自建域名或非安全上下文回落到 execCommand */
+  function copyText(t) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      return navigator.clipboard.writeText(t).catch(function () {
+        return legacyCopy(t) ? null : Promise.reject(new Error('copy'));
+      });
+    }
+    return legacyCopy(t) ? Promise.resolve() : Promise.reject(new Error('copy'));
+  }
+
+  function enhanceCode() {
+    var opt = (CFG.code && typeof CFG.code === 'object') ? CFG.code : {};
+    var wantNo = opt.lineNumbers !== false;
+    var wantCopy = opt.copy !== false;
+    var body = document.getElementById('cnblogs_post_body');
+    if (!body || !body.querySelectorAll) return;
+
+    var pres = body.querySelectorAll('pre');
+    for (var i = 0; i < pres.length; i++) {
+      var pre = pres[i];
+      if (pre.getAttribute('data-qb-code')) continue;
+      /* 富文本代码块：pre 在 .cnblogs_code 里面，园方已带表格行号 */
+      if (pre.closest && pre.closest('.cnblogs_code')) continue;
+      var code = pre.querySelector('code');
+      if (!code) continue;
+
+      var raw = code.textContent.replace(/\r\n?/g, '\n');
+      if (!raw.trim()) continue;
+      raw = raw.replace(/\n+$/, '');          /* 去掉结尾空行，别多画一行 */
+      var lines = raw.split('\n');
+
+      var m = LANG_RE.exec(code.className || '');
+      var lang = m ? m[1].toLowerCase() : '';
+      pre.setAttribute('data-qb-code', '1');
+
+      var wrap = document.createElement('div');
+      wrap.className = 'qb-code' + (wantNo ? '' : ' no-line-numbers');
+      pre.parentNode.insertBefore(wrap, pre);
+      wrap.appendChild(pre);
+
+      /* 这一块要不要自己画行号，现在还不能定：boot 跑在解析期，
+         prism-line-numbers 脚本标签和它加的行号容器都还没出现。
+         先记下来，等 load 之后再判 —— 那时有 .line-numbers-rows 就说明园方已经接管。 */
+      if (wantNo) CODE_PENDING.push({ pre: pre, code: code, raw: raw, lines: lines });
+
+      var bar = document.createElement('div');
+      bar.className = 'qb-code-bar';
+      var tag = document.createElement('span');
+      tag.className = 'qb-code-lang';
+      tag.textContent = lang || 'code';
+      bar.appendChild(tag);
+
+      if (wantCopy) {
+        /* 复制用 raw 而不是 code.textContent —— 拆行后 span 之间没有 \n 文本节点，
+           直接读 textContent 会把整段代码粘成一行。 */
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'qb-code-copy';
+        btn.textContent = '复制';
+        btn.setAttribute('aria-label', '复制代码');
+        (function (b, txt) {
+          b.addEventListener('click', function () {
+            copyText(txt).then(function () {
+              b.textContent = '已复制';
+              b.className = 'qb-code-copy done';
+            }, function () {
+              b.textContent = '复制失败';
+              b.className = 'qb-code-copy';
+            }).then(function () {
+              setTimeout(function () {
+                b.textContent = '复制';
+                b.className = 'qb-code-copy';
+              }, 1400);
+            });
+          });
+        })(btn, raw);
+        bar.appendChild(btn);
+      }
+      wrap.insertBefore(bar, pre);
+    }
+  }
+
+  /* 行号收尾：load 之后园方行号还没出现，才自己按行拆。
+     三种情况一律让位，宁可不画行号也不能把代码弄坏：
+       1) 已有 .line-numbers-rows —— Prism 行号接管了，CSS 里给它留了 3.8em
+       2) code 里已有 token 子元素 —— Prism 高亮了但没开行号，拆行会把颜色拍平
+       3) wrap 带 no-line-numbers —— 用户明确关掉了 */
+  function settleCode() {
+    var pend = CODE_PENDING;
+    CODE_PENDING = [];
+    for (var i = 0; i < pend.length; i++) {
+      var it = pend[i];
+      var wrap = it.pre.parentNode;
+      if (!wrap || !wrap.classList || !wrap.classList.contains('qb-code')) continue;
+      if (wrap.classList.contains('no-line-numbers')) continue;
+      if (it.pre.querySelector('.line-numbers-rows')) continue;
+      if (it.code.children.length) continue;
+
+      /* 用 textContent 逐行建 span，不用 innerHTML：
+         代码里的 < & 原样保留，不经过一遍转义再反转义，也就不可能被当标签解析 */
+      it.code.textContent = '';
+      var frag = document.createDocumentFragment();
+      for (var j = 0; j < it.lines.length; j++) {
+        var ln = document.createElement('span');
+        ln.className = 'qb-cl';
+        ln.textContent = it.lines[j];
+        frag.appendChild(ln);
+      }
+      it.code.appendChild(frag);
+      /* 行号列宽按最大行号的位数给，ch 单位跟着字号走，移动端缩字号也不会错位 */
+      it.code.style.setProperty('--qb-ln-w', Math.max(2, String(it.lines.length).length) + 'ch');
+    }
+  }
+
+  /* 350ms 是给 Prism 的收尾时间：它在 DOMContentLoaded 附近高亮，
+     autoloader 拉子语言时还会再晚一点。等不到就自己画。 */
+  if (document.readyState === 'complete') {
+    setTimeout(settleCode, 0);
+  } else {
+    window.addEventListener('load', function () { setTimeout(settleCode, 350); });
   }
 
   /* 6. 博客 Icon（favicon）
@@ -1212,6 +1385,15 @@
     var total = 0;
     months.forEach(function (mo) { total += mo.n; });
 
+    /* 正式面板进来之前先摘掉等待期的占位面板。
+       waitArchiveReady 建的那张只写了「读取中」，不清掉就会和这张并排，
+       左栏出现两张「全部归档」—— 何时出现取决于月份索引来得快慢，所以是偶发。 */
+    var staleWait = left.querySelector('.qb-arc-wait');
+    if (staleWait) {
+      var stalePanel = staleWait.closest ? staleWait.closest('.qb-panel') : null;
+      (stalePanel || staleWait).parentNode.removeChild(stalePanel || staleWait);
+    }
+
     var panel = makePanel('全部归档', total + ' 篇');
     left.insertBefore(panel, left.firstChild);
 
@@ -1453,6 +1635,8 @@
     syncSide(left);
 
     lazyImages();
+    /* 代码块放在闸门放行前：行号要在首帧就是齐的，晚一步会看到代码先铺开、行号后插入 */
+    if (CFG.code) enhanceCode();
     markNav();
     initFavicon();
     initDarkMode();

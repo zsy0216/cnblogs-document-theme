@@ -1,4 +1,4 @@
-<!-- 流苏主题 v7.18 · 2026-11-16 页脚 HTML（压缩版）
+<!-- 流苏主题 v7.19 · 2026-11-16 页脚 HTML（压缩版）
      位置：博客园后台 -> 设置 -> 页脚 HTML 代码（粘贴前先清空）
      说明：本文件由 _dev-tools/gen-footer-min.py 从 footer-script-v7.html 生成，
            功能完全一致，只删注释与缩进。要改逻辑请改源文件后重新生成，不要改这里。 -->
@@ -33,6 +33,10 @@ pager: true,
 archive: true,
 archiveTtl: 24,
 gate: true,
+code: {
+lineNumbers: true,
+copy: true
+},
 nav: {
 brand: SITE_NAME,
 home: HOME,
@@ -431,6 +435,113 @@ return u.style.display !== 'none' && !u.classList.contains('qb-pager-top');
 });
 if (!vis.length) bar.setAttribute('data-qb-empty', '1');
 });
+}
+var LANG_RE = /(?:^|\s)(?:language|lang)-([\w+#.-]+)/i;
+var CODE_PENDING = [];
+function legacyCopy(t) {
+var ta = document.createElement('textarea');
+ta.value = t;
+ta.setAttribute('readonly', '');
+ta.style.cssText = 'position:fixed;top:-1000px;left:0;opacity:0';
+document.body.appendChild(ta);
+ta.select();
+var ok = false;
+try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+document.body.removeChild(ta);
+return ok;
+}
+function copyText(t) {
+if (navigator.clipboard && navigator.clipboard.writeText) {
+return navigator.clipboard.writeText(t).catch(function () {
+return legacyCopy(t) ? null : Promise.reject(new Error('copy'));
+});
+}
+return legacyCopy(t) ? Promise.resolve() : Promise.reject(new Error('copy'));
+}
+function enhanceCode() {
+var opt = (CFG.code && typeof CFG.code === 'object') ? CFG.code : {};
+var wantNo = opt.lineNumbers !== false;
+var wantCopy = opt.copy !== false;
+var body = document.getElementById('cnblogs_post_body');
+if (!body || !body.querySelectorAll) return;
+var pres = body.querySelectorAll('pre');
+for (var i = 0; i < pres.length; i++) {
+var pre = pres[i];
+if (pre.getAttribute('data-qb-code')) continue;
+if (pre.closest && pre.closest('.cnblogs_code')) continue;
+var code = pre.querySelector('code');
+if (!code) continue;
+var raw = code.textContent.replace(/\r\n?/g, '\n');
+if (!raw.trim()) continue;
+raw = raw.replace(/\n+$/, '');
+var lines = raw.split('\n');
+var m = LANG_RE.exec(code.className || '');
+var lang = m ? m[1].toLowerCase() : '';
+pre.setAttribute('data-qb-code', '1');
+var wrap = document.createElement('div');
+wrap.className = 'qb-code' + (wantNo ? '' : ' no-line-numbers');
+pre.parentNode.insertBefore(wrap, pre);
+wrap.appendChild(pre);
+if (wantNo) CODE_PENDING.push({ pre: pre, code: code, raw: raw, lines: lines });
+var bar = document.createElement('div');
+bar.className = 'qb-code-bar';
+var tag = document.createElement('span');
+tag.className = 'qb-code-lang';
+tag.textContent = lang || 'code';
+bar.appendChild(tag);
+if (wantCopy) {
+var btn = document.createElement('button');
+btn.type = 'button';
+btn.className = 'qb-code-copy';
+btn.textContent = '复制';
+btn.setAttribute('aria-label', '复制代码');
+(function (b, txt) {
+b.addEventListener('click', function () {
+copyText(txt).then(function () {
+b.textContent = '已复制';
+b.className = 'qb-code-copy done';
+}, function () {
+b.textContent = '复制失败';
+b.className = 'qb-code-copy';
+}).then(function () {
+setTimeout(function () {
+b.textContent = '复制';
+b.className = 'qb-code-copy';
+}, 1400);
+});
+});
+})(btn, raw);
+bar.appendChild(btn);
+}
+wrap.insertBefore(bar, pre);
+}
+}
+function settleCode() {
+var pend = CODE_PENDING;
+CODE_PENDING = [];
+for (var i = 0; i < pend.length; i++) {
+var it = pend[i];
+var wrap = it.pre.parentNode;
+if (!wrap || !wrap.classList || !wrap.classList.contains('qb-code')) continue;
+if (wrap.classList.contains('no-line-numbers')) continue;
+if (it.pre.querySelector('.line-numbers-rows')) continue;
+if (it.code.children.length) continue;
+it.code.textContent = '';
+var frag = document.createDocumentFragment();
+for (var j = 0; j < it.lines.length; j++) {
+var ln = document.createElement('span');
+ln.className = 'qb-cl';
+ln.textContent = it.lines[j];
+frag.appendChild(ln);
+}
+it.code.appendChild(frag);
+it.code.style.setProperty('--qb-ln-w', Math.max(2, String(it.lines.length).length) + 'ch');
+}
+}
+if (document.readyState === 'complete') {
+setTimeout(settleCode, 0);
+} else {
+window.addEventListener('load', function () { setTimeout(settleCode, 350); });
 }
 function initFavicon() {
 var head = document.head || document.querySelector('head');
@@ -903,6 +1014,11 @@ if (months.length < 2) return false;
 var curKey = months[0].key;
 var total = 0;
 months.forEach(function (mo) { total += mo.n; });
+var staleWait = left.querySelector('.qb-arc-wait');
+if (staleWait) {
+var stalePanel = staleWait.closest ? staleWait.closest('.qb-panel') : null;
+(stalePanel || staleWait).parentNode.removeChild(stalePanel || staleWait);
+}
 var panel = makePanel('全部归档', total + ' 篇');
 left.insertBefore(panel, left.firstChild);
 var box = mk('div', 'qb-archive');
@@ -1058,6 +1174,7 @@ buildLeft();
 var left = document.getElementById('qb-left');
 syncSide(left);
 lazyImages();
+if (CFG.code) enhanceCode();
 markNav();
 initFavicon();
 initDarkMode();

@@ -87,6 +87,10 @@
 window.LS_CONFIG = {
   accent: '#d05ce8',        // 强调色
   dark: 'auto',             // 'auto' 跟随系统 | 'on' | 'off'
+  code: {
+    lineNumbers: true,      // 代码块行号（有 Prism 行号时用园方的，没有才自己画）
+    copy: true              // 右上角复制按钮
+  },
   nav: {
     brand: '你的博客名',
     home: 'https://www.cnblogs.com/你的博客名/',
@@ -112,6 +116,7 @@ window.LS_CONFIG = {
 | `pager` | `true` | 列表页分页整理（隐藏上方那份，只留下方一条） |
 | `archive` | `true` | 归档页聚合成全站时间线 |
 | `archiveTtl` | `24` | 归档单月缓存有效期（小时）；篇数一变仍会立即失效 |
+| `code` | `{ lineNumbers: true, copy: true }` | 代码块行号与复制按钮。`lineNumbers:false` 去行号（园方那套也一起收），`copy:false` 去按钮，`code:false` 整块不加工 |
 | `nav` | **按当前站点自动生成** | 顶栏。`{ brand, home, logo, mark, dark, links: [{ t, h, b, on }] }`，`links` 整体替换 |
 | `notice` | **博客园「公告」字段原文** | 公告。`{ show, title, html }`；`show:false` 隐藏，`html:''`（默认）用后台公告字段 |
 
@@ -135,6 +140,8 @@ window.LS_CONFIG = {
 
 > **命名说明**：`LS` = 流苏（LiuSu）的拼音首字母。v6.29 及以前叫 `window.QB_CONFIG`，两个名字等价，
 > **同时写时 `LS_CONFIG` 优先**，老配置一个字都不用改。
+> 反过来说，`LS_CONFIG` 里**不要写与默认值相同的键**（例如 `accent: ''`）—— 它会把
+> `QB_CONFIG` 里的同名设置整个吞掉。页首模板里 `accent` 与 `code` 因此留成注释，用到再放开。
 > CSS 类名（`.qb-nav` / `.qb-pager`…）和 `localStorage` 键（`qb-dark`、`qb-arc-v3:`）仍是 `qb-` 前缀，
 > 升级不会丢用户已存的暗色选择和归档缓存。
 
@@ -148,6 +155,7 @@ window.LS_CONFIG = {
 | [布局与左栏目录](docs/功能-布局与目录.md) | 三栏原理、适配页面、左栏目录、一篇一卡、右栏精简 |
 | [归档时间线](docs/功能-归档时间线.md) | 归档总览页怎么补出来、缓存新鲜度、侧栏异步的稳定性处理 |
 | [分页与滚动](docs/功能-分页与滚动.md) | 列表页分页整理、吸顶行为、回到顶部按钮 |
+| [代码块](docs/功能-代码块.md) | 行号归属（园方 Prism / 主题自建）、语言标签、复制、为什么不显示 |
 | [开发指南](docs/开发指南.md) | 源码结构、构建与版本管理、压缩、验证脚本、文件清单 |
 | [推广文](docs/promo-post.md) | 发到博客园 / CSDN 的介绍文章（配图 + 安装步骤） |
 
