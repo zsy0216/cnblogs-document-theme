@@ -1,6 +1,6 @@
 /* ============================================================
-   流苏主题 v7.20 · 2026-11-16
-   最近：feat(v7.20): 顶栏主题色选择、阅读时长、标题锚点、文末版权
+   流苏主题 v7.21 · 2026-11-16
+   最近：feat(v7.21): 移动端目录抽屉、宽表横滑、打印样式、代码折叠、暗色跟随系统、续读
    ------------------------------------------------------------
    主题 v6 —— 基于博客园 2026 真实 DOM 重写
    ------------------------------------------------------------
@@ -1631,6 +1631,45 @@ body.qb-dark .qb-arc-idx-m.on i { color: rgba(13, 17, 23, .7); }
 #cnblogs_post_body .qb-code.no-line-numbers .qb-cl { padding-left: 18px; }
 #cnblogs_post_body .qb-code.no-line-numbers .qb-cl::before { display: none; }
 
+/* 6.5b 超长代码块折叠（v7.21，脚本 5.9 给 .qb-code 加 qb-folded）
+   34 行以上默认折到约 22 行，底部一条按钮写清总行数。
+   按钮的 ::before 从下往上渐隐，盖住被切断的最后半行 —— 直接一刀切会正好切在字符中间，
+   看起来像样式坏了。 */
+#cnblogs_post_body .qb-code.qb-folded > pre {
+    max-height: 500px;
+    overflow-y: hidden;
+}
+#cnblogs_post_body .qb-code-more {
+    position: relative;
+    display: block;
+    width: 100%;
+    margin: 0;
+    padding: 9px 12px;
+    border: 0;
+    border-top: 1px solid var(--pre-line);
+    background: rgba(255, 255, 255, .035);
+    font-family: "JetBrains Mono", Consolas, Monaco, monospace;
+    font-size: 12px;
+    line-height: 1.4;
+    color: var(--pre-num);
+    cursor: pointer;
+    transition: background .15s, color .15s;
+}
+#cnblogs_post_body .qb-code-more::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 100%;
+    height: 64px;
+    background: linear-gradient(to bottom, rgba(22, 27, 34, 0), var(--pre-bg) 78%);
+    pointer-events: none;
+}
+#cnblogs_post_body .qb-code-more:hover {
+    background: rgba(255, 255, 255, .09);
+    color: var(--pre-ink);
+}
+
 /* 6.6 阅读时长（v7.20 起由页脚脚本插在标题与正文之间）
    一行小字，不占视觉重量：正文前面已经有标题和目录，再放一块卡片会把正文推下去。 */
 #post_detail .qb-readtime {
@@ -1702,11 +1741,9 @@ body.qb-dark .qb-arc-idx-m.on i { color: rgba(13, 17, 23, .7); }
 body.qb-dark #cnblogs_post_body .qb-copyright { border-color: rgba(255, 255, 255, .16); }
 
 /* 博客园会给每个标题塞一个「显示目录导航」按钮（.cnblogs-toc-button）。
-   桌面端左栏本来就有目录，这个按钮只会让标题变成「标题 ≡ #」，藏掉；
-   小屏左栏是隐藏的，那个按钮反而有用，所以只在 ≥861px 生效。 */
-@media screen and (min-width: 861px) {
-    #cnblogs_post_body .cnblogs-toc-button { display: none !important; }
-}
+   桌面端左栏有目录、小屏有底部的目录抽屉，这个按钮只会让标题变成「标题 ≡」，
+   两边都不需要，一律藏掉。 */
+#cnblogs_post_body .cnblogs-toc-button { display: none !important; }
 #cnblogs_post_body table {
     width: 100%;
     border-collapse: collapse;
@@ -1719,6 +1756,145 @@ body.qb-dark #cnblogs_post_body .qb-copyright { border-color: rgba(255, 255, 255
     text-align: left;
 }
 #cnblogs_post_body th { background: var(--bg); font-weight: 600; color: var(--ink); }
+
+/* 6.14 宽表格：横向滚动 + 首列吸附（v7.21，脚本 6.10 套的 .qb-table-wrap）
+   园方给 table 写死 width:100%，七八列就被压成竖条、表头一个字一行。
+   这里给单元格一个下限宽度，撑不下就让外层横滑；首列 sticky，滑到第 5 列时
+   还知道自己在看哪一行。只在真的溢出（.qb-x）时才吸附，窄表不受影响。 */
+#cnblogs_post_body .qb-table-wrap {
+    margin: 1.2em 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+}
+#cnblogs_post_body .qb-table-wrap table { margin: 0; }
+#cnblogs_post_body .qb-table-wrap th,
+#cnblogs_post_body .qb-table-wrap td { min-width: 92px; }
+#cnblogs_post_body .qb-table-wrap.qb-x th:first-child,
+#cnblogs_post_body .qb-table-wrap.qb-x td:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 2;
+    background: var(--card);
+    /* 阴影而不是 border-right：border 会加宽单元格，横滑时首列宽度跳一下 */
+    box-shadow: 1px 0 0 var(--line);
+}
+#cnblogs_post_body .qb-table-wrap.qb-x th:first-child { background: var(--bg); }
+/* 触屏没有可见滚动条，右侧遮一档渐隐提示「还能往右滑」 */
+@media (hover: none) {
+    #cnblogs_post_body .qb-table-wrap.qb-x {
+        -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 26px), transparent);
+        mask-image: linear-gradient(to right, #000 calc(100% - 26px), transparent);
+    }
+}
+
+/* 6.15 Markdown 元素补全（v7.21）
+   园方只给了 p/h/pre/table 的样式，kbd、mark、details、任务列表、脚注这些
+   Markdown 常见元素全是浏览器默认外观，夹在正文里就像「另一个网站的片段」。 */
+#cnblogs_post_body hr {
+    height: 0;
+    margin: 2.2em 0;
+    border: 0;
+    border-top: 1px solid var(--line);
+}
+/* 键盘按键：双层下边框模拟键帽高度，行内不撑行高 */
+#cnblogs_post_body kbd {
+    display: inline-block;
+    min-width: 1.7em;
+    padding: 1px 6px;
+    border: 1px solid var(--line);
+    border-bottom-width: 2px;
+    border-radius: 5px;
+    background: var(--card);
+    box-shadow: 0 1px 0 var(--line);
+    font-family: "JetBrains Mono", Consolas, Monaco, monospace;
+    font-size: .82em;
+    line-height: 1.55;
+    text-align: center;
+    color: var(--ink);
+    vertical-align: 1px;
+}
+#cnblogs_post_body mark {
+    padding: 0 2px;
+    border-radius: 2px;
+    background: rgba(255, 214, 102, .55);
+    color: inherit;
+}
+body.qb-dark #cnblogs_post_body mark { background: rgba(187, 128, 9, .40); color: #f0e6d2; }
+
+/* details / summary：折叠块。园方默认的 ▶ 在不同浏览器里大小不一，收成统一的小三角 */
+#cnblogs_post_body details {
+    margin: 1.2em 0;
+    padding: 0;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    background: var(--card);
+    overflow: hidden;
+}
+#cnblogs_post_body summary {
+    padding: 9px 14px;
+    font-weight: 600;
+    color: var(--ink);
+    cursor: pointer;
+    list-style: none;
+    user-select: none;
+}
+#cnblogs_post_body summary::-webkit-details-marker { display: none; }
+#cnblogs_post_body summary::before {
+    content: '▸';
+    display: inline-block;
+    width: 1.2em;
+    color: var(--meta);
+    transition: transform .15s;
+}
+#cnblogs_post_body details[open] > summary::before { transform: rotate(90deg); }
+#cnblogs_post_body details[open] > summary { border-bottom: 1px solid var(--line); }
+#cnblogs_post_body details > *:not(summary) { margin-left: 14px; margin-right: 14px; }
+#cnblogs_post_body details > *:last-child { margin-bottom: 12px; }
+
+/* 任务列表：脚本给 li 加 .qb-task、给父列表加 .qb-tasklist */
+#cnblogs_post_body .qb-tasklist { padding-left: 1.4em; }
+#cnblogs_post_body .qb-task { list-style: none; }
+#cnblogs_post_body .qb-task > input[type="checkbox"] {
+    margin: 0 .5em 0 -1.3em;
+    vertical-align: -1px;
+    accent-color: var(--accent);
+}
+
+/* 脚注：正文里的上标 + 文末列表 */
+#cnblogs_post_body sup a {
+    padding: 0 2px;
+    font-size: .78em;
+    text-decoration: none;
+    color: var(--accent-deep);
+}
+#cnblogs_post_body .footnotes {
+    margin-top: 2em;
+    padding-top: .9em;
+    border-top: 1px solid var(--line);
+    font-size: 13px;
+    color: var(--meta);
+}
+
+/* 图片说明 */
+#cnblogs_post_body figure { margin: 1.4em 0; }
+#cnblogs_post_body figcaption {
+    margin-top: 6px;
+    font-size: 12.5px;
+    line-height: 1.7;
+    text-align: center;
+    color: var(--meta);
+}
+
+/* 定义列表 */
+#cnblogs_post_body dl { margin: 1.1em 0; }
+#cnblogs_post_body dt { margin-top: .7em; font-weight: 600; color: var(--ink); }
+#cnblogs_post_body dd { margin: .2em 0 0 1.4em; }
+
+#cnblogs_post_body abbr[title] {
+    text-decoration: underline dotted var(--meta);
+    cursor: help;
+}
 
 /* 文章标签 */
 #EntryTag { margin: 20px 0 8px !important; font-size: 0; }
@@ -2079,4 +2255,333 @@ body.qb-dark #cnblogs_post_body img:hover {
     .qb-theme { flex: 0 0 36px; }
     /* 面板贴着按钮右缘会离屏幕边只剩 14px，这里往回带一点，六颗色点在小屏也放得下 */
     .qb-theme-pop { right: -4px; gap: 8px; padding: 9px 11px; }
+}
+
+/* ---------- 11. 移动端目录抽屉（v7.21，由页脚脚本 7.1 建） ----------
+   <860px 左栏整列隐藏，手机上原本没有任何目录入口。
+   做法：左下角一个悬浮按钮 + 底部抽屉，内容从桌面目录克隆，不另起一套逻辑。
+   只在 <860px 显示，桌面端按钮与抽屉都不可见（脚本仍会建，成本只有几个节点）。 */
+.qb-mtoc-fab { display: none; }
+.qb-mtoc {
+    position: fixed;
+    inset: 0;
+    z-index: 1200;
+    visibility: hidden;
+    pointer-events: none;
+}
+.qb-mtoc.open { visibility: visible; pointer-events: auto; }
+.qb-mtoc-mask {
+    position: absolute;
+    inset: 0;
+    background: rgba(9, 12, 17, .44);
+    opacity: 0;
+    transition: opacity .22s ease;
+}
+.qb-mtoc.open .qb-mtoc-mask { opacity: 1; }
+.qb-mtoc-sheet {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    max-height: 76vh;
+    padding-bottom: env(safe-area-inset-bottom);
+    border-radius: 16px 16px 0 0;
+    background: var(--card);
+    box-shadow: 0 -8px 32px rgba(16, 24, 40, .22);
+    transform: translateY(100%);
+    transition: transform .26s cubic-bezier(.22, .61, .36, 1);
+}
+.qb-mtoc.open .qb-mtoc-sheet { transform: none; }
+.qb-mtoc-hd {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 13px 14px 10px;
+    border-bottom: 1px solid var(--line);
+}
+.qb-mtoc-title { font-size: 14px; font-weight: 600; color: var(--ink); }
+.qb-mtoc-n {
+    padding: 1px 7px;
+    border-radius: 10px;
+    background: var(--bg);
+    font-size: 11.5px;
+    color: var(--meta);
+}
+.qb-mtoc-x {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    margin-left: auto;
+    padding: 0;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--meta);
+    cursor: pointer;
+}
+.qb-mtoc-x:hover { background: var(--bg); color: var(--ink); }
+.qb-mtoc-x svg { width: 16px; height: 16px; }
+.qb-mtoc-list {
+    flex: 1 1 auto;
+    margin: 0;
+    padding: 8px 10px 14px;
+    list-style: none;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+}
+.qb-mtoc-list li { margin: 0; }
+.qb-mtoc-list a {
+    display: block;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 13.5px;
+    line-height: 1.65;
+    color: var(--body);
+    text-decoration: none;
+}
+.qb-mtoc-list a.on {
+    background: var(--accent-soft);
+    color: var(--accent-deep);
+    font-weight: 600;
+}
+/* 抽屉打开时锁住背景滚动。锁在 html 上：iOS 对 body overflow:hidden 不生效 */
+html.qb-mtoc-lock,
+html.qb-mtoc-lock body { overflow: hidden !important; }
+
+/* 续读提示：底部居中的轻提示，不挡正文（v7.21 脚本 7.2 用） */
+.qb-toast {
+    position: fixed;
+    left: 50%;
+    bottom: 26px;
+    z-index: 1300;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    max-width: calc(100vw - 32px);
+    box-sizing: border-box;
+    padding: 9px 12px 9px 15px;
+    border: 1px solid var(--line);
+    border-radius: 22px;
+    background: var(--card);
+    box-shadow: var(--shadow-hover);
+    font-size: 13px;
+    color: var(--body);
+    opacity: 0;
+    transform: translate(-50%, 12px);
+    transition: opacity .22s ease, transform .22s ease;
+}
+.qb-toast.show { opacity: 1; transform: translate(-50%, 0); }
+.qb-toast-t { white-space: nowrap; }
+.qb-toast-a {
+    flex: 0 0 auto;
+    padding: 2px 8px;
+    border: 0;
+    border-radius: 6px;
+    background: var(--accent-soft);
+    font: inherit;
+    color: var(--accent-deep);
+    cursor: pointer;
+}
+.qb-toast-a:hover { background: var(--accent); color: #fff; }
+.qb-toast-x {
+    flex: 0 0 auto;
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    font-size: 15px;
+    line-height: 1;
+    color: var(--meta);
+    cursor: pointer;
+}
+.qb-toast-x:hover { background: var(--bg); color: var(--ink); }
+
+@media screen and (max-width: 860px) {
+    /* 悬浮按钮与「回到顶部」分开站两端：右下是回顶，左下是目录，
+       两个都 44px（WCAG 触控下限），互不遮挡 */
+    .qb-mtoc-fab {
+        position: fixed;
+        left: 14px;
+        bottom: calc(20px + env(safe-area-inset-bottom));
+        z-index: 1001;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        height: 44px;
+        padding: 0 14px 0 12px;
+        border: 1px solid var(--line);
+        border-radius: 22px;
+        background: var(--card);
+        box-shadow: var(--shadow);
+        font-family: var(--font);
+        font-size: 12.5px;
+        color: var(--ink);
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+    }
+    .qb-mtoc-fab svg { width: 16px; height: 16px; }
+    .qb-mtoc-fab:active { transform: scale(.97); }
+    #qb-top { bottom: calc(20px + env(safe-area-inset-bottom)); }
+    .qb-toast { bottom: calc(78px + env(safe-area-inset-bottom)); font-size: 12.5px; }
+
+    /* 正文里的宽表：单元格再收一档，让更多列能一次看到；
+       字号也跟着降，否则 92px 的首列只能放下 6 个字 */
+    #cnblogs_post_body .qb-table-wrap th,
+    #cnblogs_post_body .qb-table-wrap td {
+        min-width: 84px;
+        padding: 7px 9px;
+        font-size: 12.5px;
+    }
+    /* 代码折叠在手机上折得更狠：一屏本来就只放得下十几行 */
+    #cnblogs_post_body .qb-code.qb-folded > pre { max-height: 360px; }
+    /* 归档时间线：日期列与标题列在小屏挤在一起，把日期单独缩一档 */
+    .qb-arc-d { flex: 0 0 52px; }
+    .qb-arc-link { padding: 7px 10px; }
+}
+
+@media screen and (max-width: 480px) {
+    /* 375/390 宽：左右留白各收 4px，正文有效宽度 +8px，
+       15px 的字号下这 8px 大概能多放半个字，但一行能少折一次 */
+    #main { padding: 10px 10px 4px; gap: 10px; }
+    #post_detail { padding: 18px 15px 16px; }
+    #post_detail .postTitle { font-size: 20px !important; line-height: 1.42; }
+    #post_detail .postDesc { margin-bottom: 18px !important; font-size: 12px !important; }
+    /* 手机阅读把正文提到 16px：15px 在 375 宽上偏挤，长文读起来累 */
+    #cnblogs_post_body { font-size: 16px !important; line-height: 1.85; }
+    #cnblogs_post_body h2 { font-size: 18px; padding-left: 10px; border-left-width: 3px; }
+    #cnblogs_post_body h3 { font-size: 16px; }
+    #cnblogs_post_body blockquote { margin: 1em 0; padding: 10px 14px; }
+    #cnblogs_post_body .qb-code { margin: 1em 0; }
+    #cnblogs_post_body .qb-code-bar { font-size: 11px; }
+    .day { padding: 14px 14px 10px; }
+    .day .postTitle { font-size: 18px; }
+    #post_detail .qb-readtime { margin-bottom: 16px; }
+    #cnblogs_post_body .qb-copyright { padding: 12px 13px 11px; line-height: 1.85; }
+    #post_detail .qb-hanchor { display: none; }   /* 触屏没有 hover，标题旁的 # 只是噪音 */
+}
+
+/* ---------- 12. 打印 / 存 PDF ----------
+   读者按 Ctrl+P 时，顶栏、左栏、回到顶部、代码工具条全都会被印出来，
+   暗色模式还会把半页纸涂成黑的。这一节把外壳全部去掉，正文转成白底黑字。 */
+@media print {
+    @page { margin: 16mm 14mm; }
+
+    /* 变量先归零：正文所有颜色都走变量，改这里比逐条覆盖省事 */
+    :root,
+    html.qb-dark,
+    body.qb-dark {
+        --bg: #fff;
+        --card: #fff;
+        --line: #d7d7d7;
+        --ink: #000;
+        --body: #1a1a1a;
+        --meta: #555;
+        --accent: #000;
+        --accent-deep: #000;
+        --accent-soft: #f0f0f0;
+        --code-bg: #f3f3f3;
+        --code-ink: #111;
+        --pre-bg: #f6f6f6;
+        --pre-ink: #111;
+        --pre-line: #ddd;
+        --pre-num: #888;
+        --shadow: none;
+        --shadow-hover: none;
+    }
+    html, body {
+        background: #fff !important;
+        color: #111 !important;
+        font-size: 11.5pt;
+    }
+    #qb-nav, .qb-nav, #qb-left, #sideBar, #sideBarMain,
+    #qb-top, .qb-mtoc, .qb-mtoc-fab, .qb-toast,
+    .qb-code-bar, .qb-code-more, .qb-hanchor,
+    #blog-comments-placeholder, .commentform,
+    #footer, #blog_post_info_block, #post_next_prev, #EntryTag,
+    .qb-arc-idx, #cnblogs_post_body .cnblogs-toc-button {
+        display: none !important;
+    }
+    #main {
+        display: block !important;
+        max-width: none;
+        margin: 0;
+        padding: 0;
+        gap: 0;
+    }
+    #mainContent { width: 100% !important; max-width: none; }
+    #post_detail, .day {
+        margin: 0 !important;
+        padding: 0 !important;
+        border: 0 !important;
+        background: #fff !important;
+        box-shadow: none !important;
+    }
+    #post_detail .postTitle { font-size: 20pt !important; margin-bottom: 8pt !important; }
+    #post_detail .postDesc { border-bottom: 1px solid #ddd !important; }
+    #cnblogs_post_body { font-size: 11pt !important; line-height: 1.72; color: #111 !important; }
+    #cnblogs_post_body h2,
+    #cnblogs_post_body h3 { break-after: avoid; page-break-after: avoid; }
+    #cnblogs_post_body h2 { border-left-color: #000; }
+    #cnblogs_post_body p { orphans: 3; widows: 3; }
+    #cnblogs_post_body img {
+        max-width: 100% !important;
+        page-break-inside: avoid;
+        break-inside: avoid;
+        filter: none !important;
+    }
+    #cnblogs_post_body blockquote,
+    #cnblogs_post_body .qb-copyright { background: #fff !important; border-color: #ccc !important; }
+    #cnblogs_post_body a { color: #000 !important; text-decoration: underline; }
+
+    /* 代码块：整段印出来（展开折叠）、自动折行，不让它被纸张右边裁掉 */
+    #cnblogs_post_body .qb-code.qb-folded > pre {
+        max-height: none !important;
+        overflow: visible !important;
+    }
+    #cnblogs_post_body .qb-code > pre {
+        padding-left: 0 !important;
+        overflow: visible !important;
+        white-space: pre-wrap !important;
+        word-break: break-word;
+        border: 1px solid #ddd !important;
+    }
+    /* Prism 的行号容器是 absolute、按「一行一个 span」定高的：纸面上开了 pre-wrap，
+       长行一折就比行号多占一行，后面的行号整体错位。宁可这页不印行号，
+       也不能让读者按错位的编号去对照代码。主题自建的行号（.qb-cl::before）是
+       跟着块走的，折行不会错位，保留。 */
+    #cnblogs_post_body .qb-code .line-numbers-rows { display: none !important; }
+    #cnblogs_post_body .qb-code > pre.line-numbers { padding-left: 14px !important; }
+    /* 语法高亮的 token 是按深色底配的，印在白纸上就成了浅橙 / 浅黄，
+       对比度低到几乎看不见。打印时统一压成深色，只保留粗斜体。 */
+    #cnblogs_post_body .qb-code pre,
+    #cnblogs_post_body .qb-code pre * { color: #111 !important; }
+    #cnblogs_post_body .qb-cl { background: transparent !important; }
+    #cnblogs_post_body .qb-cl::before { background: #f6f6f6 !important; color: #888 !important; }
+    #cnblogs_post_body .qb-code { border-color: #ddd !important; background: #f6f6f6 !important; }
+
+    /* 表格：纸面上没法横滑，去掉容器限制让它按纸张宽度排版 */
+    #cnblogs_post_body .qb-table-wrap {
+        overflow: visible !important;
+        -webkit-mask-image: none !important;
+        mask-image: none !important;
+    }
+    #cnblogs_post_body .qb-table-wrap th,
+    #cnblogs_post_body .qb-table-wrap td { min-width: 0 !important; font-size: 9.5pt; }
+    #cnblogs_post_body .qb-table-wrap th:first-child,
+    #cnblogs_post_body .qb-table-wrap td:first-child {
+        position: static;
+        box-shadow: none;
+        background: transparent !important;
+    }
+    #cnblogs_post_body th { background: #f3f3f3 !important; }
+    #cnblogs_post_body th,
+    #cnblogs_post_body td { border-color: #ccc !important; }
 }

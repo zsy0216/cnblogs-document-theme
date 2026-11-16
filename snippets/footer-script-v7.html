@@ -1,8 +1,8 @@
-<!-- 流苏主题 v7.20 · 2026-11-16 页脚 HTML 重要脚本
+<!-- 流苏主题 v7.21 · 2026-11-16 页脚 HTML 重要脚本
      位置：博客园后台 -> 设置 -> 页脚 HTML 代码
      说明：1. 这里的 script 包含全部 DOM 操作逻辑（目录生成、滚动高亮、部件搬运）。2. 粘贴前务必备份原有内容。3. 博客园 HTML 校验器：确保没有未配对的尖括号，所有符号合法。 -->
 <script>
-/* 流苏主题 v7.20 · 2026-11-16 页脚：列表页文章目录 / 详情页文章目录 / 归档时间线 / 分页 / 回到顶部 / 滚动高亮 */
+/* 流苏主题 v7.21 · 2026-11-16 页脚：列表页文章目录 / 详情页文章目录 / 归档时间线 / 分页 / 回到顶部 / 滚动高亮 */
 (function () {
   'use strict';
 
@@ -657,6 +657,9 @@
 
      配置：code:false 全关 | { lineNumbers:false } 只去行号 | { copy:false } 只去复制 */
   var LANG_RE = /(?:^|\s)(?:language|lang)-([\w+#.-]+)/i;
+  /* 超过这个行数默认折起来。按行数而不是像素：同一个值在任何字号下都约等于
+     「一屏半」，而像素阈值在手机上会把 20 行也折了。 */
+  var FOLD_LINES = 34;
 
   /* 等 load 之后再决定要不要自己画行号的块。
      为什么不能当场判：博客园的 prism-line-numbers 是客户端加载的，
@@ -757,6 +760,36 @@
         bar.appendChild(btn);
       }
       wrap.insertBefore(bar, pre);
+
+      /* 超长代码块默认折叠（v7.21）。
+         40 行以上的块铺满两屏，读者既看不出这块代码在讲什么，又得一直滚过去。
+         折到 CSS 里的固定高度，按钮上写清总行数 —— 想看的照样一键展开。
+         用独立按钮而不是把「展开」塞进工具条：工具条在顶部，读者滚到折叠处才发现
+         被截断，再滚回顶部去找按钮，等于白折。 */
+      if (lines.length > FOLD_LINES) {
+        wrap.className += ' qb-folded';
+        var more = document.createElement('button');
+        more.type = 'button';
+        more.className = 'qb-code-more';
+        more.setAttribute('aria-expanded', 'false');
+        more.textContent = '展开全部（共 ' + lines.length + ' 行）';
+        (function (w, b, n) {
+          b.addEventListener('click', function () {
+            var back = w.classList.toggle('qb-folded');
+            b.setAttribute('aria-expanded', back ? 'false' : 'true');
+            b.textContent = back ? '展开全部（共 ' + n + ' 行）' : '收起';
+            /* 收起时如果按钮上方已经滚出视口，把块顶部拉回来，
+               否则读者点完「收起」看到的是代码块中间，像没反应 */
+            if (back && w.getBoundingClientRect().top < 60) {
+              window.scrollTo({
+                top: w.getBoundingClientRect().top + window.pageYOffset - 80,
+                behavior: 'smooth'
+              });
+            }
+          });
+        })(wrap, more, lines.length);
+        wrap.appendChild(more);
+      }
     }
   }
 
@@ -936,11 +969,17 @@
       if (body) body.classList.remove('qb-dark');
     }
   }
+  /* 手动选过没有：'1' 暗 / '0' 亮 / null 没选过。
+     单独抽出来是因为「跟随系统」要判断这一项 —— 读者手动点过，就永远不该被系统改动。 */
+  function manualDark() {
+    var v = null;
+    try { v = localStorage && localStorage.getItem('qb-dark'); } catch (e) { /* 隐私模式 */ }
+    return (v === '1' || v === '0') ? v : null;
+  }
   /* 该不该用暗色：用户手动切过（localStorage）> LS_CONFIG.dark > 系统偏好。
      单独抽出来是因为「加类」必须赶在第一次绘制之前做，而绑定按钮要等顶栏建好。 */
   function darkPref() {
-    var v = null;
-    try { v = localStorage && localStorage.getItem('qb-dark'); } catch (e) { /* 隐私模式 */ }
+    var v = manualDark();
     if (v === '1') return true;
     if (v === '0') return false;
     if (CFG.dark === 'on') return true;
@@ -962,6 +1001,22 @@
       if (icon) icon.textContent = on ? '☀️' : '🌙';
       if (localStorage) localStorage.setItem('qb-dark', on ? '1' : '0');
     });
+
+    /* 跟随系统变化（v7.21）：原来只在加载时读一次 prefers-color-scheme，
+       页面开着的时候系统切到暗色（macOS 日落后自动切、Windows 定时切），
+       主题一动不动 —— 读者得手动刷新才「跟上」。这里订阅一次即可。
+       手动选过（localStorage 有值）就不跟：那是读者的明确选择，不能被系统顶掉。 */
+    if (window.matchMedia) {
+      var mq = window.matchMedia('(prefers-color-scheme: dark)');
+      var onChange = function () {
+        if (manualDark() !== null) return;
+        on = darkPref();
+        syncDarkClass(on);
+        if (icon) icon.textContent = on ? '☀️' : '🌙';
+      };
+      if (mq.addEventListener) mq.addEventListener('change', onChange);
+      else if (mq.addListener) mq.addListener(onChange);   /* Safari 13 及更早 */
+    }
   }
   /* ============ 6.1 主题色：顶栏取色面板（v7.20） ============
      为什么不做成配置项：配色是「读者当下想看什么」，不是站长的固定设置。
@@ -1246,6 +1301,338 @@
     buildReadTime(body);
     buildAnchors(body);
     buildCopyright(body);
+  }
+
+  /* ============ 6.10 宽表格：横向滚动 + 首列吸附（v7.21） ============
+     博客园给正文表格写死了 width:100%，六列以上的表会被压成竖条、表头一个字一行。
+     实测一篇 7 列表格在 780px 正文里每列只剩 110px，「操作」「说明」这类表头全折成
+     两行，看起来像排版坏了。
+
+     做法：套一层横向滚动容器 + 给首列 position:sticky。左右滑动时首列留在左边，
+     才能知道当前这行是哪个接口 / 哪个字段；没有这一条，滑到第 5 列就只能靠猜。 */
+  function enhanceTables() {
+    var body = document.getElementById('cnblogs_post_body');
+    if (!body) return;
+    var tables = [].slice.call(body.querySelectorAll('table'));
+    tables.forEach(function (t) {
+      var host = t.parentNode;
+      if (host && host.classList && host.classList.contains('qb-table-wrap')) return;
+      var wrap = mk('div', 'qb-table-wrap');
+      host.insertBefore(wrap, t);
+      wrap.appendChild(t);
+
+      /* 只有真的溢出才加 .qb-x：不溢出的窄表加了右边渐隐，看起来像被裁了一角 */
+      function upd() {
+        var over = wrap.scrollWidth - wrap.clientWidth > 2;
+        if (over) { wrap.classList.add('qb-x'); } else { wrap.classList.remove('qb-x'); }
+      }
+      upd();
+      requestAnimationFrame(upd);
+      window.addEventListener('resize', upd);
+      window.addEventListener('load', upd);
+      /* 表格里的图片、换字体都会改宽度，观察表格本身比反复轮询省事 */
+      if ('ResizeObserver' in window) {
+        try { new ResizeObserver(upd).observe(t); } catch (e) { /* 老内核忽略 */ }
+      }
+    });
+  }
+
+  /* ============ 6.11 Markdown 元素补全（v7.21） ============
+     博客园原生样式只管 p / h* / pre / table，Markdown 的 kbd、mark、details、
+     任务列表、脚注、figure 全是裸的。视觉上就变成「正文是主题、这些元素是别的站」。
+     大部分靠 CSS（第 6.12 节），这里只做 CSS 做不到的那一点点：给任务列表打标记。 */
+  function enhanceMarkdown() {
+    var body = document.getElementById('cnblogs_post_body');
+    if (!body) return;
+    /* 任务列表：渲染器输出 <li><input type=checkbox> 文本</li>，园方 markdown 样式
+       仍给 li 画圆点，于是每行前面「• ☐」。CSS 靠 .qb-task 去掉 marker 并对齐。 */
+    var boxes = body.querySelectorAll('li > input[type="checkbox"]');
+    for (var i = 0; i < boxes.length; i++) {
+      var li = boxes[i].parentNode;
+      if (li && li.tagName === 'LI') li.classList.add('qb-task');
+      var ul = li && li.parentNode;
+      if (ul && /^(UL|OL)$/.test(ul.tagName)) ul.classList.add('qb-tasklist');
+    }
+  }
+
+  /* ============ 7.1 移动端目录抽屉（v7.21） ============
+     <860px 时左栏整列 display:none，手机上**完全没有目录** —— 读者只能一路滑，
+     想知道「这篇文章讲了哪几节」得先滚到底。这是功能缺口，不是美化。
+
+     抽屉的内容从已生成的目录克隆，不重新扫标题：桌面与手机看到的是同一份目录，
+     不会出现「目录里有 H4、抽屉里没有」这种两套逻辑。 */
+  var MTOC_MQ = window.matchMedia ? window.matchMedia('(max-width: 860px)') : null;
+
+  function initMobileToc() {
+    var src = document.querySelector('#qb-left .qb-toc-list');
+    if (!src) return;
+    if (document.getElementById('qb-mtoc')) return;
+    var items = [].slice.call(src.querySelectorAll('a[data-t]'));
+    if (items.length < 2) return;
+
+    var fab = mk('button', 'qb-mtoc-fab');
+    fab.type = 'button';
+    fab.id = 'qb-mtoc-fab';
+    fab.setAttribute('aria-label', '打开文章目录');
+    fab.setAttribute('aria-expanded', 'false');
+    fab.innerHTML =
+      '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" ' +
+      'stroke-width="2" stroke-linecap="round"><path d="M4 6h16"/><path d="M4 12h11"/>' +
+      '<path d="M4 18h7"/></svg><span>目录</span>';
+    document.body.appendChild(fab);
+
+    var root = mk('div', 'qb-mtoc');
+    root.id = 'qb-mtoc';
+    root.setAttribute('aria-hidden', 'true');
+
+    var mask = mk('div', 'qb-mtoc-mask');
+    var sheet = mk('div', 'qb-mtoc-sheet');
+    sheet.setAttribute('role', 'dialog');
+    sheet.setAttribute('aria-modal', 'true');
+    sheet.setAttribute('aria-label', '文章目录');
+
+    var hd = mk('div', 'qb-mtoc-hd');
+    hd.appendChild(mk('span', 'qb-mtoc-title', '文章目录'));
+    hd.appendChild(mk('span', 'qb-mtoc-n', items.length + ' 节'));
+    var x = mk('button', 'qb-mtoc-x');
+    x.type = 'button';
+    x.setAttribute('aria-label', '关闭目录');
+    x.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" ' +
+      'stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12"/><path d="M18 6L6 18"/></svg>';
+    hd.appendChild(x);
+
+    var list = mk('ul', 'qb-mtoc-list');
+    var links = [];
+    items.forEach(function (it) {
+      var li = mk('li');
+      var a = mk('a', null, (it.textContent || '').trim());
+      a.href = it.getAttribute('href');
+      a.setAttribute('data-t', it.getAttribute('data-t'));
+      li.appendChild(a);
+      list.appendChild(li);
+      links.push(a);
+    });
+
+    sheet.appendChild(hd);
+    sheet.appendChild(list);
+    root.appendChild(mask);
+    root.appendChild(sheet);
+    document.body.appendChild(root);
+
+    function close() {
+      if (!root.classList.contains('open')) return;
+      root.classList.remove('open');
+      root.setAttribute('aria-hidden', 'true');
+      fab.setAttribute('aria-expanded', 'false');
+      document.documentElement.classList.remove('qb-mtoc-lock');
+    }
+    function open() {
+      root.classList.add('open');
+      root.setAttribute('aria-hidden', 'false');
+      fab.setAttribute('aria-expanded', 'true');
+      /* 锁滚动写在 html 上而不是 body：body 上加 overflow:hidden 在 iOS 上不生效 */
+      document.documentElement.classList.add('qb-mtoc-lock');
+      spy();
+    }
+
+    fab.addEventListener('click', function () {
+      if (root.classList.contains('open')) { close(); } else { open(); }
+    });
+    mask.addEventListener('click', close);
+    x.addEventListener('click', close);
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') close();
+    });
+    /* 竖屏转横屏、或拖宽窗口越过 860：抽屉与悬浮按钮被 CSS 藏起来，
+       但滚动锁还挂在 html 上，必须一起解开，否则桌面端整页不能滚 */
+    if (MTOC_MQ && MTOC_MQ.addEventListener) {
+      MTOC_MQ.addEventListener('change', function (e) { if (!e.matches) close(); });
+    }
+
+    list.addEventListener('click', function (e) {
+      var a = e.target.closest ? e.target.closest('a') : null;
+      if (!a) return;
+      var t = document.getElementById(a.getAttribute('data-t'));
+      if (!t) return;
+      e.preventDefault();
+      close();
+      window.scrollTo({
+        top: t.getBoundingClientRect().top + window.pageYOffset - 64,
+        behavior: 'smooth'
+      });
+      history.replaceState(null, '', a.getAttribute('href'));
+    });
+
+    /* 高亮自己算：左栏那套 spy 绑在 #qb-left 的滚动容器上，手机上左栏不显示，
+       它照样在跑，但用户看不到。抽屉里的这一份只认标题位置。 */
+    var lock = false, heads = [];
+    links.forEach(function (a) {
+      var h = document.getElementById(a.getAttribute('data-t'));
+      if (h) heads.push({ h: h, a: a });
+    });
+    links.forEach(function (a) {
+      var h = document.getElementById(a.getAttribute('data-t'));
+      if (h) heads.push({ h: h, a: a });
+    });
+    function spy() {
+      lock = false;
+      if (!heads.length) return;
+      var line = 110, cur = heads[0].a;
+      heads.forEach(function (it) {
+        if (line >= it.h.getBoundingClientRect().top) cur = it.a;
+      });
+      if (window.innerHeight + window.pageYOffset >= document.body.scrollHeight - 60) {
+        cur = heads[heads.length - 1].a;
+      }
+      links.forEach(function (a) {
+        if (a === cur) { a.classList.add('on'); } else { a.classList.remove('on'); }
+      });
+      /* 抽屉自己滚：选中项不在可视区时把它带到中间 */
+      if (cur && (cur.offsetTop > list.scrollTop + list.clientHeight - 48 ||
+                  cur.offsetTop < list.scrollTop)) {
+        list.scrollTop = Math.max(0, cur.offsetTop - list.clientHeight / 2);
+      }
+    }
+    window.addEventListener('scroll', function () {
+      if (lock) return;
+      lock = true;
+      requestAnimationFrame(spy);
+    }, { passive: true });
+  }
+
+  /* ============ 7.2 续读记忆（v7.21） ============
+     长文看到一半关掉、过两天再点回来，从顶上重新找位置的成本很高。
+     按「路径」把滚动位置记进 localStorage，下次同一篇自动回到那儿，
+     并给一条可撤销的提示（读者可能只是想吃灰回看开头）。
+
+     三个克制的地方：
+       1) 只在详情页、且页面高度 > 1200px 时记录 —— 短页没有「上次位置」可言；
+       2) 带 #hash 进来不恢复 —— 那是有明确目标的跳转，抢过来就是错误；
+       3) 读者已经自己滚动过（scrollY > 120）就不恢复，避免把他拽走。 */
+  function posKey() { return 'qb-pos:' + location.pathname; }
+
+  var posPruned = false;
+  function prunePos() {
+    if (posPruned) return;
+    posPruned = true;
+    try {
+      var keys = [], i, k;
+      for (i = 0; i < localStorage.length; i++) {
+        k = localStorage.key(i);
+        if (k && k.indexOf('qb-pos:') === 0) keys.push(k);
+      }
+      if (keys.length <= 60) return;
+      keys.map(function (key) {
+        var t = 0;
+        try { t = (JSON.parse(localStorage.getItem(key)) || {}).t || 0; } catch (e) { t = 0; }
+        return { k: key, t: t };
+      }).sort(function (a, b) { return a.t - b.t; })
+        .slice(0, keys.length - 40)
+        .forEach(function (it) { localStorage.removeItem(it.k); });
+    } catch (e) { /* 隐私模式或配额满：静默放弃，续读只是锦上添花 */ }
+  }
+
+  function savePos() {
+    if (!document.getElementById('cnblogs_post_body')) return;
+    try {
+      var max = document.documentElement.scrollHeight - window.innerHeight;
+      if (max < 1200) return;
+      var y = window.pageYOffset;
+      /* 滚回顶部 = 读完了 / 不打算续读，清掉记录，下次别再把人家拽到中间 */
+      if (y < 300) { localStorage.removeItem(posKey()); return; }
+      localStorage.setItem(posKey(), JSON.stringify({
+        y: Math.round(y),
+        h: Math.round(max),
+        t: Date.now()
+      }));
+      prunePos();
+    } catch (e) { /* 配额满时静默跳过，不影响阅读 */ }
+  }
+
+  function initResume() {
+    if (!document.getElementById('cnblogs_post_body')) return;
+    if (location.hash) return;
+
+    var d = null;
+    try {
+      d = JSON.parse(localStorage.getItem(posKey()) || 'null');
+    } catch (e) { d = null; }
+    if (!d || !d.y || !d.t) return;
+    /* 7 天前的记录不可信：文章改过、标题变过，位置早就不对了 */
+    if (Date.now() - d.t > 7 * 864e5) {
+      try { localStorage.removeItem(posKey()); } catch (e) {}
+      return;
+    }
+    if (d.y < 500) return;
+
+    function restore() {
+      if (window.pageYOffset > 120) return;
+      var max = document.documentElement.scrollHeight - window.innerHeight;
+      if (max < 700) return;
+      var y = Math.min(d.y, max - 40);
+      if (y < 400) return;
+      window.scrollTo(0, y);
+      showToast('已回到上次阅读的位置', '回到开头', function () {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        try { localStorage.removeItem(posKey()); } catch (e) {}
+      });
+    }
+    /* 等 load：图片与字体把页面撑到最终高度之后再滚，位置才对得上 */
+    if (document.readyState === 'complete') {
+      setTimeout(restore, 60);
+    } else {
+      window.addEventListener('load', function () { setTimeout(restore, 60); });
+    }
+
+    var timer = null;
+    window.addEventListener('scroll', function () {
+      if (timer) return;
+      timer = setTimeout(function () { timer = null; savePos(); }, 450);
+    }, { passive: true });
+    window.addEventListener('pagehide', savePos);
+    document.addEventListener('visibilitychange', function () {
+      if (document.visibilityState === 'hidden') savePos();
+    });
+  }
+
+  /* 轻提示：不引第三方 toast，也不挡住正文 —— 固定在底部居中，几秒后自己走。
+     actionText 为空时就是纯提示。 */
+  function showToast(text, actionText, onAction) {
+    var old = document.getElementById('qb-toast');
+    if (old && old.parentNode) old.parentNode.removeChild(old);
+
+    var box = mk('div', 'qb-toast');
+    box.id = 'qb-toast';
+    box.setAttribute('role', 'status');
+    box.appendChild(mk('span', 'qb-toast-t', text));
+
+    var t = null;
+    function hide() {
+      if (t) { clearTimeout(t); t = null; }
+      box.classList.remove('show');
+      setTimeout(function () {
+        if (box.parentNode) box.parentNode.removeChild(box);
+      }, 260);
+    }
+    if (actionText) {
+      var b = mk('button', 'qb-toast-a', actionText);
+      b.type = 'button';
+      b.addEventListener('click', function () {
+        if (onAction) onAction();
+        hide();
+      });
+      box.appendChild(b);
+    }
+    var x = mk('button', 'qb-toast-x');
+    x.type = 'button';
+    x.setAttribute('aria-label', '关闭提示');
+    x.textContent = '×';
+    x.addEventListener('click', hide);
+    box.appendChild(x);
+
+    document.body.appendChild(box);
+    requestAnimationFrame(function () { box.classList.add('show'); });
+    t = setTimeout(hide, 7000);
   }
 
   /* 4b. 回到顶部
@@ -1946,14 +2333,22 @@
     lazyImages();
     /* 代码块放在闸门放行前：行号要在首帧就是齐的，晚一步会看到代码先铺开、行号后插入 */
     if (CFG.code) enhanceCode();
+    /* 表格容器与 Markdown 补全也要在放行前做完：晚一步会看到表格先按 7 列挤成竖条、
+       再「哗」地展开成可横滑 —— 那一下比一开始就能滑更难看 */
+    enhanceTables();
+    enhanceMarkdown();
     /* 阅读时长 / 锚点 / 版权同样要在放行前做完，否则会看到正文先出现、
        版权块随后「长出来」。放在 buildLeft 之后：目录可能已经给标题写过 id，直接复用。 */
     enhancePost();
+    /* 目录抽屉依赖 buildLeft 的产物，必须排在它后面 */
+    initMobileToc();
     markNav();
     initFavicon();
     initDarkMode();
     initTheme();
     if (CFG.backToTop) createBackToTop();
+    /* 续读放在最后：它要在 load 之后才滚，早调晚调不影响首帧 */
+    initResume();
 
     /* 结构齐了才解锁首帧闸门；没齐就逐帧补，最多 12 帧后无条件解锁 */
     settle(left, 0);
@@ -2025,8 +2420,11 @@
   document.addEventListener('DOMContentLoaded', function () {
     if (!booted) return;
     if (!leftDone) buildLeft();
-    /* 正文后到时补一次。三件事都带「已存在就跳过」的判据，重复调用安全 */
+    /* 正文后到时补一次。下面每一步都带「已存在就跳过」的判据，重复调用安全 */
+    enhanceTables();
+    enhanceMarkdown();
     enhancePost();
+    initMobileToc();
     var lc = document.getElementById('qb-left');
     syncSide(lc);
     settle(lc, 12);
