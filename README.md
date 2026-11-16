@@ -55,8 +55,9 @@
    内容是：归档页标记、顶栏外壳占位、`window.LS_CONFIG`、一段双源加载脚本。
 
 4. **传 js（两种都行）**
-   - 走镜像：把仓库 push 到 GitHub，别的不做 —— 页首默认先从
-     `gcore.jsdelivr.net/gh/<你的账号>/<仓库>@master/dist/document-theme.js` 取。
+   - 走镜像：把仓库 push 到 GitHub，并**打一个与版本号同名的 tag**（`git tag v7.23 && git push --tags`），
+     页首默认先从 `gcore.jsdelivr.net/gh/<你的账号>/<仓库>@<版本号>/dist/document-theme.js` 取。
+     钉 tag 而不是 `@master`：分支引用在 jsDelivr 各节点缓存很久，新版本推上去也可能拿到旧包。
    - 走博客园：我的博客 → 文件 → 上传 `document-theme.js`，直链为
      `https://blog-static.cnblogs.com/files/blogs/<你的博客ID>/document-theme.js`。
    两个地址都写在加载器里，前面那个失败会自动落到后面那个，换博客要一起改。

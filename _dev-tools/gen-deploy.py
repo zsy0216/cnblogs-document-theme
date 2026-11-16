@@ -46,10 +46,25 @@ DEFAULT_OUT = os.path.join(ROOT, 'dist', 'paste')
 
 # 合并版在博客园文件空间的直链。换账号 / 换文件名时改这一行。
 BUNDLE_URL = 'https://blog-static.cnblogs.com/files/blogs/477677/document-theme.js'
-# GitHub 仓库镜像（jsDelivr），页首优先取它。改版只要 push，不必再登后台传文件；
+# GitHub 仓库镜像（jsDelivr），页首优先取它。改版只要 push 并打 tag，不必再登后台传文件；
 # 缺点在国际线路，所以页首里配了 onerror 兜底回 BUNDLE_URL。
-MIRROR_URL = ('https://gcore.jsdelivr.net/gh/zsy0216/cnblogs-document-theme'
-              '@master/dist/document-theme.js')
+#
+# 为什么钉 tag 而不是 @master（实测有据，别再改回去）：
+#   · jsDelivr 各节点会长期缓存分支引用。实测 push 完 v7.22 后，fastly / cdn 已回源
+#     到新包，gcore 仍返回两周前的 v7.17；带 ?v=7.22 也一样 —— gcore 的缓存键不含
+#     query，所以「加 ?v= 防旧缓存」对它无效。
+#   · purge.jsdelivr.net 只覆盖 CF / FY 两条链路，gcore 不在其中，清不动。
+#   · tag 是不可变 ref（新路径 = 无旧缓存），实测 @06359f6 立即拿到完整 109628 B 新包。
+#   · 选 tag 而非 commit sha：tag 名由版本号决定，bump 时 URL 就已正确，一次提交即可
+#     对齐；忘了打 tag 是显式 404 走兜底，而不是静默拿到旧包。
+# 发版后必须：git tag <版本号> 且 push --tags。镜像拿不到 tag 会 404，页首自动走
+# 博客园兜底 —— 表现为「页面能用但停在旧版」，所以发版脚本末尾会打印提醒。
+MIRROR_REPO = 'https://gcore.jsdelivr.net/gh/zsy0216/cnblogs-document-theme'
+
+
+def mirror_url(ver):
+    """镜像地址：按版本号钉 tag，不可变、无缓存滞后。"""
+    return '%s@%s/dist/document-theme.js' % (MIRROR_REPO, ver)
 CSS_URL = 'https://blog-static.cnblogs.com/files/blogs/477677/theme-v7.min.css'
 ICON_URL = ('https://images.cnblogs.com/cnblogs_com/blogs/477677/galleries/1560097/'
             't_261107101943_blog-icon.jpeg')
@@ -192,7 +207,7 @@ __CFG__
      · 标签名拆开拼，是为了页面上不出现脚本标签的开闭字面量（HTML 校验器会误判）。 */
 (function () {
   var s = 'script', V = '__NUM__';
-  var MIRROR = '__MIRROR__?v=' + V;
+  var MIRROR = '__MIRROR__';
   var ORIGIN = '__BUNDLE__?v=' + V;
   var KEY = 'qb-src-fail', TTL = 3600000;
 
@@ -358,7 +373,7 @@ def build(ver, mode='hosted'):
     head = (HEAD_TOP.replace('__VER__', ver)
                    .replace('__ICON__', ICON_URL)
                    .replace('__BUNDLE__', BUNDLE_URL)
-                   .replace('__MIRROR__', MIRROR_URL)
+                   .replace('__MIRROR__', mirror_url(ver))
                    .replace('__CSS__', CSS_URL)
                    .replace('__ARC__', ARC_FLAG)
                    .replace('__CFG__', CFG_BLOCK)
@@ -413,6 +428,7 @@ def main():
             print('零闪版（推荐）：样式贴「页面定制 CSS 代码」，页脚贴「2-页脚.html」，页首贴「1-页首.html」')
         if 'hosted' in modes:
             print('托管版：上传 %s；页首字段贴「页首.html」、CSS 字段贴「样式.css」，页脚与公告留空' % BUNDLE_URL)
+            print('镜像：%s（不可变 ref，必须先 push 并 git tag %s）' % (mirror_url(ver), ver))
     sys.exit(0 if ok else 1)
 
 

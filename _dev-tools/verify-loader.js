@@ -16,19 +16,19 @@ const ROOT = 'E:/Documents/WorkBuddy/2026-10-11-15-08-36/blogcn-nicen-theme/';
 const HEAD = fs.readFileSync(ROOT + 'dist/paste/页首.html', 'utf8');
 const BUNDLE = fs.readFileSync(ROOT + 'dist/document-theme.js', 'utf8');
 
-const MIRROR_LIT = "'https://gcore.jsdelivr.net/gh/zsy0216/cnblogs-document-theme"
-                 + "@master/dist/document-theme.js?v='";
+// 镜像地址按 tag 钉死（@v7.22 这种），版本号随发版变化，所以用正则取，别硬编码版本。
+const MIRROR_LIT = (HEAD.match(/'https:\/\/gcore\.jsdelivr\.net\/gh\/zsy0216\/cnblogs-document-theme@[^']+'/) || [])[0];
 const ORIGIN_LIT = "'https://blog-static.cnblogs.com/files/blogs/477677/document-theme.js?v='";
 const MIRROR = 'https://mirror.test/bundle.js';
 const ORIGIN = 'https://origin.test/bundle.js';
 
-if (!HEAD.includes(MIRROR_LIT) || !HEAD.includes(ORIGIN_LIT)) {
+if (!MIRROR_LIT || !HEAD.includes(ORIGIN_LIT)) {
   console.error('✗ 页首里找不到两个源地址的字面量，加载器可能被改写了');
   process.exit(1);
 }
 
 const PAGE = '<!doctype html><html><head><meta charset="utf-8"><title>loader</title></head><body>'
-  + HEAD.replace(MIRROR_LIT, "'" + MIRROR + "?v='").replace(ORIGIN_LIT, "'" + ORIGIN + "?v='")
+  + HEAD.replace(MIRROR_LIT, "'" + MIRROR + "'").replace(ORIGIN_LIT, "'" + ORIGIN + "?v='")
   + '<div id="main"><div id="post_detail"><h1 class="postTitle">测试</h1>'
   + '<div class="postBody"><h2>一、小节</h2><p>正文。</p></div></div></div>'
   + '</body></html>';
