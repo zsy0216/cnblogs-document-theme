@@ -19,6 +19,7 @@ _dev-tools/*
 !_dev-tools/probe-navmove.js
 !_dev-tools/probe-hosted.js
 !_dev-tools/verify-*.js
+!_dev-tools/shot-docs.js
 
 # preview 中间文件（*-v7.html 正本入库）
 preview/_src/

@@ -20,9 +20,15 @@
 |:---:|:---:|
 | ![首页浅色](docs/images/home-v7.png) | ![首页暗色](docs/images/home-v7-dark.png) |
 
-文章页（左侧根据正文 H1–H4 自动生成目录）：
+文章页（左侧根据正文 H1–H4 自动生成目录，标题下是分类与标签）：
 
 ![文章页](docs/images/post-v7.png)
+
+手机（断点以下汉堡 + 右侧抽屉，条目与桌面菜单同源）：
+
+| 列表 | 导航抽屉 |
+|:---:|:---:|
+| ![手机列表](docs/images/mobile-v7.png) | ![手机导航](docs/images/mobile-menu-v7.png) |
 
 ## 谁在用
 
