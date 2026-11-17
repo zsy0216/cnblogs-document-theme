@@ -1,6 +1,6 @@
-<!-- 流苏主题 v7.29 · 页首 HTML（全托管 · 通用版）
-     贴到「页首 HTML 代码」字段即可：js 从 GitHub 仓库（jsDelivr）加载，不需要上传任何文件。
-     配置留空就用你自己的博客信息；升级时整段换新，或只改下面两个源地址的版本号。 -->
+<!-- 流苏主题 v7.30 · 页首 HTML（全托管 · 通用版）
+     贴到「页首 HTML 代码」字段即可：js 从 GitHub 仓库（jsDelivr @latest）加载，不需要上传任何文件。
+     配置留空就用你自己的博客信息；以后升级不用再动这个字段 —— 自动跟随作者最新版。 -->
 
 <script>
 /* 归档页标记：见 CSS 里 html.qb-arc-page 一节 */
@@ -43,19 +43,24 @@ window.LS_CONFIG = {
 
 <script>
 /* 3) 同步加载：主源 + 备源，失败自动切换（不需要你上传任何文件）。
-     · 主源 = GitHub 仓库（jsDelivr，钉 tag）：作者 push 打完 tag 就生效，任何人可直接引用；
+     · 主源 = GitHub 仓库（jsDelivr 的 @latest）：作者发版只要 push 打 tag，
+       这里永远取最新那版，你不需要为了升级再贴一次页首；
      · 备源 = 主源失效时自动接管（装配脚本按发放对象写入，见下方 FALLBACK 常量）；
      · 主源失败过就 1 小时内直接走备源，免得每次进站都等一遍超时（记 localStorage，
        不写 cookie，换设备互不影响，也不会把失败态永久钉死）；
+     · 地址后面拼一个「当天日期」：jsDelivr 给文件的缓存是浏览器 7 天 / 边缘 12 小时，
+       每天换一次 URL，浏览器就不会一直吃旧缓存，发版最迟次日生效；
      · 仍然必须是 document.write：博客园会把页首里的外部 <script src> 改写成 defer，
        那样样式就排到首帧之后；内联脚本不会被改写，document.write 插入的是「解析期
        脚本」—— 阻塞解析、按序立刻执行，顶栏/目录/侧栏/公告全部赶在首帧之前就位。
      · 标签名拆开拼，是为了页面上不出现脚本标签的开闭字面量（HTML 校验器会误判）。 */
 (function () {
   var s = 'script';
-  /* 两个地址都是完整 URL（含版本号）。升级 = 整段换新页首，或只把这两行的版本号改掉。 */
-  var MIRROR = 'https://gcore.jsdelivr.net/gh/zsy0216/cnblogs-document-theme@v7.29/dist/document-theme.js';
-  var FALLBACK = 'https://cdn.jsdelivr.net/gh/zsy0216/cnblogs-document-theme@v7.29/dist/document-theme.js';
+  var d = new Date(), pad = function (n) { return n < 10 ? '0' + n : '' + n; };
+  var stamp = '' + d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate());
+  var q = function (u) { return u + (u.indexOf('?') < 0 ? '?' : '&') + 'd=' + stamp; };
+  var MIRROR = q('https://gcore.jsdelivr.net/gh/zsy0216/cnblogs-document-theme@latest/dist/document-theme.js');
+  var FALLBACK = q('https://cdn.jsdelivr.net/gh/zsy0216/cnblogs-document-theme@latest/dist/document-theme.js');
   var KEY = 'qb-src-fail', TTL = 3600000;
 
   function recentlyFailed() {

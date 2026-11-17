@@ -61,16 +61,21 @@ BUNDLE_URL = 'https://blog-static.cnblogs.com/files/blogs/477677/document-theme.
 #     query，所以「加 ?v= 防旧缓存」对它无效。
 #   · purge.jsdelivr.net 只覆盖 CF / FY 两条链路，gcore 不在其中，清不动。
 #   · tag 是不可变 ref（新路径 = 无旧缓存），实测 @06359f6 立即拿到完整 109628 B 新包。
-#   · 选 tag 而非 commit sha：tag 名由版本号决定，bump 时 URL 就已正确，一次提交即可
-#     对齐；忘了打 tag 是显式 404 走兜底，而不是静默拿到旧包。
-# 发版后必须：git tag <版本号> 且 push --tags。镜像拿不到 tag 会 404，页首自动走
-# 博客园兜底 —— 表现为「页面能用但停在旧版」，所以发版脚本末尾会打印提醒。
+#
+# v7.30：从「钉死某个 tag」改成「@latest + 当天日期参数」。
+#   上一版把 tag 写进页首，副作用是每发一版都得重贴页首 —— 这跟「装一次就不用再管」
+#   的初衷正好相反（作者本人 2026-11-17 指出）。现在：
+#     · @latest 由 CDN 端解析成最新 tag（实测 2026-11-17 返回 v7.29 的包，gcore/cdn 均 200）；
+#     · 响应头 Cache-Control 是 max-age=604800（浏览器 7 天）、s-maxage=43200（边缘 12 小时），
+#       所以 URL 里拼一个「当天日期」——每天换一次 key，浏览器不会拿 7 天前的缓存，
+#       发版后最迟次日全网生效，不需要任何人动后台；
+#     · 忘了打 tag 也不会 404：@latest 仍解析到上一个 tag，页面停在旧版但不破。
 MIRROR_REPO = 'https://gcore.jsdelivr.net/gh/zsy0216/cnblogs-document-theme'
 
 
 def mirror_url(ver):
-    """镜像地址：按版本号钉 tag，不可变、无缓存滞后。"""
-    return '%s@%s/dist/document-theme.js' % (MIRROR_REPO, ver)
+    """镜像地址：跟随最新标签（@latest）。日期参数由页首在运行时拼上，见 HEAD_TOP。"""
+    return '%s@latest/dist/document-theme.js' % MIRROR_REPO
 # 样式永远内联在「页面定制 CSS 代码」字段里，不走外链。
 # 理由：首帧闸门（html:not(.qb-ready) body{opacity:0}）就写在 CSS 里 —— CSS 若从外部
 # 加载，那个请求一旦失败，页面连闸门都没有，整站裸奔；内联进 HTML 则由博客园服务端直出，
@@ -232,19 +237,24 @@ __CFG__
 
 <script>
 /* 3) 同步加载：主源 + 备源，失败自动切换（不需要你上传任何文件）。
-     · 主源 = GitHub 仓库（jsDelivr，钉 tag）：作者 push 打完 tag 就生效，任何人可直接引用；
+     · 主源 = GitHub 仓库（jsDelivr 的 @latest）：作者发版只要 push 打 tag，
+       这里永远取最新那版，你不需要为了升级再贴一次页首；
      · 备源 = 主源失效时自动接管（装配脚本按发放对象写入，见下方 FALLBACK 常量）；
      · 主源失败过就 1 小时内直接走备源，免得每次进站都等一遍超时（记 localStorage，
        不写 cookie，换设备互不影响，也不会把失败态永久钉死）；
+     · 地址后面拼一个「当天日期」：jsDelivr 给文件的缓存是浏览器 7 天 / 边缘 12 小时，
+       每天换一次 URL，浏览器就不会一直吃旧缓存，发版最迟次日生效；
      · 仍然必须是 document.write：博客园会把页首里的外部 <script src> 改写成 defer，
        那样样式就排到首帧之后；内联脚本不会被改写，document.write 插入的是「解析期
        脚本」—— 阻塞解析、按序立刻执行，顶栏/目录/侧栏/公告全部赶在首帧之前就位。
      · 标签名拆开拼，是为了页面上不出现脚本标签的开闭字面量（HTML 校验器会误判）。 */
 (function () {
   var s = 'script';
-  /* 两个地址都是完整 URL（含版本号）。升级 = 整段换新页首，或只把这两行的版本号改掉。 */
-  var MIRROR = '__MIRROR__';
-  var FALLBACK = '__FALLBACK__';
+  var d = new Date(), pad = function (n) { return n < 10 ? '0' + n : '' + n; };
+  var stamp = '' + d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate());
+  var q = function (u) { return u + (u.indexOf('?') < 0 ? '?' : '&') + 'd=' + stamp; };
+  var MIRROR = q('__MIRROR__');
+  var FALLBACK = q('__FALLBACK__');
   var KEY = 'qb-src-fail', TTL = 3600000;
 
   function recentlyFailed() {
@@ -440,9 +450,9 @@ def build(ver, mode='hosted'):
         '页首.html': head_for(
             CFG_GENERIC, generic_fallback,
             hdr='全托管 · 通用版',
-            note='贴到「页首 HTML 代码」字段即可：js 从 GitHub 仓库（jsDelivr）加载，'
+            note='贴到「页首 HTML 代码」字段即可：js 从 GitHub 仓库（jsDelivr @latest）加载，'
                  '不需要上传任何文件。\n'
-                 '     配置留空就用你自己的博客信息；升级时整段换新，或只改下面两个源地址的版本号。',
+                 '     配置留空就用你自己的博客信息；以后升级不用再动这个字段 —— 自动跟随作者最新版。',
             links=generic_links),
         '页首-我的站.html': head_for(
             CFG_AUTHOR, author_fallback,
