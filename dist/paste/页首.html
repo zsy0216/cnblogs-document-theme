@@ -1,4 +1,4 @@
-<!-- 流苏主题 v7.31 · 页首 HTML（全托管 · 通用版）
+<!-- 流苏主题 v7.32 · 页首 HTML（全托管 · 通用版）
      贴到「页首 HTML 代码」字段即可：样式和脚本都从 GitHub 仓库（jsDelivr @latest）加载，不需要上传任何文件。
      配置留空就用你自己的博客信息；以后升级不用再动任何字段 —— 自动跟随作者最新版。 -->
 
@@ -12,11 +12,12 @@ if (/\/(?:p\/)?archive\/\d{4}\/\d{1,2}/.test(location.pathname)) {
 <link rel="preconnect" href="https://gcore.jsdelivr.net" crossorigin />
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
 
-<!-- 1) 顶栏占位：先给 59px 白条，菜单由紧随其后的脚本填进来 -->
-<div class="qb-nav" id="qb-nav"><div class="qb-nav-inner"></div></div>
+<!-- 顶栏整条在这里一次性落地，不「先放空壳、再回填」：
+     跨页视图过渡的快照取的是「新页首绘那一帧」，壳已解析、内容还没填的中间态
+     一旦被拍进去，就是一条空条 —— 那正是「切页时顶栏跟着跳一下」的来源。 -->
 
 <script>
-// 2) 配置层 —— 本字段里唯一需要改的就是下面这一块
+// 1) 配置层 —— 本字段里唯一需要改的就是下面这一块
 /* ===== 配置区：不改也能用，想更像自己的站再动 =====
    全部留空时，脚本按「当前站点」自动推导：
      · 顶栏品牌 = 页面标题里的博客名；
@@ -42,7 +43,127 @@ window.LS_CONFIG = {
 </script>
 
 <script>
-/* 3) 同步加载：样式与脚本都从这里取，主源 + 备源，失败自动切换（不需要你上传任何文件）。
+/* 2) 首帧暗色：把「手动选择 → 配置 → 系统偏好」的结论提前落到 <html> 上。
+     顶栏的白条是「页面定制 CSS 代码」字段里画的，那里只认 html.qb-dark，
+     等 document-theme.js 到达再判定的话，暗色用户会先看到一条白顶栏再变黑；
+     切页时这一下尤其刺眼（跨页过渡会把两页的顶栏叠在一起比）。
+     逻辑与 document-theme.js 的 darkPref() 完全一致，只是提前执行。 */
+(function () {
+  try {
+    var m = localStorage.getItem('qb-dark');
+    var c = window.LS_CONFIG && window.LS_CONFIG.dark;
+    var dark;
+    if (m === '1') dark = true;
+    else if (m === '0') dark = false;
+    else if (c === 'on') dark = true;
+    else if (c === 'off') dark = false;
+    else dark = !!(window.matchMedia &&
+                   window.matchMedia('(prefers-color-scheme: dark)').matches);
+    if (dark) document.documentElement.className += ' qb-dark';
+  } catch (e) {}
+})();
+</script>
+
+<script>
+/* 3) 顶栏（通用版）：解析期用 document.write 直接吐出 HTML。
+    为什么不是「先放空 div、脚本再填」：浏览器可能在空 div 解析完、填充脚本还没执行时
+    就首绘，跨页过渡正好拍在那一刻，拍到的是空条 —— 观感就是「切页时顶栏跳一下」。
+    document.write 让结构和内容在同一次解析里落地，没有中间态。
+    这里生成的 DOM 与 document-theme.js 的 renderNav() 完全同构；后者到达后会清空重建
+    （data-qb-pre=1 标记，见 footer-script），内容一致所以看不出重建，交互也一并接管。 */
+(function () {
+  function esc(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+  var cfg = window.LS_CONFIG || window.QB_CONFIG || {};
+  var n = cfg.nav || {};
+  var RESERVED = { p: 1, categories: 1, tag: 1, rss: 1, archive: 1, admin: 1, sitemap: 1 };
+  var seg = String(location.pathname || '/').split('/').filter(Boolean);
+  var APP = (seg.length && !RESERVED[String(seg[0]).toLowerCase()]) ? seg[0] : '';
+  var HOME = location.origin + '/' + (APP ? APP + '/' : '');
+  var NOW = new Date();
+
+  /* 与 footer-script 的 resolveHref 同一口径：{ym} 不补零 */
+  function href(h) {
+    return String(h == null ? '' : h).replace(/\{(ym|y|m)\}/g, function (_, k) {
+      if (k === 'y') return String(NOW.getFullYear());
+      if (k === 'm') return String(NOW.getMonth() + 1);
+      return NOW.getFullYear() + '/' + (NOW.getMonth() + 1);
+    });
+  }
+
+  var brand = n.brand || '';
+  if (!brand) {
+    var p = String(document.title || '').split(' - ').map(function (s) { return s.trim(); });
+    while (p.length && /^博客园$/.test(p[p.length - 1])) p.pop();
+    brand = p.length ? p[p.length - 1] : '';
+  }
+
+  var MARK = '<svg width="30" height="30" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">'
+    + '<g fill="none" stroke="currentColor" stroke-width="7.4" stroke-linecap="round">'
+    + '<path d="M9.8 9.8 L22.2 22.2"/><path d="M22.2 9.8 L9.8 22.2"/></g>'
+    + '<circle class="qb-logo-dot" cx="4.9" cy="27.1" r="3.1"/></svg>';
+  var PALETTE = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" '
+    + 'stroke-width="1.9" stroke-linejoin="round">'
+    + '<path d="M12 3.4c3.5 3.7 6.1 6.7 6.1 9.9a6.1 6.1 0 0 1-12.2 0c0-3.2 2.6-6.2 6.1-9.9z"/>'
+    + '<path d="M9.3 13.4a2.7 2.7 0 0 0 2.7 2.7" stroke-linecap="round"/></svg>';
+
+  var h = '<div class="qb-nav" id="qb-nav" data-qb-pre="1"><div class="qb-nav-inner">';
+  h += '<a class="qb-brand" href="' + esc(href(n.home || HOME)) + '">';
+  if (n.logo) {
+    h += '<span class="qb-logo"><img src="' + esc(n.logo) + '" alt="' + esc(brand)
+       + '" width="30" height="30"></span>';
+  } else if (n.mark !== false) {
+    h += '<span class="qb-logo" aria-hidden="true">' + MARK + '</span>';
+  }
+  if (brand) h += '<span class="qb-brand-text">' + esc(brand) + '</span>';
+  h += '</a>';
+
+  var links = n.links instanceof Array ? n.links : [
+    { t: '首页', h: HOME },
+    { t: '归档', h: HOME + 'p/archive/{ym}' },
+    { t: '分类', h: HOME + 'categories' },
+    { t: '标签', h: HOME + 'tag' },
+    { t: 'RSS', h: HOME + 'rss', b: 1 }
+  ];
+  if (links.length) {
+    h += '<nav class="qb-links">';
+    for (var i = 0; i < links.length; i++) {
+      var it = links[i];
+      if (!it) continue;
+      var txt = it.t || it.text;
+      if (!txt) continue;
+      h += '<a' + (it.on ? ' class="on"' : '') + ' href="' + esc(href(it.h || it.href || '#')) + '"'
+         + ((it.b || it.blank) ? ' target="_blank" rel="noopener"' : '') + '>' + esc(txt) + '</a>';
+    }
+    h += '</nav>';
+  }
+
+  h += '<div class="qb-actions"><div class="qb-theme"><button type="button" class="qb-theme-btn"'
+     + ' id="qb-theme-toggle" title="主题色" aria-label="切换主题色" aria-haspopup="true"'
+     + ' aria-expanded="false">' + PALETTE + '</button></div>';
+  if (n.dark !== false) {
+    var moon = document.documentElement.classList.contains('qb-dark') ? '☀️' : '🌙';
+    h += '<a class="qb-dark-btn" id="qb-dark-toggle" href="javascript:void(0)" title="切换暗色模式"'
+       + ' rel="nofollow noopener"><i id="qb-dark-icon">' + moon + '</i></a>';
+  }
+  h += '</div></div></div>';
+
+  if (document.readyState === 'loading') document.write(h);
+  else {
+    /* 兜底：解析期已过（脚本被延后执行）时不能再 write，那会清空文档 */
+    var box = document.createElement('div');
+    box.innerHTML = h;
+    var nav = box.firstChild;
+    if (nav && document.body) document.body.insertBefore(nav, document.body.firstChild);
+  }
+})();
+</script>
+
+<script>
+/* 4) 同步加载：样式与脚本都从这里取，主源 + 备源，失败自动切换（不需要你上传任何文件）。
      · 主源 = GitHub 仓库（jsDelivr 的 @latest）：作者发版只要 push 打 tag，
        这里永远取最新那版，你不需要为了升级再贴一次页首，也不用重贴样式字段；
      · 备源 = 主源失效时自动接管（装配脚本按发放对象写入，见下方 FALLBACK 常量）；

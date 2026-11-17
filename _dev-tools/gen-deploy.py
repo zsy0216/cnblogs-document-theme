@@ -158,29 +158,372 @@ FIELD_MARK_LINK = 'html{--qb-field:2}\n'
 
 
 def field_css_external(url):
-    """全托管形态的「页面定制 CSS 代码」字段：只剩首帧闸门（约 450 字节）。
+    """全托管形态的「页面定制 CSS 代码」字段：首帧必需的那一段（约 5.0 KB）。
 
-    --qb-field:2 是给脚本的暗号：字段里只有闸门，正文样式在外链那儿；
+    --qb-field:2 是给脚本的暗号：字段里只有这段，正文样式在外链那儿；
     gen-bundle.py 见到 2 会去看外链死没死，死了才自己注入内嵌的那份。
+
+    为什么不能只剩「body 透明」这一条（v7.31 的失误，v7.32 修）：
+      这三段必须早于「新页首绘」生效，放进外链就晚了 ——
+      ① @view-transition 晚于首绘 = 跨页过渡整段失效，退回白屏硬切；
+      ② 外链未到时 .qb-nav 高度是 0，还带着博客园默认 body margin 8px，
+         首帧是「贴在 8px 处的一条线」，落地后才弹回 0 并撑到 59px；
+      ③ 藏 body 会让跨页过渡拍到一张空白快照，顶栏同样消失。
+      三件事叠加，观感就是用户说的「切页时导航栏跟着跳」。
+      代价是本字段从 649 B 涨到 ~5.0 KB（顶栏骨架占了绝大部分，见下面 ①），
+      且这几段几乎永不随版本变化。
     """
     return FIELD_MARK_LINK + '''/* 流苏主题 · 样式外链模式（v7.31 起）
-   完整样式由页首从 __CSS__ 加载，改版不需要再回来贴这个字段。
-   这里只留首帧闸门：结构齐之前 body 透明，脚本建完加 .qb-ready 解锁；
+   完整样式由页首从 __CSS__ 加载，改配色/布局不需要再回来贴这个字段。
+   本字段只保留「必须早于首绘生效」的三段：布局零点 + 顶栏骨架、闸门、跨页过渡。
    样式或脚本挂了，2.5 秒纯 CSS 兜底放行，不会白屏。 */
 html { background: #fff }
 @media (prefers-color-scheme: dark) {
     html { background: #0d1117 }
 }
-html:not(.qb-ready) body {
+
+/* ① 布局零点 + 顶栏。数值与 css/theme-v7.css 的同名规则一致；
+      写在这里是为了让首帧的顶栏就已经长成最终样子 —— 跨页过渡会拿
+      「新页首绘那一帧」的顶栏去做 morph，晚一帧就是「顶栏跳一下」。 */
+html, body { margin: 0 !important; padding: 0 !important }
+.qb-nav {
+    position: sticky;
+    top: 0;
+    z-index: 999;
+    min-height: 58px;
+    background: #fff;
+    border-bottom: 1px solid #ecedf0
+}
+/* 暗色靠 html.qb-dark，类由页首的预判脚本在本样式之后立刻加上（见页首第 2 段）。
+   不在这里用 prefers-color-scheme：那会跟「手动选浅色 / 配置里 dark:'off'」打架，
+   且媒体查询一旦命中就再也压不住（同特异性下它排在后面）。 */
+html.qb-dark .qb-nav,
+body.qb-dark .qb-nav { background: #161b22; border-bottom-color: #30363d }
+
+.qb-nav-inner {
+    max-width: 1320px;
+    margin: 0 auto;
+    height: 58px;
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-sizing: border-box
+}
+.qb-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    flex: 0 0 auto;
+    font-size: 17px;
+    font-weight: 700;
+    color: #1f2329;
+    letter-spacing: .01em;
+    white-space: nowrap;
+    text-decoration: none
+}
+.qb-logo {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    flex: 0 0 30px
+}
+.qb-logo svg { width: 100%; height: 100%; display: block }
+.qb-logo img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+    border-radius: 6px;
+    box-shadow: 0 0 0 1px rgba(15, 23, 42, .08)
+}
+.qb-logo .qb-logo-dot { fill: #ff5f3d }
+.qb-links { display: flex; align-items: center; gap: 4px }
+.qb-links a {
+    font-size: 14px;
+    font-weight: 500;
+    color: #3f4753;
+    padding: 6px 12px;
+    border-radius: 8px;
+    white-space: nowrap;
+    text-decoration: none
+}
+.qb-actions { display: flex; align-items: center; gap: 2px; flex: 0 0 auto }
+.qb-theme { position: relative; display: flex; align-items: center; flex: 0 0 auto }
+.qb-theme-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: none;
+    color: #3f4753;
+    cursor: pointer
+}
+.qb-theme-btn svg { width: 18px; height: 18px; display: block }
+#qb-dark-toggle,
+.qb-dark-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    color: #3f4753;
+    font-size: 16px;
+    text-decoration: none;
+    cursor: pointer
+}
+html.qb-dark .qb-brand { color: #e6edf3 }
+html.qb-dark .qb-links a,
+html.qb-dark #qb-dark-toggle,
+html.qb-dark .qb-theme-btn { color: #c9d1d9 }
+html.qb-dark .qb-logo img { box-shadow: 0 0 0 1px rgba(255, 255, 255, .14) }
+html.qb-dark .qb-logo .qb-logo-dot { fill: #ff7a5c }
+
+@media screen and (max-width: 860px) {
+    .qb-nav { min-height: 52px }
+    .qb-nav-inner { padding: 0 14px; height: 52px; gap: 10px }
+    .qb-brand { gap: 7px; font-size: 15px }
+    .qb-logo { width: 24px; height: 24px; flex: 0 0 24px }
+    .qb-links {
+        flex: 1 1 auto;
+        min-width: 0;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none
+    }
+    .qb-links::-webkit-scrollbar { display: none }
+}
+
+/* ② 闸门：只藏博客园原生容器，不藏 body。
+      藏 body 会让跨页过渡拍到空白快照，顶栏跟着消失。 */
+html:not(.qb-ready) #home,
+html:not(.qb-ready) #top_nav {
     opacity: 0;
     animation: qb-unlock 0s linear 2.5s forwards
 }
 @keyframes qb-unlock { to { opacity: 1 } }
+
+/* ③ 跨页过渡：切页时顶栏原地不动。
+      必须写在 render-blocking 的样式里、且早于新页首绘 —— 外链做不到。 */
+@view-transition { navigation: auto; }
+.qb-nav { view-transition-name: qb-nav; }
+::view-transition-group(qb-nav) { animation-duration: .18s; }
+::view-transition-old(qb-nav),
+::view-transition-new(qb-nav) { animation: none; opacity: 1; }
+::view-transition-old(root) { animation: none; opacity: 1; }
+::view-transition-new(root) { animation: qb-vt-in .16s ease-out both; }
+@keyframes qb-vt-in { from { opacity: 0 } to { opacity: 1 } }
+@media (prefers-reduced-motion: reduce) {
+    ::view-transition-group(*),
+    ::view-transition-old(*),
+    ::view-transition-new(*) { animation-duration: 0s !important }
+}
 '''.replace('__CSS__', url)
 
 
 # 作者本站的配置块（只进「页首-我的站.html」）：
 # 默认值是作者本站的实际配置，贴上去与当前线上外观一致。
+# 通用版（配置里没有 nav，品牌名和站点路径只能到运行时才推得出来）用这段脚本现场拼顶栏。
+# 作者版不用它 —— 见 nav_static_html()，那边直接把 HTML 写进页首，连这段脚本都不需要。
+NAV_RUNTIME = r'''<script>
+/* 3) 顶栏（通用版）：解析期用 document.write 直接吐出 HTML。
+    为什么不是「先放空 div、脚本再填」：浏览器可能在空 div 解析完、填充脚本还没执行时
+    就首绘，跨页过渡正好拍在那一刻，拍到的是空条 —— 观感就是「切页时顶栏跳一下」。
+    document.write 让结构和内容在同一次解析里落地，没有中间态。
+    这里生成的 DOM 与 document-theme.js 的 renderNav() 完全同构；后者到达后会清空重建
+    （data-qb-pre=1 标记，见 footer-script），内容一致所以看不出重建，交互也一并接管。 */
+(function () {
+  function esc(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+  var cfg = window.LS_CONFIG || window.QB_CONFIG || {};
+  var n = cfg.nav || {};
+  var RESERVED = { p: 1, categories: 1, tag: 1, rss: 1, archive: 1, admin: 1, sitemap: 1 };
+  var seg = String(location.pathname || '/').split('/').filter(Boolean);
+  var APP = (seg.length && !RESERVED[String(seg[0]).toLowerCase()]) ? seg[0] : '';
+  var HOME = location.origin + '/' + (APP ? APP + '/' : '');
+  var NOW = new Date();
+
+  /* 与 footer-script 的 resolveHref 同一口径：{ym} 不补零 */
+  function href(h) {
+    return String(h == null ? '' : h).replace(/\{(ym|y|m)\}/g, function (_, k) {
+      if (k === 'y') return String(NOW.getFullYear());
+      if (k === 'm') return String(NOW.getMonth() + 1);
+      return NOW.getFullYear() + '/' + (NOW.getMonth() + 1);
+    });
+  }
+
+  var brand = n.brand || '';
+  if (!brand) {
+    var p = String(document.title || '').split(' - ').map(function (s) { return s.trim(); });
+    while (p.length && /^博客园$/.test(p[p.length - 1])) p.pop();
+    brand = p.length ? p[p.length - 1] : '';
+  }
+
+  var MARK = '<svg width="30" height="30" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">'
+    + '<g fill="none" stroke="currentColor" stroke-width="7.4" stroke-linecap="round">'
+    + '<path d="M9.8 9.8 L22.2 22.2"/><path d="M22.2 9.8 L9.8 22.2"/></g>'
+    + '<circle class="qb-logo-dot" cx="4.9" cy="27.1" r="3.1"/></svg>';
+  var PALETTE = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" '
+    + 'stroke-width="1.9" stroke-linejoin="round">'
+    + '<path d="M12 3.4c3.5 3.7 6.1 6.7 6.1 9.9a6.1 6.1 0 0 1-12.2 0c0-3.2 2.6-6.2 6.1-9.9z"/>'
+    + '<path d="M9.3 13.4a2.7 2.7 0 0 0 2.7 2.7" stroke-linecap="round"/></svg>';
+
+  var h = '<div class="qb-nav" id="qb-nav" data-qb-pre="1"><div class="qb-nav-inner">';
+  h += '<a class="qb-brand" href="' + esc(href(n.home || HOME)) + '">';
+  if (n.logo) {
+    h += '<span class="qb-logo"><img src="' + esc(n.logo) + '" alt="' + esc(brand)
+       + '" width="30" height="30"></span>';
+  } else if (n.mark !== false) {
+    h += '<span class="qb-logo" aria-hidden="true">' + MARK + '</span>';
+  }
+  if (brand) h += '<span class="qb-brand-text">' + esc(brand) + '</span>';
+  h += '</a>';
+
+  var links = n.links instanceof Array ? n.links : [
+    { t: '首页', h: HOME },
+    { t: '归档', h: HOME + 'p/archive/{ym}' },
+    { t: '分类', h: HOME + 'categories' },
+    { t: '标签', h: HOME + 'tag' },
+    { t: 'RSS', h: HOME + 'rss', b: 1 }
+  ];
+  if (links.length) {
+    h += '<nav class="qb-links">';
+    for (var i = 0; i < links.length; i++) {
+      var it = links[i];
+      if (!it) continue;
+      var txt = it.t || it.text;
+      if (!txt) continue;
+      h += '<a' + (it.on ? ' class="on"' : '') + ' href="' + esc(href(it.h || it.href || '#')) + '"'
+         + ((it.b || it.blank) ? ' target="_blank" rel="noopener"' : '') + '>' + esc(txt) + '</a>';
+    }
+    h += '</nav>';
+  }
+
+  h += '<div class="qb-actions"><div class="qb-theme"><button type="button" class="qb-theme-btn"'
+     + ' id="qb-theme-toggle" title="主题色" aria-label="切换主题色" aria-haspopup="true"'
+     + ' aria-expanded="false">' + PALETTE + '</button></div>';
+  if (n.dark !== false) {
+    var moon = document.documentElement.classList.contains('qb-dark') ? '☀️' : '🌙';
+    h += '<a class="qb-dark-btn" id="qb-dark-toggle" href="javascript:void(0)" title="切换暗色模式"'
+       + ' rel="nofollow noopener"><i id="qb-dark-icon">' + moon + '</i></a>';
+  }
+  h += '</div></div></div>';
+
+  if (document.readyState === 'loading') document.write(h);
+  else {
+    /* 兜底：解析期已过（脚本被延后执行）时不能再 write，那会清空文档 */
+    var box = document.createElement('div');
+    box.innerHTML = h;
+    var nav = box.firstChild;
+    if (nav && document.body) document.body.insertBefore(nav, document.body.firstChild);
+  }
+})();
+</script>'''
+
+
+LOGO_MARK_SVG = (
+    '<svg width="30" height="30" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">'
+    '<g fill="none" stroke="currentColor" stroke-width="7.4" stroke-linecap="round">'
+    '<path d="M9.8 9.8 L22.2 22.2"/><path d="M22.2 9.8 L9.8 22.2"/></g>'
+    '<circle class="qb-logo-dot" cx="4.9" cy="27.1" r="3.1"/></svg>')
+
+PALETTE_SVG = (
+    '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" '
+    'stroke-width="1.9" stroke-linejoin="round">'
+    '<path d="M12 3.4c3.5 3.7 6.1 6.7 6.1 9.9a6.1 6.1 0 0 1-12.2 0c0-3.2 2.6-6.2 6.1-9.9z"/>'
+    '<path d="M9.3 13.4a2.7 2.7 0 0 0 2.7 2.7" stroke-linecap="round"/></svg>')
+
+# 静态顶栏后面紧跟的补齐脚本：{ym} 展开、暗色图标。两者都是运行时才知道的值。
+NAV_FIXUP = '''<script>
+/* 顶栏是静态写进字段的，这里只补两处运行时才知道的值：
+   归档地址里的 {ym}、暗色图标。本段紧跟静态 HTML，首绘还没发生，看不到占位值。 */
+(function () {
+  var d = new Date(), ym = d.getFullYear() + '/' + (d.getMonth() + 1);
+  var as = document.querySelectorAll('.qb-nav a[href*="{ym}"]');
+  for (var i = 0; i < as.length; i++) {
+    as[i].setAttribute('href', as[i].getAttribute('href').replace('{ym}', ym));
+  }
+  if (document.documentElement.classList.contains('qb-dark')) {
+    var ic = document.getElementById('qb-dark-icon');
+    if (ic) ic.textContent = '☀️';
+  }
+})();
+</script>'''
+
+
+def parse_nav_block(cfg):
+    """从配置块文本里取出 nav 的 brand / home / logo / links。
+
+    只解析本项目自己维护的模板（格式固定），不是通用 JS 解析器；
+    取不到就返回 None —— 通用版的 nav 整段被注释掉了，走的就是这条。
+    """
+    m = re.search(r"nav:\s*\{(.*?)\n  \},", cfg, re.S)
+    if not m:
+        return None
+    body = m.group(1)
+
+    def one(key):
+        mm = re.search(r"\b%s:\s*'([^']*)'" % key, body)
+        return mm.group(1) if mm else ''
+
+    links = []
+    for lm in re.finditer(r"\{\s*t:\s*'([^']*)'\s*,\s*h:\s*'([^']*)'([^}]*)\}", body):
+        links.append((lm.group(1), lm.group(2), 'b:' in lm.group(3)))
+    brand, home, logo = one('brand'), one('home'), one('logo')
+    if not (brand or home or links):
+        return None
+    return {'brand': brand, 'home': home, 'logo': logo, 'links': links}
+
+
+def nav_static_html(nav):
+    """页首里的顶栏 HTML —— 直接写进字段，不由脚本生成。
+
+    为什么必须是静态 HTML：跨页过渡取的是「新页首绘那一帧」的画面。用脚本
+    （哪怕 document.write）生成，首绘都可能落在「节点已建、内容还没填」的缝里，
+    过渡拍到的就是一条空条 —— 观感即「切页时顶栏跳一下」。静态写在字段里，
+    解析器在首绘之前就已经把它变成 DOM 了。
+    """
+    def e(v):
+        return (str(v).replace('&', '&amp;').replace('<', '&lt;')
+                .replace('>', '&gt;').replace('"', '&quot;'))
+
+    out = ['<div class="qb-nav" id="qb-nav" data-qb-pre="1"><div class="qb-nav-inner">']
+    out.append('<a class="qb-brand" href="%s">' % e(nav['home'] or '/'))
+    if nav['logo']:
+        out.append('<span class="qb-logo"><img src="%s" alt="%s" width="30" height="30" /></span>'
+                   % (e(nav['logo']), e(nav['brand'])))
+    else:
+        out.append('<span class="qb-logo" aria-hidden="true">%s</span>' % LOGO_MARK_SVG)
+    if nav['brand']:
+        out.append('<span class="qb-brand-text">%s</span>' % e(nav['brand']))
+    out.append('</a>')
+    if nav['links']:
+        out.append('<nav class="qb-links">')
+        for t, h, b in nav['links']:
+            out.append('<a href="%s"%s>%s</a>'
+                       % (e(h), ' target="_blank" rel="noopener"' if b else '', e(t)))
+        out.append('</nav>')
+    out.append('<div class="qb-actions">')
+    out.append('<div class="qb-theme"><button type="button" class="qb-theme-btn" id="qb-theme-toggle"'
+               ' title="主题色" aria-label="切换主题色" aria-haspopup="true" aria-expanded="false">%s</button></div>'
+               % PALETTE_SVG)
+    out.append('<a class="qb-dark-btn" id="qb-dark-toggle" href="javascript:void(0)"'
+               ' title="切换暗色模式" rel="nofollow noopener"><i id="qb-dark-icon">🌙</i></a>')
+    out.append('</div></div></div>\n\n')
+    out.append(NAV_FIXUP)
+    return ''.join(out)
+
+
 CFG_AUTHOR = '''/* ===== 配置区：整个主题只有这一处要改，改完保存就生效 =====
    ① 每个键都可以删。删光会按「当前站点」自动生成：首页 / 归档（当月）/ 分类 / 标签 / RSS，
       品牌名取页面标题里的博客名，公告取后台「公告」字段原文。
@@ -271,16 +614,41 @@ HEAD_TOP = '''<!-- 流苏主题 __VER__ · 页首 HTML（__HDR__）
 __ARC__
 __HEADLINKS__
 
-<!-- 1) 顶栏占位：先给 59px 白条，菜单由紧随其后的脚本填进来 -->
-<div class="qb-nav" id="qb-nav"><div class="qb-nav-inner"></div></div>
+<!-- 顶栏整条在这里一次性落地，不「先放空壳、再回填」：
+     跨页视图过渡的快照取的是「新页首绘那一帧」，壳已解析、内容还没填的中间态
+     一旦被拍进去，就是一条空条 —— 那正是「切页时顶栏跟着跳一下」的来源。 -->
 
 <script>
-// 2) 配置层 —— 本字段里唯一需要改的就是下面这一块
+// 1) 配置层 —— 本字段里唯一需要改的就是下面这一块
 __CFG__
 </script>
 
 <script>
-/* 3) 同步加载：样式与脚本都从这里取，主源 + 备源，失败自动切换（不需要你上传任何文件）。
+/* 2) 首帧暗色：把「手动选择 → 配置 → 系统偏好」的结论提前落到 <html> 上。
+     顶栏的白条是「页面定制 CSS 代码」字段里画的，那里只认 html.qb-dark，
+     等 document-theme.js 到达再判定的话，暗色用户会先看到一条白顶栏再变黑；
+     切页时这一下尤其刺眼（跨页过渡会把两页的顶栏叠在一起比）。
+     逻辑与 document-theme.js 的 darkPref() 完全一致，只是提前执行。 */
+(function () {
+  try {
+    var m = localStorage.getItem('qb-dark');
+    var c = window.LS_CONFIG && window.LS_CONFIG.dark;
+    var dark;
+    if (m === '1') dark = true;
+    else if (m === '0') dark = false;
+    else if (c === 'on') dark = true;
+    else if (c === 'off') dark = false;
+    else dark = !!(window.matchMedia &&
+                   window.matchMedia('(prefers-color-scheme: dark)').matches);
+    if (dark) document.documentElement.className += ' qb-dark';
+  } catch (e) {}
+})();
+</script>
+
+__NAVBLOCK__
+
+<script>
+/* 4) 同步加载：样式与脚本都从这里取，主源 + 备源，失败自动切换（不需要你上传任何文件）。
      · 主源 = GitHub 仓库（jsDelivr 的 @latest）：作者发版只要 push 打 tag，
        这里永远取最新那版，你不需要为了升级再贴一次页首，也不用重贴样式字段；
      · 备源 = 主源失效时自动接管（装配脚本按发放对象写入，见下方 FALLBACK 常量）；
@@ -478,7 +846,7 @@ def build(ver, mode='hosted'):
             '3-公告.html': NOTICE_HYBRID,
             '4-样式.css': field_css(css),
         }
-    def head_for(cfg, fallback, hdr, note, links, css_m, css_f):
+    def head_for(cfg, fallback, hdr, note, links, css_m, css_f, navblock):
         """同一套模板，按发放对象换几样东西：配置、备源、头注释、预连接/图标、样式地址。"""
         return (HEAD_TOP.replace('__VER__', ver)
                         .replace('__HDR__', hdr)
@@ -489,7 +857,8 @@ def build(ver, mode='hosted'):
                         .replace('__CSS_MIRROR__', css_m)
                         .replace('__CSS_FALLBACK__', css_f)
                         .replace('__ARC__', ARC_FLAG)
-                        .replace('__CFG__', cfg))
+                        .replace('__CFG__', cfg)
+                        .replace('__NAVBLOCK__', navblock))
 
     # 通用版备源 = 同一 CDN 的另一个节点（cdn.jsdelivr.net）：版本一致、跨域可用。
     # 不用作者的 blog-static 做备源，两个理由都有实测撑：
@@ -524,13 +893,15 @@ def build(ver, mode='hosted'):
             note='贴到「页首 HTML 代码」字段即可：样式和脚本都从 GitHub 仓库（jsDelivr @latest）加载，'
                  '不需要上传任何文件。\n'
                  '     配置留空就用你自己的博客信息；以后升级不用再动任何字段 —— 自动跟随作者最新版。',
-            links=generic_links, css_m=css_m, css_f=css_f),
+            links=generic_links, css_m=css_m, css_f=css_f, navblock=NAV_RUNTIME),
         '页首-我的站.html': head_for(
             CFG_AUTHOR, author_fallback,
             hdr='全托管 · 作者自用',
             note='带本站品牌 / 头像 / 公告与菜单；备源用自己博客园文件空间。\n'
                  '     别人装主题请用「页首.html」，那份不带任何作者信息。',
-            links=author_links, css_m=css_m, css_f=css_f),
+            links=author_links, css_m=css_m, css_f=css_f,
+            # 作者站的 nav 是确定的，直接渲染成静态 HTML，跨页过渡才拍得到完整顶栏
+            navblock=nav_static_html(parse_nav_block(CFG_AUTHOR))),
     }
 
 def main():
@@ -576,7 +947,7 @@ def main():
         if 'inline' in modes:
             print('零闪版（推荐）：样式贴「页面定制 CSS 代码」，页脚贴「2-页脚.html」，页首贴「1-页首.html」')
         if 'hosted' in modes:
-            print('托管版（发给别人）：CSS 字段贴「样式.css」（只有闸门，约 450 B），'
+            print('托管版（发给别人）：CSS 字段贴「样式.css」（闸门 + 顶栏骨架 + 跨页过渡，约 5.0 KB），'
                   '页首字段贴「页首.html」；页脚与公告留空。')
             print('                   样式和脚本都跟随 @latest —— 以后发版两个字段都不用再动。')
             print('作者自用：页首改贴「页首-我的站.html」（带本站品牌/头像/公告），其余同上。')

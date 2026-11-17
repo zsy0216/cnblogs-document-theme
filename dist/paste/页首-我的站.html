@@ -1,4 +1,4 @@
-<!-- 流苏主题 v7.31 · 页首 HTML（全托管 · 作者自用）
+<!-- 流苏主题 v7.32 · 页首 HTML（全托管 · 作者自用）
      带本站品牌 / 头像 / 公告与菜单；备源用自己博客园文件空间。
      别人装主题请用「页首.html」，那份不带任何作者信息。 -->
 
@@ -13,11 +13,12 @@ if (/\/(?:p\/)?archive\/\d{4}\/\d{1,2}/.test(location.pathname)) {
 <link rel="preconnect" href="https://gcore.jsdelivr.net" crossorigin />
 <link rel="icon" href="https://images.cnblogs.com/cnblogs_com/blogs/477677/galleries/1560097/t_261107101943_blog-icon.jpeg" />
 
-<!-- 1) 顶栏占位：先给 59px 白条，菜单由紧随其后的脚本填进来 -->
-<div class="qb-nav" id="qb-nav"><div class="qb-nav-inner"></div></div>
+<!-- 顶栏整条在这里一次性落地，不「先放空壳、再回填」：
+     跨页视图过渡的快照取的是「新页首绘那一帧」，壳已解析、内容还没填的中间态
+     一旦被拍进去，就是一条空条 —— 那正是「切页时顶栏跟着跳一下」的来源。 -->
 
 <script>
-// 2) 配置层 —— 本字段里唯一需要改的就是下面这一块
+// 1) 配置层 —— 本字段里唯一需要改的就是下面这一块
 /* ===== 配置区：整个主题只有这一处要改，改完保存就生效 =====
    ① 每个键都可以删。删光会按「当前站点」自动生成：首页 / 归档（当月）/ 分类 / 标签 / RSS，
       品牌名取页面标题里的博客名，公告取后台「公告」字段原文。
@@ -73,7 +74,47 @@ window.LS_CONFIG = {
 </script>
 
 <script>
-/* 3) 同步加载：样式与脚本都从这里取，主源 + 备源，失败自动切换（不需要你上传任何文件）。
+/* 2) 首帧暗色：把「手动选择 → 配置 → 系统偏好」的结论提前落到 <html> 上。
+     顶栏的白条是「页面定制 CSS 代码」字段里画的，那里只认 html.qb-dark，
+     等 document-theme.js 到达再判定的话，暗色用户会先看到一条白顶栏再变黑；
+     切页时这一下尤其刺眼（跨页过渡会把两页的顶栏叠在一起比）。
+     逻辑与 document-theme.js 的 darkPref() 完全一致，只是提前执行。 */
+(function () {
+  try {
+    var m = localStorage.getItem('qb-dark');
+    var c = window.LS_CONFIG && window.LS_CONFIG.dark;
+    var dark;
+    if (m === '1') dark = true;
+    else if (m === '0') dark = false;
+    else if (c === 'on') dark = true;
+    else if (c === 'off') dark = false;
+    else dark = !!(window.matchMedia &&
+                   window.matchMedia('(prefers-color-scheme: dark)').matches);
+    if (dark) document.documentElement.className += ' qb-dark';
+  } catch (e) {}
+})();
+</script>
+
+<div class="qb-nav" id="qb-nav" data-qb-pre="1"><div class="qb-nav-inner"><a class="qb-brand" href="https://www.cnblogs.com/zhangshuaiyin/"><span class="qb-logo"><img src="https://images.cnblogs.com/cnblogs_com/blogs/477677/galleries/1560097/t_261107102128_QQ%E5%9B%BE%E7%89%8720201122102348.jpg" alt="Ep流苏" width="30" height="30" /></span><span class="qb-brand-text">Ep流苏</span></a><nav class="qb-links"><a href="https://www.cnblogs.com/zhangshuaiyin/">首页</a><a href="https://www.cnblogs.com/zhangshuaiyin/p/archive/{ym}">归档</a><a href="https://www.cnblogs.com/zhangshuaiyin/categories">分类</a><a href="https://www.cnblogs.com/zhangshuaiyin/tag">标签</a><a href="https://msg.cnblogs.com/send/Ep%E6%B5%81%E8%8B%8F">留言</a><a href="https://github.com/zsy0216" target="_blank" rel="noopener">GitHub</a><a href="https://www.cnblogs.com/zhangshuaiyin/rss" target="_blank" rel="noopener">RSS</a><a href="https://home.cnblogs.com/u/zhangshuaiyin">主页</a><a href="https://i.cnblogs.com/settings/" target="_blank" rel="noopener">管理</a></nav><div class="qb-actions"><div class="qb-theme"><button type="button" class="qb-theme-btn" id="qb-theme-toggle" title="主题色" aria-label="切换主题色" aria-haspopup="true" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><path d="M12 3.4c3.5 3.7 6.1 6.7 6.1 9.9a6.1 6.1 0 0 1-12.2 0c0-3.2 2.6-6.2 6.1-9.9z"/><path d="M9.3 13.4a2.7 2.7 0 0 0 2.7 2.7" stroke-linecap="round"/></svg></button></div><a class="qb-dark-btn" id="qb-dark-toggle" href="javascript:void(0)" title="切换暗色模式" rel="nofollow noopener"><i id="qb-dark-icon">🌙</i></a></div></div></div>
+
+<script>
+/* 顶栏是静态写进字段的，这里只补两处运行时才知道的值：
+   归档地址里的 {ym}、暗色图标。本段紧跟静态 HTML，首绘还没发生，看不到占位值。 */
+(function () {
+  var d = new Date(), ym = d.getFullYear() + '/' + (d.getMonth() + 1);
+  var as = document.querySelectorAll('.qb-nav a[href*="{ym}"]');
+  for (var i = 0; i < as.length; i++) {
+    as[i].setAttribute('href', as[i].getAttribute('href').replace('{ym}', ym));
+  }
+  if (document.documentElement.classList.contains('qb-dark')) {
+    var ic = document.getElementById('qb-dark-icon');
+    if (ic) ic.textContent = '☀️';
+  }
+})();
+</script>
+
+<script>
+/* 4) 同步加载：样式与脚本都从这里取，主源 + 备源，失败自动切换（不需要你上传任何文件）。
      · 主源 = GitHub 仓库（jsDelivr 的 @latest）：作者发版只要 push 打 tag，
        这里永远取最新那版，你不需要为了升级再贴一次页首，也不用重贴样式字段；
      · 备源 = 主源失效时自动接管（装配脚本按发放对象写入，见下方 FALLBACK 常量）；
@@ -91,7 +132,7 @@ window.LS_CONFIG = {
   var stamp = '' + d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate());
   var q = function (u) { return u + (u.indexOf('?') < 0 ? '?' : '&') + 'd=' + stamp; };
   var MIRROR = q('https://gcore.jsdelivr.net/gh/zsy0216/cnblogs-document-theme@latest/dist/document-theme.js');
-  var FALLBACK = q('https://blog-static.cnblogs.com/files/blogs/477677/document-theme.js?v=7.31');
+  var FALLBACK = q('https://blog-static.cnblogs.com/files/blogs/477677/document-theme.js?v=7.32');
   var CSS_M = q('https://gcore.jsdelivr.net/gh/zsy0216/cnblogs-document-theme@latest/css/theme-v7.min.css');
   var CSS_F = q('https://cdn.jsdelivr.net/gh/zsy0216/cnblogs-document-theme@latest/css/theme-v7.min.css');
   var KEY = 'qb-src-fail', TTL = 3600000;

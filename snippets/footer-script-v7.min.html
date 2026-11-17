@@ -1,4 +1,4 @@
-<!-- 流苏主题 v7.31 · 2026-11-17 页脚 HTML（压缩版）
+<!-- 流苏主题 v7.32 · 2026-11-17 页脚 HTML（压缩版）
      位置：博客园后台 -> 设置 -> 页脚 HTML 代码（粘贴前先清空）
      说明：本文件由 _dev-tools/gen-footer-min.py 从 footer-script-v7.html 生成，
            功能完全一致，只删注释与缩进。要改逻辑请改源文件后重新生成，不要改这里。 -->
@@ -124,7 +124,7 @@ var explicit = !!((window.LS_CONFIG && window.LS_CONFIG.nav) ||
 (window.QB_CONFIG && window.QB_CONFIG.nav));
 var nav = document.querySelector('.qb-nav');
 var shell = !!nav && !nav.querySelector('.qb-brand');
-if (nav && !shell && !explicit) return nav;
+if (nav && !shell && !explicit && nav.getAttribute('data-qb-pre') !== '1') return nav;
 var dup = document.querySelectorAll('.qb-nav');
 for (var j = dup.length - 1; j >= 0; j--) {
 if (dup[j] !== nav && dup[j].parentNode) dup[j].parentNode.removeChild(dup[j]);

@@ -1,14 +1,153 @@
 html{--qb-field:2}
 /* 流苏主题 · 样式外链模式（v7.31 起）
-   完整样式由页首从 https://gcore.jsdelivr.net/gh/zsy0216/cnblogs-document-theme@latest/css/theme-v7.min.css 加载，改版不需要再回来贴这个字段。
-   这里只留首帧闸门：结构齐之前 body 透明，脚本建完加 .qb-ready 解锁；
+   完整样式由页首从 https://gcore.jsdelivr.net/gh/zsy0216/cnblogs-document-theme@latest/css/theme-v7.min.css 加载，改配色/布局不需要再回来贴这个字段。
+   本字段只保留「必须早于首绘生效」的三段：布局零点 + 顶栏骨架、闸门、跨页过渡。
    样式或脚本挂了，2.5 秒纯 CSS 兜底放行，不会白屏。 */
 html { background: #fff }
 @media (prefers-color-scheme: dark) {
     html { background: #0d1117 }
 }
-html:not(.qb-ready) body {
+
+/* ① 布局零点 + 顶栏。数值与 css/theme-v7.css 的同名规则一致；
+      写在这里是为了让首帧的顶栏就已经长成最终样子 —— 跨页过渡会拿
+      「新页首绘那一帧」的顶栏去做 morph，晚一帧就是「顶栏跳一下」。 */
+html, body { margin: 0 !important; padding: 0 !important }
+.qb-nav {
+    position: sticky;
+    top: 0;
+    z-index: 999;
+    min-height: 58px;
+    background: #fff;
+    border-bottom: 1px solid #ecedf0
+}
+/* 暗色靠 html.qb-dark，类由页首的预判脚本在本样式之后立刻加上（见页首第 2 段）。
+   不在这里用 prefers-color-scheme：那会跟「手动选浅色 / 配置里 dark:'off'」打架，
+   且媒体查询一旦命中就再也压不住（同特异性下它排在后面）。 */
+html.qb-dark .qb-nav,
+body.qb-dark .qb-nav { background: #161b22; border-bottom-color: #30363d }
+
+.qb-nav-inner {
+    max-width: 1320px;
+    margin: 0 auto;
+    height: 58px;
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-sizing: border-box
+}
+.qb-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    flex: 0 0 auto;
+    font-size: 17px;
+    font-weight: 700;
+    color: #1f2329;
+    letter-spacing: .01em;
+    white-space: nowrap;
+    text-decoration: none
+}
+.qb-logo {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    flex: 0 0 30px
+}
+.qb-logo svg { width: 100%; height: 100%; display: block }
+.qb-logo img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+    border-radius: 6px;
+    box-shadow: 0 0 0 1px rgba(15, 23, 42, .08)
+}
+.qb-logo .qb-logo-dot { fill: #ff5f3d }
+.qb-links { display: flex; align-items: center; gap: 4px }
+.qb-links a {
+    font-size: 14px;
+    font-weight: 500;
+    color: #3f4753;
+    padding: 6px 12px;
+    border-radius: 8px;
+    white-space: nowrap;
+    text-decoration: none
+}
+.qb-actions { display: flex; align-items: center; gap: 2px; flex: 0 0 auto }
+.qb-theme { position: relative; display: flex; align-items: center; flex: 0 0 auto }
+.qb-theme-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: none;
+    color: #3f4753;
+    cursor: pointer
+}
+.qb-theme-btn svg { width: 18px; height: 18px; display: block }
+#qb-dark-toggle,
+.qb-dark-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    color: #3f4753;
+    font-size: 16px;
+    text-decoration: none;
+    cursor: pointer
+}
+html.qb-dark .qb-brand { color: #e6edf3 }
+html.qb-dark .qb-links a,
+html.qb-dark #qb-dark-toggle,
+html.qb-dark .qb-theme-btn { color: #c9d1d9 }
+html.qb-dark .qb-logo img { box-shadow: 0 0 0 1px rgba(255, 255, 255, .14) }
+html.qb-dark .qb-logo .qb-logo-dot { fill: #ff7a5c }
+
+@media screen and (max-width: 860px) {
+    .qb-nav { min-height: 52px }
+    .qb-nav-inner { padding: 0 14px; height: 52px; gap: 10px }
+    .qb-brand { gap: 7px; font-size: 15px }
+    .qb-logo { width: 24px; height: 24px; flex: 0 0 24px }
+    .qb-links {
+        flex: 1 1 auto;
+        min-width: 0;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none
+    }
+    .qb-links::-webkit-scrollbar { display: none }
+}
+
+/* ② 闸门：只藏博客园原生容器，不藏 body。
+      藏 body 会让跨页过渡拍到空白快照，顶栏跟着消失。 */
+html:not(.qb-ready) #home,
+html:not(.qb-ready) #top_nav {
     opacity: 0;
     animation: qb-unlock 0s linear 2.5s forwards
 }
 @keyframes qb-unlock { to { opacity: 1 } }
+
+/* ③ 跨页过渡：切页时顶栏原地不动。
+      必须写在 render-blocking 的样式里、且早于新页首绘 —— 外链做不到。 */
+@view-transition { navigation: auto; }
+.qb-nav { view-transition-name: qb-nav; }
+::view-transition-group(qb-nav) { animation-duration: .18s; }
+::view-transition-old(qb-nav),
+::view-transition-new(qb-nav) { animation: none; opacity: 1; }
+::view-transition-old(root) { animation: none; opacity: 1; }
+::view-transition-new(root) { animation: qb-vt-in .16s ease-out both; }
+@keyframes qb-vt-in { from { opacity: 0 } to { opacity: 1 } }
+@media (prefers-reduced-motion: reduce) {
+    ::view-transition-group(*),
+    ::view-transition-old(*),
+    ::view-transition-new(*) { animation-duration: 0s !important }
+}
