@@ -13,8 +13,9 @@
 * [X]  之前发布的文章要更新安装步骤，更新最新配图，更新博客到线上包括博客园和csdn
 * [X]  浏览器控制台报错 —— 已逐条定性：2 条是页首 `document.write` 插跨站脚本的警告（Chrome 只在 2G/slow-2G 真拦，回落兜底可用）；3 条 `ERR_BLOCKED_BY_CLIENT` 是广告插件拦掉的百度统计、字节推送、侧栏广告位，与主题无关。按当前判断不改，处理结论见下面「工程与文档」那条
 * [X]  文章展示分类和标签 —— v7.25：详情页标题下分类 + 标签胶囊（超 4 个折成 +n），列表页顶部分类筛选条；分类名单存 localStorage 7 天，取不到则只显示标签
-* [X]  补充实例站 —— v7.26：README「谁在用」+ `docs/使用案例.md` + GitHub issue 表单（Issues → Labels 需手建 `showcase` 标签，否则模板标签被静默忽略）
+* [ ]  补充实例站 —— 入口已就位（v7.26：README「谁在用」+ `docs/使用案例.md` + issue 表单）；等第一个真实站点登记后才算完成，另需在 GitHub 手建 `showcase` 标签，否则模板标签被静默忽略
 * [ ]  打赏功能怎么加，是加到我的博客还是仓库？
-* [X]  页脚写死 Theme powered by cnblogs-document-theme，链接 GitHub 仓库 —— v7.28：`CFG.credit` 键已从配置层删除，写 `false` 无处生效；文案与拼写做了修正（原话 power → powered）
+* [X]  页脚写死 Theme powered by cnblogs-document-theme，链接 GitHub 仓库，无配置开关 —— v7.28：`CFG.credit` 键已从配置层删除，写 `false` 无处生效；拼写修正（原话 power → powered）
+* [ ]  页脚继续优化
 
 ---
