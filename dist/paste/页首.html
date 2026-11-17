@@ -1,6 +1,6 @@
-<!-- 流苏主题 v7.30 · 页首 HTML（全托管 · 通用版）
-     贴到「页首 HTML 代码」字段即可：js 从 GitHub 仓库（jsDelivr @latest）加载，不需要上传任何文件。
-     配置留空就用你自己的博客信息；以后升级不用再动这个字段 —— 自动跟随作者最新版。 -->
+<!-- 流苏主题 v7.31 · 页首 HTML（全托管 · 通用版）
+     贴到「页首 HTML 代码」字段即可：样式和脚本都从 GitHub 仓库（jsDelivr @latest）加载，不需要上传任何文件。
+     配置留空就用你自己的博客信息；以后升级不用再动任何字段 —— 自动跟随作者最新版。 -->
 
 <script>
 /* 归档页标记：见 CSS 里 html.qb-arc-page 一节 */
@@ -42,9 +42,9 @@ window.LS_CONFIG = {
 </script>
 
 <script>
-/* 3) 同步加载：主源 + 备源，失败自动切换（不需要你上传任何文件）。
+/* 3) 同步加载：样式与脚本都从这里取，主源 + 备源，失败自动切换（不需要你上传任何文件）。
      · 主源 = GitHub 仓库（jsDelivr 的 @latest）：作者发版只要 push 打 tag，
-       这里永远取最新那版，你不需要为了升级再贴一次页首；
+       这里永远取最新那版，你不需要为了升级再贴一次页首，也不用重贴样式字段；
      · 备源 = 主源失效时自动接管（装配脚本按发放对象写入，见下方 FALLBACK 常量）；
      · 主源失败过就 1 小时内直接走备源，免得每次进站都等一遍超时（记 localStorage，
        不写 cookie，换设备互不影响，也不会把失败态永久钉死）；
@@ -61,7 +61,25 @@ window.LS_CONFIG = {
   var q = function (u) { return u + (u.indexOf('?') < 0 ? '?' : '&') + 'd=' + stamp; };
   var MIRROR = q('https://gcore.jsdelivr.net/gh/zsy0216/cnblogs-document-theme@latest/dist/document-theme.js');
   var FALLBACK = q('https://cdn.jsdelivr.net/gh/zsy0216/cnblogs-document-theme@latest/dist/document-theme.js');
+  var CSS_M = q('https://gcore.jsdelivr.net/gh/zsy0216/cnblogs-document-theme@latest/css/theme-v7.min.css');
+  var CSS_F = q('https://cdn.jsdelivr.net/gh/zsy0216/cnblogs-document-theme@latest/css/theme-v7.min.css');
   var KEY = 'qb-src-fail', TTL = 3600000;
+
+  /* 样式：解析期就写进去，和下面的脚本并行下载（不是串行等）。
+     字段里只剩闸门，正文样式全在这一份里 —— 所以它加载失败时脚本要能知道：
+     __qbCssDead=1 表示主源挂了（已换备源）、=2 表示两个源都没成。 */
+  window.__qbCssDead = 0;
+  window.__qbCssFail = function () {
+    if (window.__qbCssDead) { window.__qbCssDead = 2; return; }
+    window.__qbCssDead = 1;
+    var n = document.createElement('link');
+    n.rel = 'stylesheet';
+    n.href = CSS_F;
+    n.onerror = function () { window.__qbCssDead = 2; };
+    (document.head || document.documentElement).appendChild(n);
+  };
+  document.write('<' + 'link rel="stylesheet" id="qb-theme-css" href="' + CSS_M +
+                 '" onerror="window.__qbCssFail()">');
 
   function recentlyFailed() {
     try {

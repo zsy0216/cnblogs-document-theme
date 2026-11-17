@@ -76,11 +76,30 @@ MIRROR_REPO = 'https://gcore.jsdelivr.net/gh/zsy0216/cnblogs-document-theme'
 def mirror_url(ver):
     """镜像地址：跟随最新标签（@latest）。日期参数由页首在运行时拼上，见 HEAD_TOP。"""
     return '%s@latest/dist/document-theme.js' % MIRROR_REPO
-# 样式永远内联在「页面定制 CSS 代码」字段里，不走外链。
-# 理由：首帧闸门（html:not(.qb-ready) body{opacity:0}）就写在 CSS 里 —— CSS 若从外部
-# 加载，那个请求一旦失败，页面连闸门都没有，整站裸奔；内联进 HTML 则由博客园服务端直出，
-# 零请求、零失败面。代价是发版后要重贴 50KB，这是唯一但值得付的账。
-# （曾经留过一条指向 blog-static 的 CSS_URL 但从未启用，2026-11-17 查该地址还是 404。）
+
+
+def css_url():
+    """样式外链：与 js 同源同版本，同样 @latest，日期参数同样运行时拼。"""
+    return '%s@latest/css/theme-v7.min.css' % MIRROR_REPO
+
+
+# v7.31：样式从「内联进 CSS 字段」改成「外链 + 字段只留闸门」。
+#
+# 上一版的账：js 跟 @latest 走了，但 54KB 样式仍内联在「页面定制 CSS 代码」字段里，
+# 于是每次改样式（形态、间距、配色）还是要回后台重贴一次 —— 用户 2026-11-17 追问
+# 「每次改版本都要重新贴页首，不就违背更新不再粘贴配置的初衷了吗」，指的正是这个半拉子。
+# 现在字段只剩 ~450 字节，样式与脚本都不再需要人碰。
+#
+# 为什么可以这样改（上一版不敢改的两个理由，逐条消解）：
+#   ① 「CSS 挂了连闸门都没有，整站裸奔」→ 闸门留在字段里，外链只负责正文样式。
+#      外链失败时页面是「白屏 2.5 秒后放出博客园原样」，不会裸奔到不可用；
+#   ② 「首帧会先白一帧再变暗」→ 闸门让 body 全程 opacity:0，首绘前本就是空白，
+#      那一眼白由字段里的 prefers-color-scheme 兜（暗色系统直接给 #0d1117 底）。
+#   ③ 「CDN 挂掉没有兜底样式」→ document-theme.js 里本来就内嵌了完整样式，且已能
+#      识别外链是否成功（见 gen-bundle.py 的 inject）；外链失败它会自己注入一份。
+#
+# 代价：样式晚一个 RTT 到位。闸门把它藏在白屏期里，与脚本同一时刻开始下载（并行），
+# 实测可见时刻不变（见 CHANGELOG v7.31 的实测记录）。
 ICON_URL = ('https://images.cnblogs.com/cnblogs_com/blogs/477677/galleries/1560097/'
             't_261107101943_blog-icon.jpeg')
 
@@ -111,28 +130,53 @@ if (/\\/(?:p\\/)?archive\\/\\d{4}\\/\\d{1,2}/.test(location.pathname)) {
 # 脚本晚到 = 闸门晚到，那之前照样画了一整页。必须在 head 里、随 HTML 首字节生效。
 #
 # 兜底 2.5 秒：脚本 404 / 被拦 / 禁 JS 都不会永远白屏。
-# 「页面定制 CSS 代码」字段 = 完整主题样式 + 一条首帧标记。
+# 「页面定制 CSS 代码」字段 = 首帧闸门 +（内联模式下额外的）完整主题样式。
 #
-# 为什么必须是完整样式，而不是几百字节的骨架：
-#   托管形态下样式在 document-theme.js 里，脚本没到就没有样式。浏览器在脚本之前
-#   就已经会画一帧，这一帧如果只有骨架，看到的是「顶栏白条 + 博客园原生内容」，
-#   脚本一到整页换样式 —— 切页那一下「刷」就是它。实测新页首帧左右两栏是空的，
-#   跨页过渡的新快照也跟着空。
-#   把完整样式放字段 = 首帧就是最终外观，脚本到达后只填内容，不再换样式。
+# v7.31 起，全托管形态里这个字段只放闸门（约 450 字节），完整样式改由页首外链。
+# 之前坚持「必须是完整样式」的理由是首帧观感，但那个前提已经被闸门本身化解：
+# body 全程 opacity:0，首帧本来就是空白，不存在「骨架 → 完整样式」的换装；
+# 样式晚到只是让空白期稍长，而它和脚本是并行下载的，可见时刻由更慢的脚本决定。
 #
 # 为什么只贴一次就够：
-#   本文件里的样式与 theme-v7.css 是同一份（生成时直接取 min 产物），
-#   js 里的那份只在检测不到本字段时才注入。以后改配色、改卡片样式只上传
-#   document-theme.js，后台这个字段不用再动。
+#   字段里没有样式了，改配色、改卡片、改布局都只动仓库里的 css —— 用户零操作。
 #
-# html{--qb-field:1} 是给 js 的标记：脚本看到它就知道字段里有样式，跳过注入，
-# 避免同一份 33KB 样式被塞两遍（无视觉差异，但会白算一次全量样式）。
+# html{--qb-field:1|2} 是给 js 的标记：
+#   1 = 完整样式在字段里（内联/混合版）→ 跳过注入；
+#   2 = 字段只有闸门，样式在外链 → 外链死了才注入内嵌那份（见 gen-bundle.py）。
 FIELD_MARK = 'html{--qb-field:1}\n'
 
 
 def field_css(css):
-    """「页面定制 CSS 代码」字段的内容：标记 + 完整主题样式。"""
+    """「页面定制 CSS 代码」字段的内容：标记 + 完整主题样式。
+
+    只给零闪版 / 混合版用 —— 那两种形态本来就要求样式内联。
+    """
     return FIELD_MARK + css + '\n'
+
+
+FIELD_MARK_LINK = 'html{--qb-field:2}\n'
+
+
+def field_css_external(url):
+    """全托管形态的「页面定制 CSS 代码」字段：只剩首帧闸门（约 450 字节）。
+
+    --qb-field:2 是给脚本的暗号：字段里只有闸门，正文样式在外链那儿；
+    gen-bundle.py 见到 2 会去看外链死没死，死了才自己注入内嵌的那份。
+    """
+    return FIELD_MARK_LINK + '''/* 流苏主题 · 样式外链模式（v7.31 起）
+   完整样式由页首从 __CSS__ 加载，改版不需要再回来贴这个字段。
+   这里只留首帧闸门：结构齐之前 body 透明，脚本建完加 .qb-ready 解锁；
+   样式或脚本挂了，2.5 秒纯 CSS 兜底放行，不会白屏。 */
+html { background: #fff }
+@media (prefers-color-scheme: dark) {
+    html { background: #0d1117 }
+}
+html:not(.qb-ready) body {
+    opacity: 0;
+    animation: qb-unlock 0s linear 2.5s forwards
+}
+@keyframes qb-unlock { to { opacity: 1 } }
+'''.replace('__CSS__', url)
 
 
 # 作者本站的配置块（只进「页首-我的站.html」）：
@@ -236,9 +280,9 @@ __CFG__
 </script>
 
 <script>
-/* 3) 同步加载：主源 + 备源，失败自动切换（不需要你上传任何文件）。
+/* 3) 同步加载：样式与脚本都从这里取，主源 + 备源，失败自动切换（不需要你上传任何文件）。
      · 主源 = GitHub 仓库（jsDelivr 的 @latest）：作者发版只要 push 打 tag，
-       这里永远取最新那版，你不需要为了升级再贴一次页首；
+       这里永远取最新那版，你不需要为了升级再贴一次页首，也不用重贴样式字段；
      · 备源 = 主源失效时自动接管（装配脚本按发放对象写入，见下方 FALLBACK 常量）；
      · 主源失败过就 1 小时内直接走备源，免得每次进站都等一遍超时（记 localStorage，
        不写 cookie，换设备互不影响，也不会把失败态永久钉死）；
@@ -255,7 +299,25 @@ __CFG__
   var q = function (u) { return u + (u.indexOf('?') < 0 ? '?' : '&') + 'd=' + stamp; };
   var MIRROR = q('__MIRROR__');
   var FALLBACK = q('__FALLBACK__');
+  var CSS_M = q('__CSS_MIRROR__');
+  var CSS_F = q('__CSS_FALLBACK__');
   var KEY = 'qb-src-fail', TTL = 3600000;
+
+  /* 样式：解析期就写进去，和下面的脚本并行下载（不是串行等）。
+     字段里只剩闸门，正文样式全在这一份里 —— 所以它加载失败时脚本要能知道：
+     __qbCssDead=1 表示主源挂了（已换备源）、=2 表示两个源都没成。 */
+  window.__qbCssDead = 0;
+  window.__qbCssFail = function () {
+    if (window.__qbCssDead) { window.__qbCssDead = 2; return; }
+    window.__qbCssDead = 1;
+    var n = document.createElement('link');
+    n.rel = 'stylesheet';
+    n.href = CSS_F;
+    n.onerror = function () { window.__qbCssDead = 2; };
+    (document.head || document.documentElement).appendChild(n);
+  };
+  document.write('<' + 'link rel="stylesheet" id="qb-theme-css" href="' + CSS_M +
+                 '" onerror="window.__qbCssFail()">');
 
   function recentlyFailed() {
     try {
@@ -416,14 +478,16 @@ def build(ver, mode='hosted'):
             '3-公告.html': NOTICE_HYBRID,
             '4-样式.css': field_css(css),
         }
-    def head_for(cfg, fallback, hdr, note, links):
-        """同一套模板，按发放对象换四样东西：配置、备源、头注释、预连接/图标。"""
+    def head_for(cfg, fallback, hdr, note, links, css_m, css_f):
+        """同一套模板，按发放对象换几样东西：配置、备源、头注释、预连接/图标、样式地址。"""
         return (HEAD_TOP.replace('__VER__', ver)
                         .replace('__HDR__', hdr)
                         .replace('__NOTE__', note)
                         .replace('__HEADLINKS__', links)
                         .replace('__MIRROR__', mirror_url(ver))
                         .replace('__FALLBACK__', fallback)
+                        .replace('__CSS_MIRROR__', css_m)
+                        .replace('__CSS_FALLBACK__', css_f)
                         .replace('__ARC__', ARC_FLAG)
                         .replace('__CFG__', cfg))
 
@@ -437,6 +501,10 @@ def build(ver, mode='hosted'):
     # 作者版备源 = 自己的博客园文件空间：同域 CDN 最快，且作者自己能保证每次发版都传
     author_fallback = '%s?v=%s' % (BUNDLE_URL, ver.lstrip('v'))
 
+    # 样式的外链与备源：同一个 @latest，换节点就是备源（样式没有手工上传的副本可用）。
+    css_m = css_url()
+    css_f = css_m.replace('//gcore.jsdelivr.net', '//cdn.jsdelivr.net')
+
     # 通用版不写 <link rel="icon">：那是作者的头像，别人贴了会把人家站的图标换掉；
     # 不写就沿用博客园自己的 favicon。
     generic_links = ('<link rel="preconnect" href="https://gcore.jsdelivr.net" crossorigin />\n'
@@ -446,20 +514,23 @@ def build(ver, mode='hosted'):
                     '<link rel="icon" href="%s" />' % ICON_URL)
 
     return {
-        '样式.css': field_css(css),
+        '样式.css': field_css_external(css_m),
+        # 内联备份：CDN 全挂、或想退回「样式贴字段」的老形态时，贴这份即可（手动应急用，
+        # 页首字段同时要换回 --qb-field:1 的老版本，见 README「应急回滚」）。
+        '样式-内联备份.css': field_css(css),
         '页首.html': head_for(
             CFG_GENERIC, generic_fallback,
             hdr='全托管 · 通用版',
-            note='贴到「页首 HTML 代码」字段即可：js 从 GitHub 仓库（jsDelivr @latest）加载，'
+            note='贴到「页首 HTML 代码」字段即可：样式和脚本都从 GitHub 仓库（jsDelivr @latest）加载，'
                  '不需要上传任何文件。\n'
-                 '     配置留空就用你自己的博客信息；以后升级不用再动这个字段 —— 自动跟随作者最新版。',
-            links=generic_links),
+                 '     配置留空就用你自己的博客信息；以后升级不用再动任何字段 —— 自动跟随作者最新版。',
+            links=generic_links, css_m=css_m, css_f=css_f),
         '页首-我的站.html': head_for(
             CFG_AUTHOR, author_fallback,
             hdr='全托管 · 作者自用',
             note='带本站品牌 / 头像 / 公告与菜单；备源用自己博客园文件空间。\n'
                  '     别人装主题请用「页首.html」，那份不带任何作者信息。',
-            links=author_links),
+            links=author_links, css_m=css_m, css_f=css_f),
     }
 
 def main():
@@ -505,13 +576,16 @@ def main():
         if 'inline' in modes:
             print('零闪版（推荐）：样式贴「页面定制 CSS 代码」，页脚贴「2-页脚.html」，页首贴「1-页首.html」')
         if 'hosted' in modes:
-            print('托管版（发给别人）：CSS 字段贴「样式.css」，页首字段贴「页首.html」；页脚与公告留空。')
-            print('                   别人照这个装就行 —— 不用 fork、不用上传、不用打 tag。')
+            print('托管版（发给别人）：CSS 字段贴「样式.css」（只有闸门，约 450 B），'
+                  '页首字段贴「页首.html」；页脚与公告留空。')
+            print('                   样式和脚本都跟随 @latest —— 以后发版两个字段都不用再动。')
             print('作者自用：页首改贴「页首-我的站.html」（带本站品牌/头像/公告），其余同上。')
-            print('镜像：%s' % mirror_url(ver))
-            print('      ↑ 不可变 ref，必须先 push 并 git tag %s，否则 404 会落到备源' % ver)
+            print('镜像 js：%s' % mirror_url(ver))
+            print('镜像 css：%s' % css_url())
+            print('      ↑ @latest 由 CDN 解析到最新 tag，必须先 push 并 git tag %s（否则停在上一版）' % ver)
             print('作者备源：%s?v=%s （改了 js 记得重新上传到这个地址，否则作者自己的站会停在旧版）'
                   % (BUNDLE_URL, ver.lstrip('v')))
+            print('应急：CDN 全挂时贴「样式-内联备份.css」，页首换回 tag v7.30 那份（内联模式不受影响）')
     sys.exit(0 if ok else 1)
 
 
