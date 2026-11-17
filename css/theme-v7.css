@@ -1,6 +1,6 @@
 /* ============================================================
-   流苏主题 v7.27 · 2026-11-17
-   最近：安装简化：通用版页首零配置、js 从 jsDelivr 直取（主 gcore / 备 cdn），别人不用上传也不用 fork
+   流苏主题 v7.28 · 2026-11-17
+   最近：页脚署名写死为 Theme powered by cnblogs-document-theme（无配置开关），链回仓库
    ------------------------------------------------------------
    主题 v6 —— 基于博客园 2026 真实 DOM 重写
    ------------------------------------------------------------
@@ -2064,11 +2064,13 @@ body.qb-dark #cnblogs_post_body mark { background: rgba(187, 128, 9, .40); color
 #footer a:hover { color: var(--accent-deep) !important; }
 #footer img { vertical-align: -3px; height: 14px; }
 
-/* 页脚署名（v7.26）：比备案那两行再淡一档，悬停才提亮，不抢视觉。
-   内容是脚本按 CFG.credit 生成的，credit:false 时这里没有节点，样式留着无害。 */
+/* 页脚署名（v7.28）：比备案那两行再淡一档，悬停才提亮，不抢视觉。
+   内容是脚本写死的（initCredit），没有配置开关；这里只管外观。
+   英文串比中文长一倍，窄屏允许折行 —— 不设 nowrap，320px 下会溢出。 */
 #footer .qb-credit {
     margin-top: 6px;
     font-size: 12px;
+    line-height: 1.9;
     opacity: .85;
     transition: opacity .15s;
 }
@@ -2085,6 +2087,9 @@ body.qb-dark #cnblogs_post_body mark { background: rgba(187, 128, 9, .40); color
     font-size: .92em;
     opacity: .8;
 }
+/* 仓库名不许在连字符处断开：320px 下让整句断在「by」后面，而不是劈成
+   「cnblogs-document-」+「theme」，那样像被裁掉了半截 */
+#footer .qb-credit .qb-credit-name { white-space: nowrap; }
 #footer .qb-credit a:hover {
     color: var(--accent-deep) !important;
     border-bottom-color: currentColor;

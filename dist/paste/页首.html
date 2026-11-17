@@ -1,4 +1,4 @@
-<!-- 流苏主题 v7.27 · 页首 HTML（全托管 · 通用版）
+<!-- 流苏主题 v7.28 · 页首 HTML（全托管 · 通用版）
      贴到「页首 HTML 代码」字段即可：js 从 GitHub 仓库（jsDelivr）加载，不需要上传任何文件。
      配置留空就用你自己的博客信息；升级时整段换新，或只改下面两个源地址的版本号。 -->
 
@@ -22,7 +22,7 @@ if (/\/(?:p\/)?archive\/\d{4}\/\d{1,2}/.test(location.pathname)) {
      · 顶栏品牌 = 页面标题里的博客名；
      · 首页 / 归档（当月）/ 分类 / 标签 / RSS 都指向你自己的博客；
      · 公告用博客园后台「公告」字段的原文，不内置任何人的文案。
-   下面三块都是注释，需要哪块就把 // 去掉再改。完整字段表见仓库 README「配置项」。 */
+   下面两块都是注释，需要哪块就把 // 去掉再改。完整字段表见仓库 README「配置项」。 */
 window.LS_CONFIG = {
   /* ① 强调色：换一个 hex 就是另一套配色，暗色下会自动派生深/浅两档 */
   // accent: '#3b82f6',
@@ -37,10 +37,7 @@ window.LS_CONFIG = {
   //     { t: '归档', h: 'https://www.cnblogs.com/你的博客名/p/archive/{ym}' },
   //     { t: 'GitHub', h: 'https://github.com/你的账号', b: 1 }
   //   ]
-  // },
-
-  /* ③ 页脚那行「主题 · 流苏」：不想留就放开下面这行（MIT，不强制署名） */
-  // credit: false
+  // }
 };
 </script>
 
@@ -57,8 +54,8 @@ window.LS_CONFIG = {
 (function () {
   var s = 'script';
   /* 两个地址都是完整 URL（含版本号）。升级 = 整段换新页首，或只把这两行的版本号改掉。 */
-  var MIRROR = 'https://gcore.jsdelivr.net/gh/zsy0216/cnblogs-document-theme@v7.27/dist/document-theme.js';
-  var FALLBACK = 'https://cdn.jsdelivr.net/gh/zsy0216/cnblogs-document-theme@v7.27/dist/document-theme.js';
+  var MIRROR = 'https://gcore.jsdelivr.net/gh/zsy0216/cnblogs-document-theme@v7.28/dist/document-theme.js';
+  var FALLBACK = 'https://cdn.jsdelivr.net/gh/zsy0216/cnblogs-document-theme@v7.28/dist/document-theme.js';
   var KEY = 'qb-src-fail', TTL = 3600000;
 
   function recentlyFailed() {

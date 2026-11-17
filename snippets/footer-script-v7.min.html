@@ -1,4 +1,4 @@
-<!-- 流苏主题 v7.27 · 2026-11-17 页脚 HTML（压缩版）
+<!-- 流苏主题 v7.28 · 2026-11-17 页脚 HTML（压缩版）
      位置：博客园后台 -> 设置 -> 页脚 HTML 代码（粘贴前先清空）
      说明：本文件由 _dev-tools/gen-footer-min.py 从 footer-script-v7.html 生成，
            功能完全一致，只删注释与缩进。要改逻辑请改源文件后重新生成，不要改这里。 -->
@@ -56,8 +56,7 @@ notice: {
 show: true,
 title: '公告',
 html: ''
-},
-credit: true
+}
 };
 var u = {};
 [window.QB_CONFIG, window.LS_CONFIG].forEach(function (src) {
@@ -1461,22 +1460,22 @@ requestAnimationFrame(function () { box.classList.add('show'); });
 t = setTimeout(hide, 7000);
 }
 function initCredit() {
-if (CFG.credit === false) return;
 if (!document.querySelector('meta[name="generator"]')) {
 var gen = mk('meta');
 gen.setAttribute('name', 'generator');
-gen.setAttribute('content', 'cnblogs-document-theme (流苏主题)');
+gen.setAttribute('content', 'cnblogs-document-theme');
 (document.head || document.documentElement).appendChild(gen);
 }
 var ft = document.getElementById('footer');
 if (!ft || ft.querySelector('.qb-credit')) return;
-var text = typeof CFG.credit === 'string' && CFG.credit.replace(/\s/g, '') ? CFG.credit : '主题 · 流苏';
 var bar = mk('div', 'qb-credit');
-var a = mk('a', null, text);
+var a = mk('a', null, '');
+a.appendChild(document.createTextNode('Theme powered by '));
+a.appendChild(mk('span', 'qb-credit-name', 'cnblogs-document-theme'));
 a.href = REPO;
 a.target = '_blank';
 a.rel = 'noopener';
-a.title = '博客园「文档风」主题 · MIT 开源，点击查看源码';
+a.title = 'cnblogs-document-theme · 博客园文档风主题 · MIT';
 bar.appendChild(a);
 ft.appendChild(bar);
 }

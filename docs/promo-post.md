@@ -179,7 +179,7 @@ window.LS_CONFIG = {
 
 不用打招呼，直接拿走。两件小事，做不做都行：
 
-**署名**：页脚默认带一行「主题 · 流苏 ↗」，链回仓库。不想留就在 `LS_CONFIG` 里写 `credit: false`，一行关掉，不影响任何功能。主题是 MIT，署名是请求不是条件。
+**署名**：页脚固定带一行 `Theme powered by cnblogs-document-theme ↗`，链回仓库。这条是写死的，配置里关不掉，界面上也没开关 —— 我把它当成「让下一个人找到这个主题」的成本，公开说明在这儿，不藏着。真不想要可以 fork 后删掉那一行，MIT 允许。
 
 **登记**：用着顺，欢迎到 [仓库 issue](https://github.com/zsy0216/cnblogs-document-theme/issues/new?template=showcase.yml) 登记你的站（地址 + 一句话说明就够），我会加进 README 的「谁在用」。别人的站比我的截图更有说服力，也方便我发现某种模板设置下的翻车 —— 博客园每个人的设置都不一样，有些问题只有换个人装才会冒出来。
 

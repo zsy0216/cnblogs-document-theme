@@ -1,14 +1,17 @@
 /**
- * v7.26 专项验证：页脚署名（默认反链 + meta generator + 可关闭）。
+ * v7.28 专项验证：页脚署名（写死，无配置开关）。
+ *
+ * 署名文案与地址都在 footer-script 里写死：`Theme powered by cnblogs-document-theme`，
+ * 链回仓库。配置对象里已经没有 credit 这个键了，写 false 也无处生效 —— 这一条是
+ * 这次改动的核心，必须真跑一遍来钉住，不能只看代码。
  *
  * 要钉住的几条：
- *   1) 默认在 #footer 内加一行「主题 · 流苏」，有且只有一条（boot 与 DCL 各跑一次）
- *   2) 链接指向仓库，target=_blank 且 rel 含 noopener
- *   3) <meta name="generator"> 只写一次，内容标识主题
- *   4) credit:false 时整段不出现（包括 generator）—— 说了可关就得真关得掉
- *   5) credit 传字符串时替换文案，地址不变
- *   6) 页面没有 #footer 时不抛错，其余功能照常
- *   7) 打印样式里页脚整块隐藏，署名不会印在纸上
+ *   1) 在 #footer 内加一行，有且只有一条（boot 与 DCL 各跑一次也不叠）
+ *   2) 文案固定，链接指向仓库，target=_blank 且 rel 含 noopener
+ *   3) <meta name="generator"> 只写一次
+ *   4) credit:false 不生效（写死）；credit 传字符串也不改文案
+ *   5) 页面没有 #footer 时不抛错，其余功能照常
+ *   6) 打印样式里页脚整块隐藏，署名不会印在纸上
  */
 const fs = require('fs');
 const { chromium } = require('playwright-core');
@@ -16,6 +19,7 @@ const { chromium } = require('playwright-core');
 const ROOT = 'E:/Documents/WorkBuddy/2026-10-11-15-08-36/blogcn-nicen-theme/';
 const BUNDLE = fs.readFileSync(ROOT + 'dist/document-theme.js', 'utf8');
 const REPO = 'https://github.com/zsy0216/cnblogs-document-theme';
+const TEXT = 'Theme powered by cnblogs-document-theme';
 
 const SITE = 'https://www.cnblogs.com/zhangshuaiyin/';
 const PARA = '这一段用来凑字数，讨论的是页脚署名的展示方式。'.repeat(5);
@@ -69,7 +73,7 @@ async function open(browser, opts) {
   });
   await p.goto(SITE, { waitUntil: 'load' });
   /* 配置必须在脚本执行前挂上，页首字段在真实页面里就是这么做的 */
-  if (opts.cfg) await p.evaluate((c) => { window.LS_CONFIG = c; }, opts.cfg);
+  if (opts && opts.cfg) await p.evaluate((c) => { window.LS_CONFIG = c; }, opts.cfg);
   await p.addScriptTag({ url: 'https://www.cnblogs.com/document-theme.js' });
   await p.waitForTimeout(900);
   return { ctx, p, errs };
@@ -100,14 +104,14 @@ const probe = () => {
   const browser = await chromium.launch();
 
   /* ---------- 1. 默认：有署名、指向仓库、只有一条 ---------- */
-  console.log('\n[1] 默认开启');
+  console.log('\n[1] 默认输出');
   {
     const { ctx, p, errs } = await open(browser, {});
     const r = await p.evaluate(probe);
     eq('署名只有一个', r.n, 1);
     ck('挂在 #footer 里面', r.inFooter, r);
     ck('是 #footer 的最后一个子节点', r.lastChild, r);
-    eq('默认文案', r.text, '主题 · 流苏');
+    eq('文案写死', r.text, TEXT);
     eq('指向仓库', r.href, REPO);
     eq('新窗口打开', r.target, '_blank');
     ck('rel 带 noopener', /noopener/.test(r.rel || ''), r.rel);
@@ -117,15 +121,13 @@ const probe = () => {
     await ctx.close();
   }
 
-  /* ---------- 2. 幂等：结构重建 / DCL 补调后仍是一条 ---------- */
+  /* ---------- 2. 幂等：DCL 补调后仍是一条 ---------- */
   console.log('\n[2] 重复调用不叠加');
   {
     const { ctx, p } = await open(browser, {});
     const r = await p.evaluate(() => {
-      /* 模拟「正文后到时补一次」那条路径：boot 已跑过，再走一遍 DCL 里的调用 */
       document.dispatchEvent(new Event('DOMContentLoaded'));
       const n1 = document.querySelectorAll('.qb-credit').length;
-      /* 再极端一点：把脚本的整体初始化逻辑重复触发（幂等判据必须扛住） */
       document.dispatchEvent(new Event('DOMContentLoaded'));
       return {
         n1,
@@ -139,25 +141,26 @@ const probe = () => {
     await ctx.close();
   }
 
-  /* ---------- 3. credit:false 真的能关掉 ---------- */
-  console.log('\n[3] credit:false');
+  /* ---------- 3. 写死：配置里关不掉 ---------- */
+  console.log('\n[3] credit:false 不生效（写死）');
   {
     const { ctx, p, errs } = await open(browser, { cfg: { credit: false } });
     const r = await p.evaluate(probe);
-    eq('署名不出现', r.n, 0);
-    eq('generator 也不写', r.genN, 0);
+    eq('署名照样出现', r.n, 1);
+    eq('文案不受配置影响', r.text, TEXT);
+    eq('generator 照写', r.genN, 1);
     ck('页面其余功能正常（左栏已建）', r.left, r);
     ck('没有 JS 报错', errs.length === 0, errs);
     await ctx.close();
   }
 
-  /* ---------- 4. 自定义文案 ---------- */
-  console.log('\n[4] 自定义文案');
+  /* ---------- 4. 写死：自定义文案也不生效 ---------- */
+  console.log('\n[4] credit 传字符串也不改文案');
   {
     const { ctx, p } = await open(browser, { cfg: { credit: 'Theme by Ep' } });
     const r = await p.evaluate(probe);
-    eq('文案被替换', r.text, 'Theme by Ep');
-    eq('地址仍指向仓库', r.href, REPO);
+    eq('文案仍是写死那句', r.text, TEXT);
+    eq('地址仍是仓库', r.href, REPO);
     await ctx.close();
   }
 

@@ -121,7 +121,7 @@ js 由页首自己从 GitHub 仓库加载（jsDelivr 镜像，地址里钉了版
 | `document-theme.js` | 2 处（主源 + 备源各一处） |
 | `qb-right` | **0 处**（有的话说明页脚旧脚本没清干净） |
 
-页面上看：左栏有内容、右栏有公告和搜索/积分/排行榜、顶栏 59px、页脚末行有「主题 · 流苏」。
+页面上看：左栏有内容、右栏有公告和搜索/积分/排行榜、顶栏 59px、页脚末行有 `Theme powered by cnblogs-document-theme`。
 逐项验收清单与排错表见[安装-详解](docs/安装-详解.md)。
 
 <details>
@@ -162,8 +162,7 @@ window.LS_CONFIG = {
   notice: {
     title: '公告',
     html: '<p>你好，我是 <b>你的名字</b></p>'
-  },
-  credit: true              // 页脚署名「主题 · 流苏」；false 关闭，字符串则自定义文案
+  }
 };
 ```
 
@@ -178,7 +177,6 @@ window.LS_CONFIG = {
 | `code` | `{ lineNumbers: true, copy: true }` | 代码块行号与复制按钮。`lineNumbers:false` 去行号（园方那套也一起收），`copy:false` 去按钮，`code:false` 整块不加工 |
 | `nav` | **按当前站点自动生成** | 顶栏。`{ brand, home, logo, mark, dark, links: [{ t, h, b, on }] }`，`links` 整体替换 |
 | `notice` | **博客园「公告」字段原文** | 公告。`{ show, title, html }`；`show:false` 隐藏，`html:''`（默认）用后台公告字段 |
-| `credit` | `true` | 页脚署名。`false` 关闭（连 `<meta name="generator">` 一起不写）；写字符串则替换文案，链接仍指向仓库 |
 
 ### 不配也能用（v7.18 起）
 
@@ -232,11 +230,14 @@ window.LS_CONFIG = {
 
 ## 许可
 
-[MIT](LICENSE) —— 商用、二改、再发布都可以，**不要求署名**。
+[MIT](LICENSE) —— 商用、二改、再发布都可以，**法律上不要求署名**。
 
-**但有一个请求**：页脚那行「主题 · 流苏 ↗」默认是开着的，留着能让更多人找到这个主题；
-不想留也没关系，在 `LS_CONFIG` 里写 `credit: false` 一行关掉，不影响任何功能。
-（写在[配置项](#配置项)末尾，保存后前台 `Ctrl+F5` 即可，不用碰任何文件。）
+**但页脚有一行是写死的**：`Theme powered by cnblogs-document-theme ↗`，链回仓库。
+它在 js 里，配置对象里没有对应的键 —— 写 `credit: false` 不生效，界面上也没有开关。
+
+这是「让人敢用」和「让下一个人找到它」之间的一个选择：默认留着，不需要使用者做决定。
+真不想要就 fork 之后删掉 `initCredit()` 里那一行，重新生成 js 即可，MIT 允许。
+（说明白：任何前端代码都锁不住，这里也没打算锁 —— 所谓写死，只是不给开关。）
 
 > 数据边界顺便说清：主题代码里没有发往作者服务器的请求，也没有埋点。
 > 走 jsDelivr 镜像时下载量会计入 [jsDelivr 公开统计](https://data.jsdelivr.com/v1/stats/packages/gh/zsy0216/cnblogs-document-theme)，

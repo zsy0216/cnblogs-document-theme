@@ -1,8 +1,8 @@
-<!-- 流苏主题 v7.27 · 2026-11-17 页脚 HTML 重要脚本
+<!-- 流苏主题 v7.28 · 2026-11-17 页脚 HTML 重要脚本
      位置：博客园后台 -> 设置 -> 页脚 HTML 代码
      说明：1. 这里的 script 包含全部 DOM 操作逻辑（目录生成、滚动高亮、部件搬运）。2. 粘贴前务必备份原有内容。3. 博客园 HTML 校验器：确保没有未配对的尖括号，所有符号合法。 -->
 <script>
-/* 流苏主题 v7.27 · 2026-11-17 页脚：列表页文章目录 / 详情页文章目录 / 归档时间线 / 分页 / 回到顶部 / 滚动高亮 */
+/* 流苏主题 v7.28 · 2026-11-17 页脚：列表页文章目录 / 详情页文章目录 / 归档时间线 / 分页 / 回到顶部 / 滚动高亮 */
 (function () {
   'use strict';
 
@@ -109,15 +109,7 @@
         show: true,
         title: '公告',
         html: ''
-      },
-
-      /* 页脚署名：默认在园方页脚末尾加一行「主题 · 流苏」，链回仓库。
-         主题是 MIT，署名不是法律义务，所以这里给的是可关的默认值而不是死代码：
-           credit: false        → 整段不出现
-           credit: 'Theme by X' → 换成自己的文案（地址仍指向仓库）
-         为什么不做成 CSS 伪元素：CSS 生成不出可点链接，用户删一条样式就没了，
-         观感更像被硬塞了一块广告。 */
-      credit: true
+      }
     };
     /* LS_CONFIG 为正式名；QB_CONFIG 是 v6.29 及以前的旧名，保留兼容不删。
        两者要合并而不是二选一：页面上若已有 window.LS_CONFIG = {}（空对象也是真值），
@@ -1972,20 +1964,22 @@
     t = setTimeout(hide, 7000);
   }
 
-  /* ============ 页脚署名（v7.26） ============
-     在园方页脚末尾加一行「主题 · 流苏」，链回仓库；顺带写 <meta name="generator">。
-       1) MIT 不强制保留署名，这行只是默认值，credit:false 关掉即可；
-       2) 只走 JS 不写 CSS 伪元素：CSS 生成不出可点链接，删一行样式就没了；
-       3) generator 是无视觉成本的行业惯例（WordPress / Hugo / VitePress 都这么标），
-          也给「谁在用这套主题」留了一条可被技术栈检测工具读到的线索。
-     #footer 博客园每页都有（备案那几行）；微信内置浏览器下整段脚本本就不跑，不必兜。 */
+  /* ============ 页脚署名（v7.28） ============
+     写死在 js 里，**没有配置开关**：配置层已经不认识 credit 这个键，写 false 也无处生效。
+     取舍说明：
+       · 主题做成 MIT 是为了让人敢用，署名留一行是让下一个人找到它；
+       · 两边都要，就只能取这个折中 —— 默认有、不用配置、也不在文档里劝人保留；
+       · 为什么不做成 CSS 伪元素：CSS 生成不出可点链接，删一行样式就没了，
+         观感更像被硬塞了一块广告，反而是这种「跟着 js 走」的更干净。
+     能删吗：能。js 是公开可读的，fork 之后改掉这一行即可，MIT 允许。
+     所谓「写死」只是让普通使用者不必做决定，不是技术上锁住 —— 任何前端代码都锁不住。
+     另写一条 <meta name="generator">：零视觉成本，WordPress / Hugo / VitePress 都这么标。
+     文案：Theme powered by cnblogs-document-theme（拆成两段是为了窄屏断行，见下）。 */
   function initCredit() {
-    if (CFG.credit === false) return;
-
     if (!document.querySelector('meta[name="generator"]')) {
       var gen = mk('meta');
       gen.setAttribute('name', 'generator');
-      gen.setAttribute('content', 'cnblogs-document-theme (流苏主题)');
+      gen.setAttribute('content', 'cnblogs-document-theme');
       (document.head || document.documentElement).appendChild(gen);
     }
 
@@ -1993,13 +1987,16 @@
     /* 幂等：boot 与 DOMContentLoaded 各调一次，贴两遍脚本也不要叠两行 */
     if (!ft || ft.querySelector('.qb-credit')) return;
 
-    var text = typeof CFG.credit === 'string' && CFG.credit.replace(/\s/g, '') ? CFG.credit : '主题 · 流苏';
     var bar = mk('div', 'qb-credit');
-    var a = mk('a', null, text);
+    var a = mk('a', null, '');
+    /* 拆两段是为了窄屏断行好看：仓库名单独包一层 nowrap，320px 下会断在「by」后面，
+       而不是把 cnblogs-document-theme 从连字符处劈成两半（实测那样很难看）。 */
+    a.appendChild(document.createTextNode('Theme powered by '));
+    a.appendChild(mk('span', 'qb-credit-name', 'cnblogs-document-theme'));
     a.href = REPO;
     a.target = '_blank';
     a.rel = 'noopener';
-    a.title = '博客园「文档风」主题 · MIT 开源，点击查看源码';
+    a.title = 'cnblogs-document-theme · 博客园文档风主题 · MIT';
     bar.appendChild(a);
     ft.appendChild(bar);
   }
