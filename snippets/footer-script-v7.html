@@ -1,8 +1,8 @@
-<!-- 流苏主题 v7.25 · 2026-11-17 页脚 HTML 重要脚本
+<!-- 流苏主题 v7.26 · 2026-11-17 页脚 HTML 重要脚本
      位置：博客园后台 -> 设置 -> 页脚 HTML 代码
      说明：1. 这里的 script 包含全部 DOM 操作逻辑（目录生成、滚动高亮、部件搬运）。2. 粘贴前务必备份原有内容。3. 博客园 HTML 校验器：确保没有未配对的尖括号，所有符号合法。 -->
 <script>
-/* 流苏主题 v7.25 · 2026-11-17 页脚：列表页文章目录 / 详情页文章目录 / 归档时间线 / 分页 / 回到顶部 / 滚动高亮 */
+/* 流苏主题 v7.26 · 2026-11-17 页脚：列表页文章目录 / 详情页文章目录 / 归档时间线 / 分页 / 回到顶部 / 滚动高亮 */
 (function () {
   'use strict';
 
@@ -37,6 +37,10 @@
     while (parts.length && /^博客园$/.test(parts[parts.length - 1])) parts.pop();
     return parts.length ? parts[parts.length - 1] : '';
   })();
+
+  /* 主题仓库：页脚署名反链与 <meta name="generator"> 共用这一处地址。
+     要搬仓库只改这一行，别在下面各处再写一遍。 */
+  var REPO = 'https://github.com/zsy0216/cnblogs-document-theme';
 
   /* 归档默认指向「当前年月」：/<app>/p/archive/ 根路径实测 404，必须带年月。
      配置里写死的年月下个月就失效，所以链接支持占位符 —— 见 resolveHref。 */
@@ -105,7 +109,15 @@
         show: true,
         title: '公告',
         html: ''
-      }
+      },
+
+      /* 页脚署名：默认在园方页脚末尾加一行「主题 · 流苏」，链回仓库。
+         主题是 MIT，署名不是法律义务，所以这里给的是可关的默认值而不是死代码：
+           credit: false        → 整段不出现
+           credit: 'Theme by X' → 换成自己的文案（地址仍指向仓库）
+         为什么不做成 CSS 伪元素：CSS 生成不出可点链接，用户删一条样式就没了，
+         观感更像被硬塞了一块广告。 */
+      credit: true
     };
     /* LS_CONFIG 为正式名；QB_CONFIG 是 v6.29 及以前的旧名，保留兼容不删。
        两者要合并而不是二选一：页面上若已有 window.LS_CONFIG = {}（空对象也是真值），
@@ -1960,6 +1972,38 @@
     t = setTimeout(hide, 7000);
   }
 
+  /* ============ 页脚署名（v7.26） ============
+     在园方页脚末尾加一行「主题 · 流苏」，链回仓库；顺带写 <meta name="generator">。
+       1) MIT 不强制保留署名，这行只是默认值，credit:false 关掉即可；
+       2) 只走 JS 不写 CSS 伪元素：CSS 生成不出可点链接，删一行样式就没了；
+       3) generator 是无视觉成本的行业惯例（WordPress / Hugo / VitePress 都这么标），
+          也给「谁在用这套主题」留了一条可被技术栈检测工具读到的线索。
+     #footer 博客园每页都有（备案那几行）；微信内置浏览器下整段脚本本就不跑，不必兜。 */
+  function initCredit() {
+    if (CFG.credit === false) return;
+
+    if (!document.querySelector('meta[name="generator"]')) {
+      var gen = mk('meta');
+      gen.setAttribute('name', 'generator');
+      gen.setAttribute('content', 'cnblogs-document-theme (流苏主题)');
+      (document.head || document.documentElement).appendChild(gen);
+    }
+
+    var ft = document.getElementById('footer');
+    /* 幂等：boot 与 DOMContentLoaded 各调一次，贴两遍脚本也不要叠两行 */
+    if (!ft || ft.querySelector('.qb-credit')) return;
+
+    var text = typeof CFG.credit === 'string' && CFG.credit.replace(/\s/g, '') ? CFG.credit : '主题 · 流苏';
+    var bar = mk('div', 'qb-credit');
+    var a = mk('a', null, text);
+    a.href = REPO;
+    a.target = '_blank';
+    a.rel = 'noopener';
+    a.title = '博客园「文档风」主题 · MIT 开源，点击查看源码';
+    bar.appendChild(a);
+    ft.appendChild(bar);
+  }
+
   /* 4b. 回到顶部
      原来用 border-right + border-bottom 转 -45° 画箭头，那条「拐角」实际并不朝正上，
      而且只有两个折边、没有竖杆，缩到 10px 看着像个小逗号。现在换成 inline SVG
@@ -2681,6 +2725,8 @@
     initFavicon();
     initDarkMode();
     initTheme();
+    /* 页脚署名：包内脚本可能早于 #footer 解析，DCL 那次会补上，内部幂等 */
+    initCredit();
     if (CFG.backToTop) createBackToTop();
     /* 续读放在最后：它要在 load 之后才滚，早调晚调不影响首帧 */
     initResume();
@@ -2761,6 +2807,8 @@
     enhancePost();
     /* 分类条 / 标签胶囊同样带「已存在则复用」判据，重复调用安全 */
     initTaxonomy();
+    /* #footer 那时可能还没解析到，这里补一次；已有 .qb-credit 就直接返回 */
+    initCredit();
     initMobileToc();
     initMobileMenu();
     var lc = document.getElementById('qb-left');

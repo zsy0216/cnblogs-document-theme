@@ -24,6 +24,15 @@
 
 ![文章页](docs/images/post-v7.png)
 
+## 谁在用
+
+| 站点 | 备注 |
+|:---|:---|
+| [张帅银的博客](https://www.cnblogs.com/zhangshuaiyin/) | 主题作者的站，每次改动先在这里跑 |
+
+装完不用打招呼。但**欢迎[登记](docs/使用案例.md)** —— 填个地址就行，我会加进这张表。
+反过来，想知道「别人装完长什么样、有没有踩坑」，也是看这张表。
+
 ## 安装
 
 > ⚠️ **第 0 步（最重要）**：设置 → 皮肤 → 选择 **`Custom`（自定义）**，否则后续全部不生效。
@@ -113,7 +122,8 @@ window.LS_CONFIG = {
   notice: {
     title: '公告',
     html: '<p>你好，我是 <b>你的名字</b></p>'
-  }
+  },
+  credit: true              // 页脚署名「主题 · 流苏」；false 关闭，字符串则自定义文案
 };
 ```
 
@@ -128,6 +138,7 @@ window.LS_CONFIG = {
 | `code` | `{ lineNumbers: true, copy: true }` | 代码块行号与复制按钮。`lineNumbers:false` 去行号（园方那套也一起收），`copy:false` 去按钮，`code:false` 整块不加工 |
 | `nav` | **按当前站点自动生成** | 顶栏。`{ brand, home, logo, mark, dark, links: [{ t, h, b, on }] }`，`links` 整体替换 |
 | `notice` | **博客园「公告」字段原文** | 公告。`{ show, title, html }`；`show:false` 隐藏，`html:''`（默认）用后台公告字段 |
+| `credit` | `true` | 页脚署名。`false` 关闭（连 `<meta name="generator">` 一起不写）；写字符串则替换文案，链接仍指向仓库 |
 
 ### 不配也能用（v7.18 起）
 
@@ -169,6 +180,7 @@ window.LS_CONFIG = {
 | [分类与标签](docs/功能-分类与标签.md) | 原生分类/标签块为何拿不到、keywords 抽分类、列表页筛选条、缓存与降级 |
 | [移动端与阅读](docs/功能-移动端与阅读.md) | 导航与目录抽屉、宽表横滑与首列吸附、代码折叠、续读记忆、打印样式、Markdown 元素补全 |
 | [开发指南](docs/开发指南.md) | 源码结构、构建与版本管理、压缩、验证脚本、文件清单 |
+| [使用案例](docs/使用案例.md) | 谁在用这套主题、怎么登记、收录标准 |
 | [推广文](docs/promo-post.md) | 发到博客园 / CSDN 的介绍文章（配图 + 安装步骤） |
 
 本地 `preview/home-v7.html` / `preview/post-v7.html` 是离线预览页（线上 DOM + 主题 CSS 合成），可直接用浏览器打开看效果。
@@ -180,4 +192,12 @@ window.LS_CONFIG = {
 
 ## 许可
 
-[MIT](LICENSE)
+[MIT](LICENSE) —— 商用、二改、再发布都可以，**不要求署名**。
+
+**但有一个请求**：页脚那行「主题 · 流苏 ↗」默认是开着的，留着能让更多人找到这个主题；
+不想留也没关系，在 `LS_CONFIG` 里写 `credit: false` 一行关掉，不影响任何功能。
+（写在[配置项](#配置项)末尾，保存后前台 `Ctrl+F5` 即可，不用碰任何文件。）
+
+> 数据边界顺便说清：主题代码里没有发往作者服务器的请求，也没有埋点。
+> 走 jsDelivr 镜像时下载量会计入 [jsDelivr 公开统计](https://data.jsdelivr.com/v1/stats/packages/gh/zsy0216/cnblogs-document-theme)，
+> 那是 jsDelivr 的计数，不是我加的追踪。

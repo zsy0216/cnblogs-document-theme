@@ -1,6 +1,6 @@
 /* ============================================================
-   流苏主题 v7.25 · 2026-11-17
-   最近：分类与标签：详情页标题下分类+标签胶囊，列表页顶部分类筛选条；分类名单 localStorage 缓存 7 天，取不到则降级为只显示标签
+   流苏主题 v7.26 · 2026-11-17
+   最近：页脚默认署名反链（credit:false 可关）+ meta generator；README 增「谁在用」，新增使用案例登记模板
    ------------------------------------------------------------
    主题 v6 —— 基于博客园 2026 真实 DOM 重写
    ------------------------------------------------------------
@@ -2063,6 +2063,32 @@ body.qb-dark #cnblogs_post_body mark { background: rgba(187, 128, 9, .40); color
 #footer a { color: var(--meta) !important; }
 #footer a:hover { color: var(--accent-deep) !important; }
 #footer img { vertical-align: -3px; height: 14px; }
+
+/* 页脚署名（v7.26）：比备案那两行再淡一档，悬停才提亮，不抢视觉。
+   内容是脚本按 CFG.credit 生成的，credit:false 时这里没有节点，样式留着无害。 */
+#footer .qb-credit {
+    margin-top: 6px;
+    font-size: 12px;
+    opacity: .85;
+    transition: opacity .15s;
+}
+#footer .qb-credit:hover { opacity: 1; }
+#footer .qb-credit a {
+    color: var(--meta) !important;
+    text-decoration: none;
+    border-bottom: 1px dashed transparent;
+}
+/* 常驻一个 ↗：手机上没法 hover，没有它就看不出这行是外链 */
+#footer .qb-credit a::after {
+    content: '↗';
+    margin-left: 2px;
+    font-size: .92em;
+    opacity: .8;
+}
+#footer .qb-credit a:hover {
+    color: var(--accent-deep) !important;
+    border-bottom-color: currentColor;
+}
 
 /* ---------- 8. 回到页首按钮 ---------- */
 /* 回到顶部：44px 圆形 + 上箭头 + 阅读进度环 */

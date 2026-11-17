@@ -1,0 +1,55 @@
+name: 登记使用案例
+description: 把你的博客加进 README 的「谁在用」列表，填三样就够
+title: "[使用案例] "
+labels: ["showcase"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        填完我会把站点加进 [README 的「谁在用」](https://github.com/zsy0216/cnblogs-document-theme#谁在用) 和 [使用案例](https://github.com/zsy0216/cnblogs-document-theme/blob/master/docs/使用案例.md)。
+
+        只要**地址、站点名、一句话说明**三样。说明写你最想告诉别人的那点就行，比如「只改了强调色」「内联安装」「和某个插件打架改了哪条选择器」。
+
+  - type: input
+    id: site
+    attributes:
+      label: 站点地址
+      description: 首页或任意一篇文章的地址都行，我会顺着点进去看。
+      placeholder: https://www.cnblogs.com/你的博客名/
+    validations:
+      required: true
+
+  - type: input
+    id: name
+    attributes:
+      label: 站点名
+      description: 显示在表格第一列的名字。
+      placeholder: 某某的博客
+    validations:
+      required: true
+
+  - type: textarea
+    id: note
+    attributes:
+      label: 一句话说明
+      description: 改了什么、遇到什么坑、或者哪个功能最常用。空着也行，我按默认配置写。
+      placeholder: 默认配置，只把 accent 换成了蓝色；内联安装，没有上传 js。
+    validations:
+      required: false
+
+  - type: input
+    id: version
+    attributes:
+      label: 主题版本
+      description: 页面源码里搜 `流苏主题 v7.` 就能看到；记不清就留空。
+      placeholder: v7.26
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: confirm
+    attributes:
+      label: 确认
+      options:
+        - label: 站点可以公开访问，且主题完整生效（三栏、顶栏、左栏目录都在）
+          required: true

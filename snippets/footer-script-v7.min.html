@@ -1,4 +1,4 @@
-<!-- 流苏主题 v7.25 · 2026-11-17 页脚 HTML（压缩版）
+<!-- 流苏主题 v7.26 · 2026-11-17 页脚 HTML（压缩版）
      位置：博客园后台 -> 设置 -> 页脚 HTML 代码（粘贴前先清空）
      说明：本文件由 _dev-tools/gen-footer-min.py 从 footer-script-v7.html 生成，
            功能完全一致，只删注释与缩进。要改逻辑请改源文件后重新生成，不要改这里。 -->
@@ -16,6 +16,7 @@ var parts = String(document.title || '').split(' - ').map(function (s) { return 
 while (parts.length && /^博客园$/.test(parts[parts.length - 1])) parts.pop();
 return parts.length ? parts[parts.length - 1] : '';
 })();
+var REPO = 'https://github.com/zsy0216/cnblogs-document-theme';
 var NOW = new Date();
 function resolveHref(h) {
 return String(h == null ? '' : h).replace(/\{(ym|y|m)\}/g, function (_, k) {
@@ -55,7 +56,8 @@ notice: {
 show: true,
 title: '公告',
 html: ''
-}
+},
+credit: true
 };
 var u = {};
 [window.QB_CONFIG, window.LS_CONFIG].forEach(function (src) {
@@ -1458,6 +1460,26 @@ document.body.appendChild(box);
 requestAnimationFrame(function () { box.classList.add('show'); });
 t = setTimeout(hide, 7000);
 }
+function initCredit() {
+if (CFG.credit === false) return;
+if (!document.querySelector('meta[name="generator"]')) {
+var gen = mk('meta');
+gen.setAttribute('name', 'generator');
+gen.setAttribute('content', 'cnblogs-document-theme (流苏主题)');
+(document.head || document.documentElement).appendChild(gen);
+}
+var ft = document.getElementById('footer');
+if (!ft || ft.querySelector('.qb-credit')) return;
+var text = typeof CFG.credit === 'string' && CFG.credit.replace(/\s/g, '') ? CFG.credit : '主题 · 流苏';
+var bar = mk('div', 'qb-credit');
+var a = mk('a', null, text);
+a.href = REPO;
+a.target = '_blank';
+a.rel = 'noopener';
+a.title = '博客园「文档风」主题 · MIT 开源，点击查看源码';
+bar.appendChild(a);
+ft.appendChild(bar);
+}
 var TOP_ARROW_SVG =
 '<svg class="qb-top-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" ' +
 'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
@@ -1971,6 +1993,7 @@ initMobileMenu();
 initFavicon();
 initDarkMode();
 initTheme();
+initCredit();
 if (CFG.backToTop) createBackToTop();
 initResume();
 settle(left, 0);
@@ -2013,6 +2036,7 @@ enhanceTables();
 enhanceMarkdown();
 enhancePost();
 initTaxonomy();
+initCredit();
 initMobileToc();
 initMobileMenu();
 var lc = document.getElementById('qb-left');
