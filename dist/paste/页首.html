@@ -1,7 +1,6 @@
-<!-- 流苏主题 v7.26 · 页首 HTML（全托管）
-     只做三件事：占住顶栏位置、放配置、同步加载样式脚本。
-     菜单与公告由脚本按配置渲染，这里没有任何菜单内容。
-     除非升级版本号，本字段不需要再改。 -->
+<!-- 流苏主题 v7.27 · 页首 HTML（全托管 · 通用版）
+     贴到「页首 HTML 代码」字段即可：js 从 GitHub 仓库（jsDelivr）加载，不需要上传任何文件。
+     配置留空就用你自己的博客信息；升级时整段换新，或只改下面两个源地址的版本号。 -->
 
 <script>
 /* 归档页标记：见 CSS 里 html.qb-arc-page 一节 */
@@ -10,83 +9,56 @@ if (/\/(?:p\/)?archive\/\d{4}\/\d{1,2}/.test(location.pathname)) {
 }
 </script>
 
-<link rel="preconnect" href="https://blog-static.cnblogs.com" />
 <link rel="preconnect" href="https://gcore.jsdelivr.net" crossorigin />
-<link rel="icon" href="https://images.cnblogs.com/cnblogs_com/blogs/477677/galleries/1560097/t_261107101943_blog-icon.jpeg" />
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
 
 <!-- 1) 顶栏占位：先给 59px 白条，菜单由紧随其后的脚本填进来 -->
 <div class="qb-nav" id="qb-nav"><div class="qb-nav-inner"></div></div>
 
 <script>
 // 2) 配置层 —— 本字段里唯一需要改的就是下面这一块
-/* ===== 配置区：整个主题只有这一处要改，改完保存就生效 =====
-   ① 每个键都可以删。删光会按「当前站点」自动生成：首页 / 归档（当月）/ 分类 / 标签 / RSS，
-      品牌名取页面标题里的博客名，公告取后台「公告」字段原文。
-   ② 只写想改的键即可：nav、notice 逐项覆盖，links 整体替换。
-   ③ 字段速查
-      基础  accent 强调色 | dark 'auto'|'on'|'off' | backToTop | pager | archive | archiveTtl | gate
-      代码块 code { lineNumbers 行号, copy 复制按钮 }，写 code: false 整块关掉
-      顶栏  nav { brand 博客名, home 首页, logo 头像图, mark 十字标记, dark 暗色按钮,
-                  links [{ t 文字, h 地址, b 1=新窗口, on 1=强制高亮 }] }
-      公告  notice { show 是否显示, title 标题, html 正文（支持 HTML，留空则用后台公告字段） }
-   ④ 地址里的 {ym} 会展开成当前年月（归档必须带年月，根路径实测 404），不用每月手改。
-   ⑤ 换成自己的站：改 nav.home 与 links 里的域名即可。 */
+/* ===== 配置区：不改也能用，想更像自己的站再动 =====
+   全部留空时，脚本按「当前站点」自动推导：
+     · 顶栏品牌 = 页面标题里的博客名；
+     · 首页 / 归档（当月）/ 分类 / 标签 / RSS 都指向你自己的博客；
+     · 公告用博客园后台「公告」字段的原文，不内置任何人的文案。
+   下面三块都是注释，需要哪块就把 // 去掉再改。完整字段表见仓库 README「配置项」。 */
 window.LS_CONFIG = {
-  /* 下面两项默认就够用，所以留成注释而不是写死值。
-     原因：本对象里的键会盖掉旧名 window.QB_CONFIG 的同名键 ——
-     写死 accent: '' 就等于把 QB_CONFIG 里设的强调色整个吞掉。
-     要用时去掉行首的两个斜杠即可。 */
+  /* ① 强调色：换一个 hex 就是另一套配色，暗色下会自动派生深/浅两档 */
   // accent: '#3b82f6',
-  // code: { lineNumbers: false, copy: false },
 
-  /* 顶栏导航 */
-  nav: {
-    brand: 'Ep流苏',
-    home: 'https://www.cnblogs.com/zhangshuaiyin/',
-    logo: 'https://images.cnblogs.com/cnblogs_com/blogs/477677/galleries/1560097/t_261107102128_QQ%E5%9B%BE%E7%89%8720201122102348.jpg',
-    links: [
-      { t: '首页', h: 'https://www.cnblogs.com/zhangshuaiyin/' },
-      { t: '归档', h: 'https://www.cnblogs.com/zhangshuaiyin/p/archive/{ym}' },
-      { t: '分类', h: 'https://www.cnblogs.com/zhangshuaiyin/categories' },
-      { t: '标签', h: 'https://www.cnblogs.com/zhangshuaiyin/tag' },
-      { t: '留言', h: 'https://msg.cnblogs.com/send/Ep%E6%B5%81%E8%8B%8F' },
-      { t: 'GitHub', h: 'https://github.com/zsy0216', b: 1 },
-      { t: 'RSS', h: 'https://www.cnblogs.com/zhangshuaiyin/rss', b: 1 },
-      { t: '主页', h: 'https://home.cnblogs.com/u/zhangshuaiyin' },
-      { t: '管理', h: 'https://i.cnblogs.com/settings/', b: 1 }
-    ]
-  },
+  /* ② 顶栏菜单：links 是「整体替换」不是追加，写了就只显示你写的这几条。
+        地址里 {ym} 会展开成当前年月（归档必须带年月，根路径实测 404）。 */
+  // nav: {
+  //   brand: '我的博客',
+  //   home: 'https://www.cnblogs.com/你的博客名/',
+  //   links: [
+  //     { t: '首页', h: 'https://www.cnblogs.com/你的博客名/' },
+  //     { t: '归档', h: 'https://www.cnblogs.com/你的博客名/p/archive/{ym}' },
+  //     { t: 'GitHub', h: 'https://github.com/你的账号', b: 1 }
+  //   ]
+  // },
 
-  /* 公告（右栏第一张卡） */
-  notice: {
-    show: true,
-    title: '公告',
-    html: '<p>你好，我是 <b>EP流苏</b></p>'
-        + '<p>记录 Java 后端、中间件与工具排错的笔记。<br>多为实践中踩坑后的整理，欢迎交流</p>'
-        + '<p class="qb-notice-tip">文章均为个人实践总结，转载请注明出处</p>'
-        + '<p class="qb-notice-links">'
-        + '<a href="https://github.com/zsy0216" target="_blank" rel="noopener">GitHub</a>'
-        + '<a href="https://www.cnblogs.com/zhangshuaiyin/rss" target="_blank" rel="noopener">RSS</a>'
-        + '<a href="https://msg.cnblogs.com/send/Ep%E6%B5%81%E8%8B%8F">留言</a>'
-        + '</p>'
-  }
+  /* ③ 页脚那行「主题 · 流苏」：不想留就放开下面这行（MIT，不强制署名） */
+  // credit: false
 };
 </script>
 
 <script>
-/* 3) 同步加载：镜像优先，博客园文件兜底。
-     · 镜像 = GitHub 仓库（jsDelivr）：改版只要 push，不必再登后台传文件；
-     · 兜底 = 博客园文件空间：国内 CDN 稳，镜像抽风时由 onerror 自动接管；
-     · 镜像失败过就 1 小时内直接走博客园，免得每次进站都等一遍超时（记 localStorage，
+/* 3) 同步加载：主源 + 备源，失败自动切换（不需要你上传任何文件）。
+     · 主源 = GitHub 仓库（jsDelivr，钉 tag）：作者 push 打完 tag 就生效，任何人可直接引用；
+     · 备源 = 主源失效时自动接管（装配脚本按发放对象写入，见下方 FALLBACK 常量）；
+     · 主源失败过就 1 小时内直接走备源，免得每次进站都等一遍超时（记 localStorage，
        不写 cookie，换设备互不影响，也不会把失败态永久钉死）；
      · 仍然必须是 document.write：博客园会把页首里的外部 <script src> 改写成 defer，
        那样样式就排到首帧之后；内联脚本不会被改写，document.write 插入的是「解析期
        脚本」—— 阻塞解析、按序立刻执行，顶栏/目录/侧栏/公告全部赶在首帧之前就位。
      · 标签名拆开拼，是为了页面上不出现脚本标签的开闭字面量（HTML 校验器会误判）。 */
 (function () {
-  var s = 'script', V = '7.26';
-  var MIRROR = 'https://gcore.jsdelivr.net/gh/zsy0216/cnblogs-document-theme@v7.26/dist/document-theme.js';
-  var ORIGIN = 'https://blog-static.cnblogs.com/files/blogs/477677/document-theme.js?v=' + V;
+  var s = 'script';
+  /* 两个地址都是完整 URL（含版本号）。升级 = 整段换新页首，或只把这两行的版本号改掉。 */
+  var MIRROR = 'https://gcore.jsdelivr.net/gh/zsy0216/cnblogs-document-theme@v7.27/dist/document-theme.js';
+  var FALLBACK = 'https://cdn.jsdelivr.net/gh/zsy0216/cnblogs-document-theme@v7.27/dist/document-theme.js';
   var KEY = 'qb-src-fail', TTL = 3600000;
 
   function recentlyFailed() {
@@ -100,16 +72,16 @@ window.LS_CONFIG = {
     document.write('<' + s + ' src="' + url + '"' + (tag || '') + '><' + '/' + s + '>');
   }
 
-  /* 镜像挂了：记下时间，再异步补一份博客园的文件。
+  /* 主源挂了：记下时间，再异步补一份备源。
      这里不能用 document.write —— 失败事件可能已经晚于解析期，再写会清空文档。 */
   window.__qbSrcFail = function () {
     try { localStorage.setItem(KEY, Date.now()); } catch (e) {}
     var e = document.createElement(s);
-    e.src = ORIGIN;
+    e.src = FALLBACK;
     (document.head || document.documentElement).appendChild(e);
   };
 
-  if (recentlyFailed()) write(ORIGIN, '');
+  if (recentlyFailed()) write(FALLBACK, '');
   else write(MIRROR, ' onerror="window.__qbSrcFail()"');
 })();
 </script>

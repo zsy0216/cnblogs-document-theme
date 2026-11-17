@@ -1,37 +1,24 @@
 /**
- * v7.22 专项验证：页首加载器的双源逻辑（镜像优先 / 博客园兜底 / 失败记忆）。
+ * 页首加载器的双源逻辑，两份页首各测一遍。
  *
- * 这条链路极易「本地看不出来、线上才炸」，所以必须真跑三种情况：
- *   A 镜像正常   → 只发一个脚本请求，主题生效，不写失败记忆
- *   B 镜像失效   → 先试镜像（失败）再自动补兜底源，主题仍然生效，写入失败记忆
- *   C 记忆生效   → 同一 context 再进站，直接走兜底源，不再空等镜像
+ * 现在有两份（gen-deploy.py 生成）：
+ *   dist/paste/页首.html          通用版（发给别人）：主源 gcore、备源 cdn，两个都是 jsDelivr
+ *   dist/paste/页首-我的站.html    作者版：主源 gcore、备源作者自己的 blog-static
  *
- * 做法：读真实的 dist/paste/页首.html，把两个源地址替换成测试域名，
- * 再用 page.route 决定哪个域名给内容、哪个 abort —— 不依赖外网，也不改产物。
+ * 每条链路都要真跑四种情况：
+ *   A 主源正常   → 只发一个脚本请求，主题生效，不写失败记忆
+ *   B 主源失效   → 先试主源再切备源，主题仍生效，写入失败记忆
+ *   C 记忆生效   → 同 context 再进站，直接走备源，不再空等主源
+ *   D 记忆过期   → 回到主源优先
+ *
+ * 做法：读真实的产物页首，把两个源地址换成测试域名，用 page.route 决定谁给内容、谁 abort。
+ * 不依赖外网，也不改产物。正则取地址而不硬编码版本号 —— 版本随发版变化。
  */
 const fs = require('fs');
 const { chromium } = require('playwright-core');
 
 const ROOT = 'E:/Documents/WorkBuddy/2026-10-11-15-08-36/blogcn-nicen-theme/';
-const HEAD = fs.readFileSync(ROOT + 'dist/paste/页首.html', 'utf8');
 const BUNDLE = fs.readFileSync(ROOT + 'dist/document-theme.js', 'utf8');
-
-// 镜像地址按 tag 钉死（@v7.22 这种），版本号随发版变化，所以用正则取，别硬编码版本。
-const MIRROR_LIT = (HEAD.match(/'https:\/\/gcore\.jsdelivr\.net\/gh\/zsy0216\/cnblogs-document-theme@[^']+'/) || [])[0];
-const ORIGIN_LIT = "'https://blog-static.cnblogs.com/files/blogs/477677/document-theme.js?v='";
-const MIRROR = 'https://mirror.test/bundle.js';
-const ORIGIN = 'https://origin.test/bundle.js';
-
-if (!MIRROR_LIT || !HEAD.includes(ORIGIN_LIT)) {
-  console.error('✗ 页首里找不到两个源地址的字面量，加载器可能被改写了');
-  process.exit(1);
-}
-
-const PAGE = '<!doctype html><html><head><meta charset="utf-8"><title>loader</title></head><body>'
-  + HEAD.replace(MIRROR_LIT, "'" + MIRROR + "'").replace(ORIGIN_LIT, "'" + ORIGIN + "?v='")
-  + '<div id="main"><div id="post_detail"><h1 class="postTitle">测试</h1>'
-  + '<div class="postBody"><h2>一、小节</h2><p>正文。</p></div></div></div>'
-  + '</body></html>';
 
 let bad = 0;
 function ck(label, ok, got) {
@@ -39,77 +26,112 @@ function ck(label, ok, got) {
   console.log('  ' + (ok ? '✓' : '✗') + ' ' + label + (ok ? '' : '  → ' + JSON.stringify(got)));
 }
 
-async function open(ctx, mirrorOk) {
+function lit(head, name) {
+  const m = head.match(new RegExp("var " + name + " = '([^']+)'"));
+  return m && m[1];
+}
+
+function makeCase(file, tag) {
+  const head = fs.readFileSync(ROOT + 'dist/paste/' + file, 'utf8');
+  const mirrorLit = lit(head, 'MIRROR');
+  const fallbackLit = lit(head, 'FALLBACK');
+  if (!mirrorLit || !fallbackLit) {
+    console.error('✗ ' + file + ' 里找不到 MIRROR / FALLBACK 字面量，加载器可能被改写了');
+    process.exit(1);
+  }
+  const MIRROR = 'https://' + tag + '-main.test/bundle.js';
+  const FALLBACK = 'https://' + tag + '-backup.test/bundle.js';
+  const page = '<!doctype html><html><head><meta charset="utf-8"><title>loader</title></head><body>'
+    + head
+        .replace("var MIRROR = '" + mirrorLit + "'", "var MIRROR = '" + MIRROR + "'")
+        .replace("var FALLBACK = '" + fallbackLit + "'", "var FALLBACK = '" + FALLBACK + "'")
+    + '<div id="main"><div id="post_detail"><h1 class="postTitle">测试</h1>'
+    + '<div class="postBody"><h2>一、小节</h2><p>正文。</p></div></div></div>'
+    + '</body></html>';
+  return { file, MIRROR, FALLBACK, page, mirrorLit, fallbackLit };
+}
+
+async function open(ctx, C, mainOk) {
   const p = await ctx.newPage();
   const order = [];
   p.on('request', (r) => {
     const u = r.url();
-    if (u.startsWith(MIRROR)) order.push('mirror');
-    else if (u.startsWith(ORIGIN)) order.push('origin');
+    if (u.startsWith(C.MIRROR)) order.push('main');
+    else if (u.startsWith(C.FALLBACK)) order.push('backup');
   });
   await p.route('**/*', (route) => {
     const u = route.request().url();
-    if (u.startsWith(MIRROR)) {
-      return mirrorOk
+    if (u.startsWith(C.MIRROR)) {
+      return mainOk
         ? route.fulfill({ contentType: 'application/javascript', body: BUNDLE })
         : route.abort('failed');
     }
-    if (u.startsWith(ORIGIN)) {
-      return mirrorOk
-        ? route.abort('failed')                                  // A 里不该被请求
+    if (u.startsWith(C.FALLBACK)) {
+      return mainOk
+        ? route.abort('failed')                                   /* A 里不该被请求 */
         : route.fulfill({ contentType: 'application/javascript', body: BUNDLE });
     }
     if (u.includes('images.cnblogs.com') || u.includes('blog-static')) {
       return route.fulfill({ status: 404, body: '' });
     }
-    return route.fulfill({ contentType: 'text/html; charset=utf-8', body: PAGE });
+    return route.fulfill({ contentType: 'text/html; charset=utf-8', body: C.page });
   });
   await p.goto('https://www.cnblogs.com/zhangshuaiyin/p/fake.html', { waitUntil: 'load' });
   await p.waitForTimeout(1500);
-  const nav = await p.evaluate(() => document.querySelectorAll('#qb-nav a').length);
-  const cls = await p.evaluate(() => document.documentElement.className);
-  const mem = await p.evaluate(() => localStorage.getItem('qb-src-fail'));
-  return { p, order, nav, cls, mem };
+  const st = await p.evaluate(() => ({
+    nav: document.querySelectorAll('#qb-nav a').length,
+    cls: document.documentElement.className,
+    mem: localStorage.getItem('qb-src-fail'),
+  }));
+  return { p, order, nav: st.nav, cls: st.cls, mem: st.mem };
 }
 
-(async () => {
-  const browser = await chromium.launch();
+async function runCase(browser, file, tag) {
+  const C = makeCase(file, tag);
+  console.log('\n=== ' + file + ' ===');
+  console.log('  主源 ' + C.mirrorLit);
+  console.log('  备源 ' + C.fallbackLit);
 
-  console.log('\n[A] 镜像正常');
+  console.log('\n  [A] 主源正常');
   {
     const ctx = await browser.newContext();
-    const r = await open(ctx, true);
-    ck('只请求镜像一个源', JSON.stringify(r.order) === '["mirror"]', r.order);
-    ck('主题生效（顶栏 11 条链接）', r.nav === 11, r.nav);
+    const r = await open(ctx, C, true);
+    ck('只请求主源一个', JSON.stringify(r.order) === '["main"]', r.order);
+    ck('主题生效（顶栏有链接）', r.nav >= 5, r.nav);
     ck('首帧闸门已放行（html.qb-ready）', /qb-ready/.test(r.cls), r.cls);
     ck('不写失败记忆', r.mem === null, r.mem);
     await ctx.close();
   }
 
-  console.log('\n[B] 镜像失效 → 兜底');
+  console.log('\n  [B] 主源失效 → 备源接管');
   {
     const ctx = await browser.newContext();
-    const r = await open(ctx, false);
-    ck('先试镜像再走兜底', JSON.stringify(r.order) === '["mirror","origin"]', r.order);
-    ck('兜底后主题仍生效', r.nav === 11, r.nav);
+    const r = await open(ctx, C, false);
+    ck('先试主源再走备源', JSON.stringify(r.order) === '["main","backup"]', r.order);
+    ck('切备源后主题仍生效', r.nav >= 5, r.nav);
     ck('写入失败记忆（时间戳）', /^\d{10,}$/.test(r.mem || ''), r.mem);
 
-    console.log('\n[C] 失败记忆生效（同 context 再进一次）');
-    const r2 = await open(ctx, false);
-    ck('不再尝试镜像', !r2.order.includes('mirror'), r2.order);
-    ck('首个请求就是兜底源', r2.order[0] === 'origin', r2.order);
-    ck('主题生效', r2.nav === 11, r2.nav);
+    console.log('\n  [C] 失败记忆生效（同 context 再进一次）');
+    const r2 = await open(ctx, C, false);
+    ck('不再尝试主源', !r2.order.includes('main'), r2.order);
+    ck('首个请求就是备源', r2.order[0] === 'backup', r2.order);
+    ck('主题生效', r2.nav >= 5, r2.nav);
 
-    console.log('\n[D] 记忆过期后回到镜像优先');
-    await r2.p.evaluate((ttl) => {
-      localStorage.setItem('qb-src-fail', String(Date.now() - ttl - 1000));
-    }, 3600000);
-    const r3 = await open(ctx, false);
-    ck('过期后重新试镜像', r3.order[0] === 'mirror', r3.order);
+    console.log('\n  [D] 记忆过期后回到主源优先');
+    await r2.p.evaluate(() => {
+      localStorage.setItem('qb-src-fail', String(Date.now() - 3600000 - 1000));
+    });
+    const r3 = await open(ctx, C, false);
+    ck('过期后重新试主源', r3.order[0] === 'main', r3.order);
     await ctx.close();
   }
+}
 
+(async () => {
+  const browser = await chromium.launch();
+  await runCase(browser, '页首.html', 'generic');
+  await runCase(browser, '页首-我的站.html', 'author');
   await browser.close();
-  console.log(bad ? '\n✗ ' + bad + ' 项不通过' : '\n✓ 双源加载器全部通过');
+  console.log(bad ? '\n✗ ' + bad + ' 项不通过' : '\n✓ 两份页首的双源加载全部通过');
   process.exit(bad ? 1 : 0);
 })();

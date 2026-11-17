@@ -6,14 +6,20 @@
     python _dev-tools/gen-deploy.py --out D:/x      指定输出目录
     python _dev-tools/gen-deploy.py --check         只比对，不写盘
 
-产物（全托管 = 后台只填 CSS 与页首两个字段，页脚与公告保持空白）
-    样式.css   = 「页面定制 CSS 代码」字段：首帧标记 + 完整压缩样式
-    页首.html  = 「页首 HTML 代码」字段：DNS 预连接 + 收藏夹图标 + LS_CONFIG 配置段 + 同步加载脚本
-                 （不含任何菜单 / 公告结构 —— 那些已改为脚本按配置生成）
+产物（全托管 = 后台只填 CSS 与页首两个字段，页脚与公告保持空白；**不需要上传任何文件**）
+    样式.css          = 「页面定制 CSS 代码」字段：首帧标记 + 完整压缩样式
+    页首.html         = 「页首 HTML 代码」字段（通用版，发给别人用）：
+                        配置整块留空，脚本按当前站点推导品牌名与站内链接；
+                        js 从 jsDelivr 取，主源 gcore、备源 cdn，两个地址都钉版本号。
+    页首-我的站.html  = 同一套模板，但配置是作者本站的（品牌 / 头像 / 公告 / 菜单），
+                        备源换成作者自己的博客园文件空间。只有作者自己贴这一份。
     页脚、公告两个字段留空即可，不再生成占位文件。
 
+    为什么通用版不能共用作者那份配置：v7.26 之前只有一份，别人照 README 贴完，
+    顶栏写着作者的名字、头像是作者的头像、菜单全指向作者博客 —— 那不叫装好了。
+
     --mode inline / hybrid 是备选形态，仍会生成四份（1-页首 / 2-页脚 / 3-公告 / 4-样式），
-    分别落在 dist/paste/inline/ 与 dist/paste/hybrid/。
+    分别落在 dist/paste/inline/ 与 dist/paste/hybrid/；两份都用通用配置。
 
 设计说明
     这些文件是「给博客园后台复制粘贴用的拼装件」，不是主题源码：
@@ -65,7 +71,11 @@ MIRROR_REPO = 'https://gcore.jsdelivr.net/gh/zsy0216/cnblogs-document-theme'
 def mirror_url(ver):
     """镜像地址：按版本号钉 tag，不可变、无缓存滞后。"""
     return '%s@%s/dist/document-theme.js' % (MIRROR_REPO, ver)
-CSS_URL = 'https://blog-static.cnblogs.com/files/blogs/477677/theme-v7.min.css'
+# 样式永远内联在「页面定制 CSS 代码」字段里，不走外链。
+# 理由：首帧闸门（html:not(.qb-ready) body{opacity:0}）就写在 CSS 里 —— CSS 若从外部
+# 加载，那个请求一旦失败，页面连闸门都没有，整站裸奔；内联进 HTML 则由博客园服务端直出，
+# 零请求、零失败面。代价是发版后要重贴 50KB，这是唯一但值得付的账。
+# （曾经留过一条指向 blog-static 的 CSS_URL 但从未启用，2026-11-17 查该地址还是 404。）
 ICON_URL = ('https://images.cnblogs.com/cnblogs_com/blogs/477677/galleries/1560097/'
             't_261107101943_blog-icon.jpeg')
 
@@ -120,10 +130,9 @@ def field_css(css):
     return FIELD_MARK + css + '\n'
 
 
-# 页首字段里的配置块 —— 三份模板共用一份，避免三处写法各说各话。
-# 这里的默认值是作者本站的实际配置（贴上去与 v7.17 的外观一致）；
-# 整段删掉则回落到脚本内置的「按当前站点推导」，不会指向任何人的博客。
-CFG_BLOCK = '''/* ===== 配置区：整个主题只有这一处要改，改完保存就生效 =====
+# 作者本站的配置块（只进「页首-我的站.html」）：
+# 默认值是作者本站的实际配置，贴上去与当前线上外观一致。
+CFG_AUTHOR = '''/* ===== 配置区：整个主题只有这一处要改，改完保存就生效 =====
    ① 每个键都可以删。删光会按「当前站点」自动生成：首页 / 归档（当月）/ 分类 / 标签 / RSS，
       品牌名取页面标题里的博客名，公告取后台「公告」字段原文。
    ② 只写想改的键即可：nav、notice 逐项覆盖，links 整体替换。
@@ -177,15 +186,44 @@ window.LS_CONFIG = {
 };'''
 
 
-HEAD_TOP = '''<!-- 流苏主题 __VER__ · 页首 HTML（全托管）
-     只做三件事：占住顶栏位置、放配置、同步加载样式脚本。
-     菜单与公告由脚本按配置渲染，这里没有任何菜单内容。
-     除非升级版本号，本字段不需要再改。 -->
+# 通用配置块：给「别人装」用。全部留空，脚本按当前站点推导 —— 品牌名取博客名、
+# 站内链接指向自己的站、公告用后台「公告」字段原文，不会带出作者的任何信息。
+#
+# 为什么不再把作者那套 nav/notice 塞进通用模板：v7.26 之前只有一份配置，别人照
+# README 贴完，顶栏写着「Ep流苏」、头像和公告都是作者的、菜单全指向作者博客。
+# 这不叫「装好了」，叫「把别人的站套在自己域名上」。
+CFG_GENERIC = '''/* ===== 配置区：不改也能用，想更像自己的站再动 =====
+   全部留空时，脚本按「当前站点」自动推导：
+     · 顶栏品牌 = 页面标题里的博客名；
+     · 首页 / 归档（当月）/ 分类 / 标签 / RSS 都指向你自己的博客；
+     · 公告用博客园后台「公告」字段的原文，不内置任何人的文案。
+   下面三块都是注释，需要哪块就把 // 去掉再改。完整字段表见仓库 README「配置项」。 */
+window.LS_CONFIG = {
+  /* ① 强调色：换一个 hex 就是另一套配色，暗色下会自动派生深/浅两档 */
+  // accent: '#3b82f6',
+
+  /* ② 顶栏菜单：links 是「整体替换」不是追加，写了就只显示你写的这几条。
+        地址里 {ym} 会展开成当前年月（归档必须带年月，根路径实测 404）。 */
+  // nav: {
+  //   brand: '我的博客',
+  //   home: 'https://www.cnblogs.com/你的博客名/',
+  //   links: [
+  //     { t: '首页', h: 'https://www.cnblogs.com/你的博客名/' },
+  //     { t: '归档', h: 'https://www.cnblogs.com/你的博客名/p/archive/{ym}' },
+  //     { t: 'GitHub', h: 'https://github.com/你的账号', b: 1 }
+  //   ]
+  // },
+
+  /* ③ 页脚那行「主题 · 流苏」：不想留就放开下面这行（MIT，不强制署名） */
+  // credit: false
+};'''
+
+
+HEAD_TOP = '''<!-- 流苏主题 __VER__ · 页首 HTML（__HDR__）
+     __NOTE__ -->
 
 __ARC__
-<link rel="preconnect" href="https://blog-static.cnblogs.com" />
-<link rel="preconnect" href="https://gcore.jsdelivr.net" crossorigin />
-<link rel="icon" href="__ICON__" />
+__HEADLINKS__
 
 <!-- 1) 顶栏占位：先给 59px 白条，菜单由紧随其后的脚本填进来 -->
 <div class="qb-nav" id="qb-nav"><div class="qb-nav-inner"></div></div>
@@ -196,19 +234,20 @@ __CFG__
 </script>
 
 <script>
-/* 3) 同步加载：镜像优先，博客园文件兜底。
-     · 镜像 = GitHub 仓库（jsDelivr）：改版只要 push，不必再登后台传文件；
-     · 兜底 = 博客园文件空间：国内 CDN 稳，镜像抽风时由 onerror 自动接管；
-     · 镜像失败过就 1 小时内直接走博客园，免得每次进站都等一遍超时（记 localStorage，
+/* 3) 同步加载：主源 + 备源，失败自动切换（不需要你上传任何文件）。
+     · 主源 = GitHub 仓库（jsDelivr，钉 tag）：作者 push 打完 tag 就生效，任何人可直接引用；
+     · 备源 = 主源失效时自动接管（装配脚本按发放对象写入，见下方 FALLBACK 常量）；
+     · 主源失败过就 1 小时内直接走备源，免得每次进站都等一遍超时（记 localStorage，
        不写 cookie，换设备互不影响，也不会把失败态永久钉死）；
      · 仍然必须是 document.write：博客园会把页首里的外部 <script src> 改写成 defer，
        那样样式就排到首帧之后；内联脚本不会被改写，document.write 插入的是「解析期
        脚本」—— 阻塞解析、按序立刻执行，顶栏/目录/侧栏/公告全部赶在首帧之前就位。
      · 标签名拆开拼，是为了页面上不出现脚本标签的开闭字面量（HTML 校验器会误判）。 */
 (function () {
-  var s = 'script', V = '__NUM__';
+  var s = 'script';
+  /* 两个地址都是完整 URL（含版本号）。升级 = 整段换新页首，或只把这两行的版本号改掉。 */
   var MIRROR = '__MIRROR__';
-  var ORIGIN = '__BUNDLE__?v=' + V;
+  var FALLBACK = '__FALLBACK__';
   var KEY = 'qb-src-fail', TTL = 3600000;
 
   function recentlyFailed() {
@@ -222,16 +261,16 @@ __CFG__
     document.write('<' + s + ' src="' + url + '"' + (tag || '') + '><' + '/' + s + '>');
   }
 
-  /* 镜像挂了：记下时间，再异步补一份博客园的文件。
+  /* 主源挂了：记下时间，再异步补一份备源。
      这里不能用 document.write —— 失败事件可能已经晚于解析期，再写会清空文档。 */
   window.__qbSrcFail = function () {
     try { localStorage.setItem(KEY, Date.now()); } catch (e) {}
     var e = document.createElement(s);
-    e.src = ORIGIN;
+    e.src = FALLBACK;
     (document.head || document.documentElement).appendChild(e);
   };
 
-  if (recentlyFailed()) write(ORIGIN, '');
+  if (recentlyFailed()) write(FALLBACK, '');
   else write(MIRROR, ' onerror="window.__qbSrcFail()"');
 })();
 </script>
@@ -344,7 +383,7 @@ def build(ver, mode='hosted'):
         foot = read(os.path.join(SNIP, 'footer-script-v7.min.html')).strip()
         head = (HEAD_INLINE.replace('__VER__', ver).replace('__ICON__', ICON_URL)
                           .replace('__ARC__', ARC_FLAG)
-                          .replace('__CFG__', CFG_BLOCK)
+                          .replace('__CFG__', CFG_GENERIC)
 )
         return {
             '1-页首.html': head,
@@ -362,7 +401,7 @@ def build(ver, mode='hosted'):
                            .replace('__NAV__', navsrc[i:].strip())
                            .replace('__BUNDLE__', BUNDLE_URL)
                            .replace('__ARC__', ARC_FLAG)
-                           .replace('__CFG__', CFG_BLOCK)
+                           .replace('__CFG__', CFG_GENERIC)
                            .replace('__NUM__', ver.lstrip('v')))
         return {
             '1-页首.html': head,
@@ -370,25 +409,57 @@ def build(ver, mode='hosted'):
             '3-公告.html': NOTICE_HYBRID,
             '4-样式.css': field_css(css),
         }
-    head = (HEAD_TOP.replace('__VER__', ver)
-                   .replace('__ICON__', ICON_URL)
-                   .replace('__BUNDLE__', BUNDLE_URL)
-                   .replace('__MIRROR__', mirror_url(ver))
-                   .replace('__CSS__', CSS_URL)
-                   .replace('__ARC__', ARC_FLAG)
-                   .replace('__CFG__', CFG_BLOCK)
-                   .replace('__NUM__', ver.lstrip('v')))
+    def head_for(cfg, fallback, hdr, note, links):
+        """同一套模板，按发放对象换四样东西：配置、备源、头注释、预连接/图标。"""
+        return (HEAD_TOP.replace('__VER__', ver)
+                        .replace('__HDR__', hdr)
+                        .replace('__NOTE__', note)
+                        .replace('__HEADLINKS__', links)
+                        .replace('__MIRROR__', mirror_url(ver))
+                        .replace('__FALLBACK__', fallback)
+                        .replace('__ARC__', ARC_FLAG)
+                        .replace('__CFG__', cfg))
+
+    # 通用版备源 = 同一 CDN 的另一个节点（cdn.jsdelivr.net）：版本一致、跨域可用。
+    # 不用作者的 blog-static 做备源，两个理由都有实测撑：
+    #   · 它对 Referer 只放行 *.cnblogs.com（2026-11-17 实测 https://example.com/ → 403），
+    #     绑了自定义域名的博客用不了；
+    #   · 那份文件是手工上传的，同一天查还是 109628 B 的旧包 —— 兜底下来会和用户刚贴的
+    #     新 CSS 版本错配，有样式没功能，比干脆没有更难看。
+    generic_fallback = mirror_url(ver).replace('//gcore.jsdelivr.net', '//cdn.jsdelivr.net')
+    # 作者版备源 = 自己的博客园文件空间：同域 CDN 最快，且作者自己能保证每次发版都传
+    author_fallback = '%s?v=%s' % (BUNDLE_URL, ver.lstrip('v'))
+
+    # 通用版不写 <link rel="icon">：那是作者的头像，别人贴了会把人家站的图标换掉；
+    # 不写就沿用博客园自己的 favicon。
+    generic_links = ('<link rel="preconnect" href="https://gcore.jsdelivr.net" crossorigin />\n'
+                     '<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />')
+    author_links = ('<link rel="preconnect" href="https://blog-static.cnblogs.com" />\n'
+                    '<link rel="preconnect" href="https://gcore.jsdelivr.net" crossorigin />\n'
+                    '<link rel="icon" href="%s" />' % ICON_URL)
+
     return {
         '样式.css': field_css(css),
-        '页首.html': head,
+        '页首.html': head_for(
+            CFG_GENERIC, generic_fallback,
+            hdr='全托管 · 通用版',
+            note='贴到「页首 HTML 代码」字段即可：js 从 GitHub 仓库（jsDelivr）加载，'
+                 '不需要上传任何文件。\n'
+                 '     配置留空就用你自己的博客信息；升级时整段换新，或只改下面两个源地址的版本号。',
+            links=generic_links),
+        '页首-我的站.html': head_for(
+            CFG_AUTHOR, author_fallback,
+            hdr='全托管 · 作者自用',
+            note='带本站品牌 / 头像 / 公告与菜单；备源用自己博客园文件空间。\n'
+                 '     别人装主题请用「页首.html」，那份不带任何作者信息。',
+            links=author_links),
     }
-
 
 def main():
     ap = argparse.ArgumentParser(add_help=True)
     ap.add_argument('--out', default=None, help='输出目录，默认 dist/paste/<mode>')
     ap.add_argument('--mode', default='hosted', choices=['inline', 'hosted', 'hybrid'],
-                    help='hosted=全托管（默认，后台只贴一次 2KB 页首，之后只上传 js）；'
+                    help='hosted=全托管（默认，贴 CSS + 页首两个字段，js 走 jsDelivr，零上传）；'
                          'hybrid=样式贴字段+脚本托管（首帧样式更早到位，但要重贴 CSS）；'
                          'inline=三字段全内联零请求（与 6.x 加载时序一致）')
     ap.add_argument('--both', action='store_true', help='三种模式各生成一套（分目录）')
@@ -427,8 +498,13 @@ def main():
         if 'inline' in modes:
             print('零闪版（推荐）：样式贴「页面定制 CSS 代码」，页脚贴「2-页脚.html」，页首贴「1-页首.html」')
         if 'hosted' in modes:
-            print('托管版：上传 %s；页首字段贴「页首.html」、CSS 字段贴「样式.css」，页脚与公告留空' % BUNDLE_URL)
-            print('镜像：%s（不可变 ref，必须先 push 并 git tag %s）' % (mirror_url(ver), ver))
+            print('托管版（发给别人）：CSS 字段贴「样式.css」，页首字段贴「页首.html」；页脚与公告留空。')
+            print('                   别人照这个装就行 —— 不用 fork、不用上传、不用打 tag。')
+            print('作者自用：页首改贴「页首-我的站.html」（带本站品牌/头像/公告），其余同上。')
+            print('镜像：%s' % mirror_url(ver))
+            print('      ↑ 不可变 ref，必须先 push 并 git tag %s，否则 404 会落到备源' % ver)
+            print('作者备源：%s?v=%s （改了 js 记得重新上传到这个地址，否则作者自己的站会停在旧版）'
+                  % (BUNDLE_URL, ver.lstrip('v')))
     sys.exit(0 if ok else 1)
 
 
