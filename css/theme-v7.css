@@ -1,6 +1,6 @@
 /* ============================================================
-   流苏主题 v7.24 · 2026-11-16
-   最近：移动端：新增导航抽屉（汉堡菜单，条目从 .qb-links 克隆）；修窄屏侧栏未隐藏的 !important 覆盖 bug（右栏 370x1408px 整个堆在正文下面）；顺带去掉目录抽屉里重复的 heads 构建循环
+   流苏主题 v7.25 · 2026-11-17
+   最近：分类与标签：详情页标题下分类+标签胶囊，列表页顶部分类筛选条；分类名单 localStorage 缓存 7 天，取不到则降级为只显示标签
    ------------------------------------------------------------
    主题 v6 —— 基于博客园 2026 真实 DOM 重写
    ------------------------------------------------------------
@@ -510,6 +510,49 @@ html.qb-arc-page #mainContent .entrylist {
     border-radius: var(--radius);
     box-shadow: var(--shadow);
     box-sizing: border-box;
+}
+
+/* 列表页顶部分类筛选条（v7.25，脚本生成，见页脚 initCatBar）。
+   7 个分类一行放得下；窄屏不换行、改成横滑 —— 换行会把首屏往下推两行，
+   比"要滑一下才看得全"更打断阅读。 */
+.qb-catbar {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin: 0 0 14px;
+    padding: 9px 12px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+}
+.qb-catbar::-webkit-scrollbar { display: none; }
+.qb-catbar a {
+    flex: none;
+    padding: 4px 11px;
+    border-radius: 20px;
+    background: var(--bg);
+    font-size: 12.5px;
+    line-height: 1.5;
+    color: var(--body) !important;
+    text-decoration: none;
+    white-space: nowrap;
+}
+.qb-catbar a:hover { background: var(--accent-soft); color: var(--accent-deep) !important; }
+.qb-catbar a.on {
+    background: var(--accent-soft);
+    color: var(--accent-deep) !important;
+    font-weight: 600;
+}
+/* 还能往右滑时给个边缘渐隐：不加的话最后一个胶囊被硬切一半，
+   看起来像布局溢出，而不是「这里还能滑」。到末尾自动摘掉，别一直糊着。 */
+.qb-catbar.qb-fade-r {
+    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 26px), transparent);
+    mask-image: linear-gradient(to right, #000 calc(100% - 26px), transparent);
 }
 
 /* 这十张卡是整块填进来的（一次 XHR，实测从 0 高直接变 1271px），
@@ -1914,6 +1957,60 @@ body.qb-dark #cnblogs_post_body mark { background: rgba(187, 128, 9, .40); color
 }
 #EntryTag a:hover { background: var(--accent-soft); color: var(--accent-deep) !important; }
 
+/* 文章分类与标签（v7.25，脚本生成，插在标题与正文之间）：
+   上面 #EntryTag 那套是博客园原生皮肤的输出，这套模板并不输出它
+   （2026-11-17 curl 实测：#EntryTag / #BlogPostCategory 都不存在），
+   样式留着给换模板的站点兜底；现行结构见页脚脚本 initPostTax。 */
+.qb-tax {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    margin: 0 0 22px !important;
+    font-size: 12px;
+    line-height: 1.5;
+}
+.qb-tax a {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    background: var(--bg);
+    color: var(--body) !important;
+    text-decoration: none;
+}
+.qb-tax a:hover { background: var(--accent-soft); color: var(--accent-deep) !important; }
+
+/* 分类用实心样式和标签区分开：一篇文只有一个分类、可以有多个标签，
+   同一种样式会让读者以为它们是同类东西。 */
+.qb-tax .qb-tax-cat {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--accent-soft);
+    color: var(--accent-deep) !important;
+    font-weight: 600;
+}
+.qb-tax .qb-tax-cat:hover { background: var(--accent); color: #fff !important; }
+.qb-tax-dot {
+    flex: none;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: currentColor;
+}
+.qb-tax-more {
+    padding: 3px 8px;
+    border: 0;
+    border-radius: 20px;
+    background: transparent;
+    color: var(--meta);
+    font: inherit;
+    font-size: 12px;
+    line-height: 1.5;
+    cursor: pointer;
+}
+.qb-tax-more:hover { background: var(--accent-soft); color: var(--accent-deep); }
+
 /* 上一篇/下一篇 */
 #post_next_prev {
     font-size: 13px !important;
@@ -2625,6 +2722,7 @@ html.qb-mmenu-lock body { overflow: hidden !important; }
     .qb-code-bar, .qb-code-more, .qb-hanchor,
     #blog-comments-placeholder, .commentform,
     #footer, #blog_post_info_block, #post_next_prev, #EntryTag,
+    .qb-catbar,
     .qb-arc-idx, #cnblogs_post_body .cnblogs-toc-button {
         display: none !important;
     }

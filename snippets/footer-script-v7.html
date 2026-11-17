@@ -1,8 +1,8 @@
-<!-- 流苏主题 v7.24 · 2026-11-16 页脚 HTML 重要脚本
+<!-- 流苏主题 v7.25 · 2026-11-17 页脚 HTML 重要脚本
      位置：博客园后台 -> 设置 -> 页脚 HTML 代码
      说明：1. 这里的 script 包含全部 DOM 操作逻辑（目录生成、滚动高亮、部件搬运）。2. 粘贴前务必备份原有内容。3. 博客园 HTML 校验器：确保没有未配对的尖括号，所有符号合法。 -->
 <script>
-/* 流苏主题 v7.24 · 2026-11-16 页脚：列表页文章目录 / 详情页文章目录 / 归档时间线 / 分页 / 回到顶部 / 滚动高亮 */
+/* 流苏主题 v7.25 · 2026-11-17 页脚：列表页文章目录 / 详情页文章目录 / 归档时间线 / 分页 / 回到顶部 / 滚动高亮 */
 (function () {
   'use strict';
 
@@ -1303,6 +1303,235 @@
     buildCopyright(body);
   }
 
+  /* ============ 6.9 分类与标签（v7.25） ============
+     数据现实（2026-11-17 curl 实测这套模板，别照别的皮肤的经验写）：
+       · 列表页 .day 只有 postTitle / postCon / postDesc，一个分类链接都没有；
+       · 详情页既没有 #EntryTag 也没有 #BlogPostCategory，#blog_post_info 是个空 div
+         （主题里那段 #EntryTag 样式因此一直是死代码）；
+       · 详情页 <meta name="keywords"> 恰好等于「本文标签 + 分类名」，分类排在最后
+         —— 拿 4 篇与 /rss 里的 <category term> 逐条比对，全部吻合。
+     所以两条路分开走：
+       详情页 —— 标签直接读 keywords，零请求；分类靠全站分类名单判定。
+       列表页 —— 每篇的分类不可得（只能抓 7 个分类页反查，约 140KB，不值），
+                 改成顶部一条分类筛选条：一次拿全站分类，翻页也不会断。
+     两边共用同一份分类名单：localStorage 存 7 天。名单没到位时先用「keywords 末位是分类」
+     这条临时判据占位，名单到了再按名字复核 —— 后台改过「关键字」设置时能自动纠正回来。 */
+  var CAT_KEY = 'qb-cats-v1:';
+  var CAT_TTL = 7 * 24 * 3600 * 1000;
+  var TAXO = { list: null, pending: false, done: false };
+
+  function catStoreKey() {
+    return CAT_KEY + location.host + (APP ? '/' + APP : '');
+  }
+
+  function readCats() {
+    try {
+      var o = JSON.parse(localStorage.getItem(catStoreKey()) || 'null');
+      if (!o || !o.t || !(o.list instanceof Array) || !o.list.length) return null;
+      if (Math.abs(Date.now() - o.t) > CAT_TTL) return null;
+      return o.list;
+    } catch (e) { return null; }
+  }
+
+  function writeCats(list) {
+    try {
+      localStorage.setItem(catStoreKey(), JSON.stringify({ t: Date.now(), list: list }));
+    } catch (e) { /* 隐私模式 / 配额满：只是不缓存，不影响本次渲染 */ }
+  }
+
+  /* 分类页条目形如 <a href="/app/category/1475104.html">后端(34)</a>，
+     名字和篇数挤在同一个文本节点里，按结尾括号拆开。 */
+  function parseCats(html) {
+    var doc = new DOMParser().parseFromString(html, 'text/html');
+    var nodes = doc.querySelectorAll('.category-list-item a');
+    var out = [], seen = {};
+    [].forEach.call(nodes, function (a) {
+      var t = (a.textContent || '').replace(/\s+/g, ' ').trim();
+      var m = t.match(/^(.*?)\s*[（(]\s*(\d+)\s*[)）]\s*$/);
+      var name = (m ? m[1] : t).trim();
+      var href = a.getAttribute('href') || '';
+      if (!name || !href || seen[name]) return;
+      seen[name] = 1;
+      out.push({ n: name, u: href, c: m ? parseInt(m[2], 10) : 0 });
+    });
+    return out;
+  }
+
+  function loadCats(cb) {
+    var hit = readCats();
+    if (hit) { TAXO.list = hit; TAXO.done = true; if (cb) cb(); return; }
+    if (!window.fetch) { TAXO.done = true; if (cb) cb(); return; }
+    TAXO.pending = true;
+    fetch(HOME + 'categories', { credentials: 'same-origin' })
+      .then(function (r) { if (!r.ok) throw new Error('http ' + r.status); return r.text(); })
+      .then(function (h) {
+        var list = parseCats(h);
+        if (list.length) { TAXO.list = list; writeCats(list); }
+      })
+      .catch(function () { /* 取不到就退化成「只显示标签」：不建筛选条，不硬编分类 */ })
+      .then(function () { TAXO.pending = false; TAXO.done = true; if (cb) cb(); });
+  }
+
+  /* keywords 形如 "TCP/IP,DHCP,ARP,NAT,子网掩码,计算机网络"。去空去重，保持原序。 */
+  function postKeywords() {
+    var m = document.querySelector('meta[name="keywords"]');
+    if (!m) return [];
+    var out = [], seen = {};
+    String(m.getAttribute('content') || '').split(/[,，]/).forEach(function (s) {
+      var t = s.replace(/\s+/g, ' ').trim();
+      if (!t || seen[t]) return;
+      seen[t] = 1;
+      out.push(t);
+    });
+    return out;
+  }
+
+  function tagHref(name) {
+    return HOME + 'tag/' + encodeURIComponent(name);
+  }
+
+  /* 末位是分类这条只在名单没到手时当临时判据；名单到手就按名字从后往前核对，
+     核对不上说明末位其实是标签，整条降级成标签 —— 宁可少一个分类，不要挂错分类。 */
+  function splitTaxo(toks) {
+    var list = TAXO.list || [];
+    var tags = toks.slice();
+    var cat = null, i, j;
+    if (list.length) {
+      for (i = toks.length - 1; i >= 0; i--) {
+        for (j = 0; j < list.length; j++) {
+          if (list[j].n === toks[i]) { cat = list[j]; break; }
+        }
+        if (cat) { tags.splice(i, 1); break; }
+      }
+    } else if (!TAXO.done && toks.length) {
+      cat = { n: toks[toks.length - 1], u: HOME + 'categories', c: 0 };
+      tags.pop();
+    }
+    return { cat: cat, tags: tags };
+  }
+
+  function paintTax(box, toks) {
+    var parts = splitTaxo(toks);
+    box.textContent = '';
+    if (parts.cat) {
+      var c = mk('a', 'qb-tax-cat');
+      c.href = parts.cat.u || (HOME + 'categories');
+      c.title = '分类：' + parts.cat.n;
+      c.appendChild(mk('span', 'qb-tax-dot'));
+      c.appendChild(mk('span', null, parts.cat.n));
+      box.appendChild(c);
+    }
+    /* 标签多的文章（实测最长 5 个）也只放 4 个，剩下的折进 +n，避免一行挤成两行 */
+    var MAX = 4;
+    var all = box.getAttribute('data-open') === '1';
+    var shown = all ? parts.tags.length : Math.min(parts.tags.length, MAX);
+    for (var i = 0; i < shown; i++) {
+      var a = mk('a', 'qb-tax-tag', parts.tags[i]);
+      a.href = tagHref(parts.tags[i]);
+      a.title = '标签：' + parts.tags[i];
+      box.appendChild(a);
+    }
+    var rest = parts.tags.length - shown;
+    if (rest > 0) {
+      var b = mk('button', 'qb-tax-more', '+' + rest);
+      b.type = 'button';
+      b.title = '展开其余 ' + rest + ' 个标签';
+      b.addEventListener('click', function () {
+        box.setAttribute('data-open', '1');
+        paintTax(box, box._qbToks || toks);
+      });
+      box.appendChild(b);
+    }
+    /* 标签和分类都没有就别留一条空行 */
+    if (!box.children.length && box.parentNode) box.parentNode.removeChild(box);
+  }
+
+  /* 插在标题和正文之间：list 页那套 .postDesc 在详情页是「文末落款」，位置不对。 */
+  function initPostTax() {
+    var title = document.querySelector('#post_detail .postTitle');
+    if (!title || !title.parentNode) return null;
+    var box = document.querySelector('.qb-tax');
+    var toks = postKeywords();
+    if (!toks.length) {
+      if (box && box.parentNode) box.parentNode.removeChild(box);
+      return null;
+    }
+    if (!box) {
+      box = mk('div', 'qb-tax');
+      box.setAttribute('role', 'group');
+      box.setAttribute('aria-label', '文章分类与标签');
+      title.parentNode.insertBefore(box, title.nextSibling);
+    }
+    box._qbToks = toks;
+    paintTax(box, toks);
+    return box;
+  }
+
+  /* 分类条在窄屏是横滑的。滑到中段时最后一个胶囊会被裁掉半个，
+     看着像溢出；加个 .qb-fade-r 做右边缘渐隐，滑到末尾再摘掉。 */
+  function watchCatFade(bar) {
+    function upd() {
+      var more = bar.scrollWidth - bar.clientWidth - bar.scrollLeft > 4;
+      if (more) { bar.classList.add('qb-fade-r'); } else { bar.classList.remove('qb-fade-r'); }
+    }
+    upd();
+    /* 首次调用发生在条子还空着的时候（子项紧接着才填），等一帧再量一次 */
+    requestAnimationFrame(upd);
+    bar.addEventListener('scroll', upd, { passive: true });
+    window.addEventListener('resize', upd);
+    window.addEventListener('load', upd);
+  }
+
+  /* 列表页只给首页和分类页挂：标签页是 .PostList、归档页是 .entrylistItem，
+     结构不同，硬挂会挤在错误的位置。分类页保留并在当前项上高亮，点进来不会「条没了」。 */
+  function initCatBar() {
+    var flow = document.querySelector('#mainContent .forFlow');
+    if (!flow || !TAXO.list || !TAXO.list.length) return null;
+    var isHome = !!flow.querySelector('.day');
+    var m = location.pathname.match(/\/category\/(\d+)\.html$/);
+    if (!isHome && !m) return null;
+    var bar = document.querySelector('.qb-catbar');
+    if (!bar) {
+      bar = mk('nav', 'qb-catbar');
+      bar.setAttribute('aria-label', '文章分类');
+      bar.setAttribute('data-qb-catbar', '1');
+      flow.insertBefore(bar, flow.firstChild);
+      watchCatFade(bar);
+    }
+    bar.textContent = '';
+    var cur = m ? location.pathname : '';
+    var all = mk('a', 'qb-cat', '全部');
+    all.href = HOME;
+    if (!cur) all.className += ' on';
+    bar.appendChild(all);
+    TAXO.list.forEach(function (c) {
+      var a = mk('a', 'qb-cat', c.c ? c.n + ' ' + c.c : c.n);
+      a.href = c.u;
+      a.title = '分类：' + c.n + (c.c ? '（' + c.c + ' 篇）' : '');
+      var path = String(c.u).replace(/^https?:\/\/[^/]+/, '');
+      if (cur && path === cur) a.className += ' on';
+      bar.appendChild(a);
+    });
+    return bar;
+  }
+
+  /* 名单命中缓存时全部同步画完，首帧就是完整的；未命中先按临时判据占位，
+     名单回来再复核一次。TAXO.pending 会被 settle 读到，首访宁可晚一百毫秒，
+     也不要让筛选条在页面显示之后再「长出来」。 */
+  function initTaxonomy() {
+    if (!TAXO.list) {
+      var hit = readCats();
+      if (hit) { TAXO.list = hit; TAXO.done = true; }
+    }
+    var box = initPostTax();
+    initCatBar();
+    if (TAXO.list) return;
+    loadCats(function () {
+      if (box && box._qbToks && box.getAttribute('data-open') !== '1') paintTax(box, box._qbToks);
+      initCatBar();
+    });
+  }
+
   /* ============ 6.10 宽表格：横向滚动 + 首列吸附（v7.21） ============
      博客园给正文表格写死了 width:100%，六列以上的表会被压成竖条、表头一个字一行。
      实测一篇 7 列表格在 780px 正文里每列只剩 110px，「操作」「说明」这类表头全折成
@@ -2400,7 +2629,10 @@
        容器可能整个不存在（后台关掉了全部侧栏部件），所以用帧上限兜底。 */
     var col = document.getElementById('blog-sidecolumn');
     var colPending = !col || !col.children.length;
-    if ((arcPending && n < 60) || (colPending && n < 30)) {
+    /* 分类名单（列表页的筛选条 / 详情页的分类胶囊）也是一次同源请求。
+       只在缓存过期后的第一次访问会挂起，命中缓存是同步的，不会走到这里。
+       上限 30 帧（约 500ms）：网络慢就放行，宁可这次少一条分类条，不能让页面干等。 */
+    if ((arcPending && n < 60) || (colPending && n < 30) || (TAXO.pending && n < 30)) {
       requestAnimationFrame(function () { settle(left, n + 1); });
       return;
     }
@@ -2436,6 +2668,10 @@
     /* 阅读时长 / 锚点 / 版权同样要在放行前做完，否则会看到正文先出现、
        版权块随后「长出来」。放在 buildLeft 之后：目录可能已经给标题写过 id，直接复用。 */
     enhancePost();
+    /* 分类与标签：详情页标题下胶囊 + 列表页顶部分类条。
+       缓存命中时同步画完；未命中先按 keywords 末位占位、名单到位再复核。
+       TAXO.pending 会被 settle 读到，首访宁可多等一百毫秒，也不让分类条后长出来。 */
+    initTaxonomy();
     /* 目录抽屉依赖 buildLeft 的产物，必须排在它后面 */
     initMobileToc();
     /* 导航抽屉要克隆 .qb-links 的 a，必须排在 markNav 之后 ——
@@ -2523,6 +2759,8 @@
     enhanceTables();
     enhanceMarkdown();
     enhancePost();
+    /* 分类条 / 标签胶囊同样带「已存在则复用」判据，重复调用安全 */
+    initTaxonomy();
     initMobileToc();
     initMobileMenu();
     var lc = document.getElementById('qb-left');
