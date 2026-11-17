@@ -52,7 +52,8 @@
 | 3 | 设置 → **页脚 HTML 代码** | **全选删除，必须清空** | — |
 | 4 | 设置 → **公告** | 全选删除（公告由脚本渲染；不删也行，会自动取原文） | — |
 
-js 由页首自己从 GitHub 仓库加载（jsDelivr 镜像，地址里钉了版本号）—— **不用你传、不用你打 tag、不用你改任何地址**。
+js 由页首自己从 GitHub 仓库加载（jsDelivr 镜像，跟随 `@latest`）—— **不用你传、不用你打 tag、不用你改任何地址**；
+以后作者发版，你也不用回来动任何字段。
 
 ### 具体怎么贴
 
@@ -79,21 +80,23 @@ js 由页首自己从 GitHub 仓库加载（jsDelivr 镜像，地址里钉了版
 
 | 顺序 | 地址 | 说明 |
 |:---:|:---|:---|
-| 主源 | `gcore.jsdelivr.net/gh/zsy0216/cnblogs-document-theme@v7.26/…` | GitHub 仓库镜像，钉 tag，路径不可变 |
-| 备源 | `cdn.jsdelivr.net/gh/zsy0216/…@v7.26/…` | 同一 CDN 的另一节点，主源失败时自动接管 |
+| 主源 | `gcore.jsdelivr.net/gh/zsy0216/cnblogs-document-theme@latest/…` | GitHub 仓库镜像，`@latest` 指向最新 tag |
+| 备源 | `cdn.jsdelivr.net/gh/zsy0216/…@latest/…` | 同一 CDN 的另一节点，主源失败时自动接管 |
 
 两个都在公网 CDN 上，`*.cnblogs.com` 和绑了自定义域名的博客都能取。主源失败会记进 `localStorage`，
 一小时内直连备源，不会每次进站都等一遍超时。
+
+地址后面还会拼一个「当天日期」参数（`?d=20261117` 这种）：jsDelivr 给文件的缓存是浏览器 7 天、
+边缘 12 小时，每天换一次 URL 才不会一直吃旧缓存 —— 所以发版后最迟次日所有站点自动生效。
 
 「每个人上传一次 js」本来就没必要 —— 文件在 GitHub 上，谁都能读。
 
 ### 升级到新版本
 
-装的是哪版就一直跑哪版，不会哪天样式突然变了。想升级时：
+**js 不用你管**：页首取的是 `@latest`，作者推新 tag 后最迟次日自动生效，你的字段一个字都不用改。
 
-1. 重贴 CSS（`dist/paste/样式.css`）—— 样式只能内联，这是唯一必须重贴的；
-2. 换页首（`dist/paste/页首.html`）—— 整段替换，或只改里面两个地址的版本号；
-3. 前台 `Ctrl + F5`。
+只有**样式**类改动需要重贴 CSS（`dist/paste/样式.css`）—— 样式内联在「页面定制 CSS 代码」里，
+是首帧就不闪的原因，代价是它不会自己更新。改完前台 `Ctrl + F5`。
 
 有没有新版看 [CHANGELOG](CHANGELOG.md) 或仓库的 Releases。
 
@@ -101,7 +104,7 @@ js 由页首自己从 GitHub 仓库加载（jsDelivr 镜像，地址里钉了版
 
 上面那套用的还是我的仓库。要改源码、或不想依赖别人的仓库：
 
-1. fork（或 clone）仓库，改完 push，并打一个与版本号同名的 tag：`git tag v7.26 && git push --tags`；
+1. fork（或 clone）仓库，改完 push，并打一个与版本号同名的 tag：`git tag v7.30 && git push --tags`；
 2. 把页首里 `var MIRROR` / `var FALLBACK` 两行的地址换成你的账号；
 3. 也可以把 `dist/document-theme.js` 传到自己博客的「文件」，让 `FALLBACK` 指向
    `https://blog-static.cnblogs.com/files/blogs/<你的博客ID>/document-theme.js?v=<版本号>`。
@@ -110,7 +113,8 @@ js 由页首自己从 GitHub 仓库加载（jsDelivr 镜像，地址里钉了版
 
 - **别用 `@master`**：分支引用在 jsDelivr 各节点会长期缓存。push 完新版本，fastly / cdn 已回源，
   gcore 仍返回两周前的旧包；加 `?v=` 也无效（gcore 的缓存键不含 query），`purge.jsdelivr.net` 也清不动它。
-  tag 是不可变路径，没有旧缓存可命中。
+  `@latest` 不一样：它由 CDN 端解析成最新 **tag**（tag 是不可变路径，缓存命中即是正确内容），
+  解析结果 12 小时内刷新，配合页首的每日日期参数就够用了。
 - **`blog-static` 只能当你自己的备源**：它对 Referer 只放行 `*.cnblogs.com`
   （2026-11-17 实测 `https://example.com/` 直接 403），绑了自定义域名的读者取不到。
 
