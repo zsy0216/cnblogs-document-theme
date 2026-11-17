@@ -1,6 +1,6 @@
 /* ============================================================
-   流苏主题 v7.28 · 2026-11-17
-   最近：页脚署名写死为 Theme powered by cnblogs-document-theme（无配置开关），链回仓库
+   流苏主题 v7.29 · 2026-11-17
+   最近：文章详情页修「正文太窄」：拆掉 #post_detail 内层 .post 的重复卡片（边框/阴影/22px 内边距），两侧栏 260/292 收到 224/256、间距 22→20，正文宽 600→726px；:has 不支持时自动退回老三栏
    ------------------------------------------------------------
    主题 v6 —— 基于博客园 2026 真实 DOM 重写
    ------------------------------------------------------------
@@ -386,6 +386,19 @@ body.qb-dark .qb-logo .qb-logo-dot { fill: #ff7a5c; }
     box-sizing: border-box;
     float: none !important;
     width: auto !important;
+}
+
+/* 文章详情页：正文是唯一主角，列表页那套「左目录 + 右栏」不用占那么宽。
+   两侧各收 36px，把省下的宽度全给正文（600 → 728），每行从 40 字提到 50 字。
+   主容器仍是 1360（= 顶栏 1320 + 两侧 24 内边距），不改 max-width：
+   改了就和中栏、顶栏、页脚对不齐，左右边缘会错开一截。
+   只在 ≥1221px 生效，窄屏继续交给下面 1220/1024 的断点接管；
+   :has 不被支持时整条忽略，退回 260/292 的老三栏，不会破版。 */
+@media screen and (min-width: 1221px) {
+    #main:has(#post_detail) {
+        grid-template-columns: 224px minmax(0, 1fr) 256px;
+        gap: 20px;
+    }
 }
 
 /* #sideBar 只是外面一层壳，摊平掉；#sideBarMain 留下当第 3 列的容器 */
@@ -1481,8 +1494,21 @@ body.qb-dark .qb-arc-idx-m.on i { color: rgba(13, 17, 23, .7); }
 
 /* ---------- 6. 文章详情页 ---------- */
 #post_detail {
-    padding: 30px 34px 24px;
+    padding: 30px 32px 24px;
     margin: 0 0 18px;
+}
+
+/* 详情页里嵌套着两层卡片：外层 #post_detail + 里层 .post。
+   .post 那条规则本来是给「文章列表卡片」用的（见 5 节），在详情页里又套了一层
+   边框、阴影和 22px 内边距 —— 两层边距加起来正文左右各吃 58px，
+   716px 的卡片只剩 600px 正文（用户反馈"边框太大、正文太窄"）。
+   这里把里层摊平，只留外层这一张卡。 */
+#post_detail .post {
+    padding: 0;
+    margin: 0;
+    background: none;
+    border: 0;
+    box-shadow: none;
 }
 #post_detail .postTitle {
     margin: 0 0 14px !important;
