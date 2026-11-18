@@ -7,8 +7,8 @@
  *   home-v7.png         首页浅色（三栏 + 顶部分类筛选条）
  *   post-v7.png         文章页浅色（左栏 H1–H4 目录 + 标题下分类标签）
  *   home-v7-dark.png    首页暗色
- *   mobile-v7.png       手机列表（390px）
- *   mobile-menu-v7.png  手机导航抽屉（同上，展开态）
+ *   mobile-v7.png       手机列表（390px，裁到两条卡片：780x1360）
+ *   mobile-menu-v7.png  手机导航抽屉（同上，展开态，同样裁到 780x1360 与列表等高）
  *
  * 为什么不用线上现成那份 js / CSS：
  *   线上「页面定制 CSS」字段与兜底 js 往往落后于仓库（发版要手工贴字段、上传文件），
@@ -112,7 +112,18 @@ async function ready(page) {
   await routeLocalBundle(m);
   await m.goto(SITE, { waitUntil: 'domcontentloaded', timeout: 60000 });
   await ready(m);
-  await m.screenshot({ path: path.join(OUT, 'mobile-v7.png') });
+
+  /* 只截「能说清这件事」的高度（2026-11-18：README / 文章里这两张竖着太占位）。
+     视口仍是 390x844 的真实手机尺寸 —— 布局、断点、行宽都不变，只把下面用不上的部分裁掉：
+       · 列表 680 CSS px：筛选条 + 两条完整卡片，正好停在第二条卡片下边界；
+       · 抽屉同样 680：菜单「管理」在 y≈470 结束，再往下是整屏白底（原图有 40% 是这个）。
+     两张等高（780x1360）才好并排 —— 等高比「裁到最紧」重要，差一截会显得散。
+     宽高比从 2.16 降到 1.74。
+     改这两个数之前先量一下：列表页第二条卡片的下边界在 CSS y≈680。 */
+  const CLIP_LIST = { x: 0, y: 0, width: 390, height: 680 };
+  const CLIP_MENU = { x: 0, y: 0, width: 390, height: 680 };
+
+  await m.screenshot({ path: path.join(OUT, 'mobile-v7.png'), clip: CLIP_LIST });
   console.log('  ✓ mobile-v7.png');
 
   await m.evaluate(() => {
@@ -120,7 +131,7 @@ async function ready(page) {
     if (btn) btn.click();
   });
   await m.waitForTimeout(500);
-  await m.screenshot({ path: path.join(OUT, 'mobile-menu-v7.png') });
+  await m.screenshot({ path: path.join(OUT, 'mobile-menu-v7.png'), clip: CLIP_MENU });
   console.log('  ✓ mobile-menu-v7.png');
   await mctx.close();
 

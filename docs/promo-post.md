@@ -2,25 +2,29 @@
 
 > 仓库：<https://github.com/zsy0216/cnblogs-document-theme>
 > 技术栈：纯 CSS（Grid）+ 原生 JS，零依赖、零构建、零后端
-> 当前版本：v7.28，MIT
+> 当前版本：v7.36，MIT
 
 ## 长什么样
 
 **首页**：左中右三栏，左边文章列表，中间文章卡片，右边公告和常用链接。列表顶上有一行分类筛选（`全部` + 每个分类及其篇数），点一下进对应分类页。
 
-![首页效果](https://gcore.jsdelivr.net/gh/zsy0216/cnblogs-document-theme@v7.28/docs/images/home-v7.png)
+![首页效果](https://cdn.jsdelivr.net/gh/zsy0216/cnblogs-document-theme@master/docs/images/home-v7.png)
 
 **文章页**：左边正文 H1–H4 自动生成的目录，右边卡片式侧栏，正文独占中栏；标题下面一行是这篇文章的分类和标签。
 
-![文章页效果](https://gcore.jsdelivr.net/gh/zsy0216/cnblogs-document-theme@v7.28/docs/images/post-v7.png)
+![文章页效果](https://cdn.jsdelivr.net/gh/zsy0216/cnblogs-document-theme@master/docs/images/post-v7.png)
 
 **暗色模式**：配色对齐 GitHub Dark —— 底色 `#0d1117`、卡片 `#161b22`、描边 `#30363d`、正文 `#c9d1d9`。右上角 🌙 一键切换，状态存本地，首次访问跟随系统偏好。
 
-![暗色首页](https://gcore.jsdelivr.net/gh/zsy0216/cnblogs-document-theme@v7.28/docs/images/home-v7-dark.png)
+![暗色首页](https://cdn.jsdelivr.net/gh/zsy0216/cnblogs-document-theme@master/docs/images/home-v7-dark.png)
 
 **手机**：断点以下收成单栏，顶栏换成汉堡按钮 + 右侧抽屉，条目和桌面菜单同源。
 
-![手机导航](https://gcore.jsdelivr.net/gh/zsy0216/cnblogs-document-theme@v7.28/docs/images/mobile-menu-v7.png)
+<p align="center">
+  <img src="https://cdn.jsdelivr.net/gh/zsy0216/cnblogs-document-theme@master/docs/images/mobile-v7.png?d=20261118" width="260" alt="手机端文章列表" />
+  &nbsp;&nbsp;
+  <img src="https://cdn.jsdelivr.net/gh/zsy0216/cnblogs-document-theme@master/docs/images/mobile-menu-v7.png?d=20261118" width="260" alt="手机端导航抽屉" />
+</p>
 
 ## 功能
 

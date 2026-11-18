@@ -26,9 +26,11 @@
 
 手机（断点以下汉堡 + 右侧抽屉，条目与桌面菜单同源）：
 
-| 列表 | 导航抽屉 |
-|:---:|:---:|
-| ![手机列表](docs/images/mobile-v7.png) | ![手机导航](docs/images/mobile-menu-v7.png) |
+<p align="center">
+  <img src="docs/images/mobile-v7.png" width="280" alt="手机端文章列表" />
+  &nbsp;&nbsp;&nbsp;&nbsp;
+  <img src="docs/images/mobile-menu-v7.png" width="280" alt="手机端导航抽屉" />
+</p>
 
 ## 谁在用
 
