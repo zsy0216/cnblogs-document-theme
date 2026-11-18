@@ -1,6 +1,6 @@
 /* ============================================================
-   流苏主题 v7.37 · 2026-11-18
-   最近：标签页（/tag）重做 —— 博客园用 <table> 排标签，每行四个 <td>、列宽随内容撑开，390px 下表格 454px 直接撑出横向滚动条。改成 table/tbody/tr 摊平的网格（tr 用 display:contents），PC 四列、窄屏两列，块状样式与分类页对齐；同时去掉 #taglist 与 #taglist_main 的父子双层卡片。
+   流苏主题 v7.38 · 2026-11-18
+   最近：列表页顶部分类筛选条改为可配置：新增 LS_CONFIG.catbar（show / mode / list / hide / count / all / max），可自选分类、自定顺序、隐藏个别分类；截断时补「更多」入口
    ------------------------------------------------------------
    主题 v6 —— 基于博客园 2026 真实 DOM 重写
    ------------------------------------------------------------
@@ -560,6 +560,22 @@ html.qb-arc-page #mainContent .entrylist {
     background: var(--accent-soft);
     color: var(--accent-deep) !important;
     font-weight: 600;
+}
+/* max 截断后补的「更多」入口：虚线框 + 箭头，和真分类区分开，不会被当成又一个分类去点。
+   边框色用 --meta 而不是 --line：--line 在暗色下几乎和卡片底同色，框会看不见。 */
+.qb-catbar a.qb-cat-more {
+    padding: 3px 9px;
+    background: transparent;
+    border: 1px dashed var(--meta);
+    color: var(--meta) !important;
+}
+.qb-catbar a.qb-cat-more::after {
+    content: '›';
+    margin-left: 4px;
+}
+.qb-catbar a.qb-cat-more:hover {
+    border-color: var(--accent);
+    color: var(--accent-deep) !important;
 }
 /* 还能往右滑时给个边缘渐隐：不加的话最后一个胶囊被硬切一半，
    看起来像布局溢出，而不是「这里还能滑」。到末尾自动摘掉，别一直糊着。 */

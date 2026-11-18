@@ -579,6 +579,10 @@ CFG_AUTHOR = '''/* ===== 配置区：整个主题只有这一处要改，改完�
       顶栏  nav { brand 博客名, home 首页, logo 头像图, mark 十字标记, dark 暗色按钮,
                   links [{ t 文字, h 地址, b 1=新窗口, on 1=强制高亮 }] }
       公告  notice { show 是否显示, title 标题, html 正文（支持 HTML，留空则用后台公告字段） }
+      分类条 catbar { show 是否显示, mode 'auto'|'pick', list 分类名数组（顺序即显示顺序）,
+                      hide 想藏掉的分类名, count 是否带篇数, all 是否要「全部」, max 最多几个 }
+             不写 = 全自动（抓到几个分类就显示几个）；只想去掉个别分类用 hide；
+             只显示固定几个用 mode:'pick' + list，超出的自动补「更多 ›」指向分类页。
    ④ 地址里的 {ym} 会展开成当前年月（归档必须带年月，根路径实测 404），不用每月手改。
    ⑤ 换成自己的站：改 nav.home 与 links 里的域名即可。 */
 window.LS_CONFIG = {
@@ -620,6 +624,11 @@ window.LS_CONFIG = {
         + '<a href="https://msg.cnblogs.com/send/Ep%E6%B5%81%E8%8B%8F">留言</a>'
         + '</p>'
   }
+
+  /* 列表页顶部的分类条：不写 = 全自动（站里有几个分类就显示几个，带篇数）。
+     想自己挑就放开下面这行 —— 顺序即显示顺序，hide 优先级最高，
+     max 超出的部分会自动补一个「更多 ›」指向分类页。 */
+  // catbar: { mode: 'pick', list: ['后端', '计算机网络', '英语'], hide: ['随笔'], max: 6 }
 };'''
 
 
@@ -650,6 +659,11 @@ window.LS_CONFIG = {
   //     { t: 'GitHub', h: 'https://github.com/你的账号', b: 1 }
   //   ]
   // }
+
+  /* ③ 列表页顶部的分类筛选条：默认全自动 —— 站里有几个分类就显示几个，带篇数。
+        只想去掉个别分类：写 hide；只显示固定几个：mode:'pick' + list（顺序即显示顺序），
+        剩下的自动补一个「更多 ›」指向分类页。 */
+  // catbar: { mode: 'pick', list: ['后端', '计算机网络', '英语'], hide: ['随笔'], max: 6 }
 };'''
 
 

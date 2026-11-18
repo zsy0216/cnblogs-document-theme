@@ -1,4 +1,4 @@
-<!-- 流苏主题 v7.37 · 2026-11-18 页脚 HTML（压缩版）
+<!-- 流苏主题 v7.38 · 2026-11-18 页脚 HTML（压缩版）
      位置：博客园后台 -> 设置 -> 页脚 HTML 代码（粘贴前先清空）
      说明：本文件由 _dev-tools/gen-footer-min.py 从 footer-script-v7.html 生成，
            功能完全一致，只删注释与缩进。要改逻辑请改源文件后重新生成，不要改这里。 -->
@@ -56,6 +56,15 @@ notice: {
 show: true,
 title: '公告',
 html: ''
+},
+catbar: {
+show: true,
+mode: 'auto',
+list: [],
+hide: [],
+count: true,
+all: true,
+max: 0
 }
 };
 var u = {};
@@ -1082,19 +1091,84 @@ function upd() {
 var more = bar.scrollWidth - bar.clientWidth - bar.scrollLeft > 4;
 if (more) { bar.classList.add('qb-fade-r'); } else { bar.classList.remove('qb-fade-r'); }
 }
+bar._qbFadeUpd = upd;
 upd();
 requestAnimationFrame(upd);
 bar.addEventListener('scroll', upd, { passive: true });
 window.addEventListener('resize', upd);
 window.addEventListener('load', upd);
 }
+function catbarCfg() {
+var c = (CFG && CFG.catbar) || {};
+function names(v) {
+if (v == null) return [];
+var arr = v instanceof Array ? v : String(v).split(/[,，]/);
+var out = [], seen = {};
+arr.forEach(function (x) {
+var n = (x && typeof x === 'object')
+? (x.n != null ? x.n : (x.name != null ? x.name : x.t))
+: x;
+n = String(n == null ? '' : n).replace(/\s+/g, ' ').trim();
+if (!n || seen[n]) return;
+seen[n] = 1;
+out.push(n);
+});
+return out;
+}
+var max = parseInt(c.max, 10);
+return {
+show: c.show !== false,
+mode: c.mode === 'pick' ? 'pick' : 'auto',
+list: names(c.list),
+hide: names(c.hide),
+count: c.count !== false,
+all: c.all !== false,
+max: max > 0 ? max : 0
+};
+}
+function pickCats(cfg) {
+var src = (TAXO.list || []).slice();
+var byName = {};
+src.forEach(function (c) { byName[c.n] = c; });
+var out = [], used = {};
+cfg.list.forEach(function (n) {
+var c = byName[n];
+if (!c || used[n]) return;
+used[n] = 1;
+out.push(c);
+});
+if (cfg.mode === 'pick' && !out.length) {
+out = src.slice();
+} else if (cfg.mode === 'auto') {
+src.forEach(function (c) { if (!used[c.n]) out.push(c); });
+}
+if (cfg.hide.length) {
+out = out.filter(function (c) { return cfg.hide.indexOf(c.n) < 0; });
+}
+var more = 0;
+if (cfg.max && out.length > cfg.max) {
+more = out.length - cfg.max;
+out = out.slice(0, cfg.max);
+}
+return { list: out, more: more };
+}
 function initCatBar() {
 var flow = document.querySelector('#mainContent .forFlow');
-if (!flow || !TAXO.list || !TAXO.list.length) return null;
+var cfg = catbarCfg();
+var old = document.querySelector('.qb-catbar');
+if (!flow || !TAXO.list || !TAXO.list.length || !cfg.show) {
+if (old && old.parentNode) old.parentNode.removeChild(old);
+return null;
+}
 var isHome = !!flow.querySelector('.day');
 var m = location.pathname.match(/\/category\/(\d+)\.html$/);
 if (!isHome && !m) return null;
-var bar = document.querySelector('.qb-catbar');
+var picked = pickCats(cfg);
+if (!picked.list.length && !cfg.all) {
+if (old && old.parentNode) old.parentNode.removeChild(old);
+return null;
+}
+var bar = old;
 if (!bar) {
 bar = mk('nav', 'qb-catbar');
 bar.setAttribute('aria-label', '文章分类');
@@ -1104,18 +1178,27 @@ watchCatFade(bar);
 }
 bar.textContent = '';
 var cur = m ? location.pathname : '';
+if (cfg.all) {
 var all = mk('a', 'qb-cat', '全部');
 all.href = HOME;
 if (!cur) all.className += ' on';
 bar.appendChild(all);
-TAXO.list.forEach(function (c) {
-var a = mk('a', 'qb-cat', c.c ? c.n + ' ' + c.c : c.n);
+}
+picked.list.forEach(function (c) {
+var a = mk('a', 'qb-cat', cfg.count && c.c ? c.n + ' ' + c.c : c.n);
 a.href = c.u;
 a.title = '分类：' + c.n + (c.c ? '（' + c.c + ' 篇）' : '');
 var path = String(c.u).replace(/^https?:\/\/[^/]+/, '');
 if (cur && path === cur) a.className += ' on';
 bar.appendChild(a);
 });
+if (picked.more > 0) {
+var more = mk('a', 'qb-cat qb-cat-more', '更多');
+more.href = HOME + 'categories';
+more.title = '还有 ' + picked.more + ' 个分类，去分类页看全部';
+bar.appendChild(more);
+}
+if (bar._qbFadeUpd) bar._qbFadeUpd();
 return bar;
 }
 function initTaxonomy() {
