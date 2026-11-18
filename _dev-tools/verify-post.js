@@ -15,6 +15,9 @@ const { chromium } = require('playwright-core');
 
 const ROOT = 'E:/Documents/WorkBuddy/2026-10-11-15-08-36/blogcn-nicen-theme/';
 const BUNDLE = fs.readFileSync(ROOT + 'dist/document-theme.js', 'utf8');
+/* 真实样式表：默认「不塞进页面」（这些用例只关心脚本行为）。
+   cssInBody 的用例把它放到 body 末尾，复现线上「样式在 body、脚本注入的变量在 head」的顺序。 */
+const THEME_CSS = fs.readFileSync(ROOT + 'css/theme-v7.min.css', 'utf8');
 
 const PARA = '这是一段用来凑字数的正文，讨论的是 ArrayList 的扩容与随机访问。'.repeat(12);
 const CODE = ['public class A {', '    int n = 1;', '}'].join('\n');
@@ -81,7 +84,8 @@ async function open(browser, opts = {}) {
   const errs = [];
   p.on('pageerror', (e) => { if (!/Permissions policy/i.test(e.message)) errs.push(e.message); });
   const cfg = opts.config || '';
-  const html = cfg ? FAKE.replace('<div id="page_begin_html">', cfg + '<div id="page_begin_html">') : FAKE;
+  let html = cfg ? FAKE.replace('<div id="page_begin_html">', cfg + '<div id="page_begin_html">') : FAKE;
+  if (opts.cssInBody) html = html.replace('</body>', '<style>' + THEME_CSS + '</style></body>');
   await p.route('**/*', (route) => {
     const u = route.request().url();
     if (u.endsWith('/document-theme.js')) {
@@ -281,6 +285,17 @@ async function open(browser, opts = {}) {
       .getPropertyValue('--accent').trim());
     expect('读者选择优先于 accent', got2, '#3b82f6');
     await o2.ctx.close();
+
+    /* v7.33 回归：样式表在 body 里的时候也必须能改色。
+       线上主题样式是页首里的 document.write 写进 #page_begin_html（body 开头）的，
+       而 applyTheme 的 <style> 是解析期追加到 <head> 末尾 —— 文档顺序反而更靠前。
+       同为 :root、同特异度，后出现的赢，曾经把配色按回紫色（色点能点、选中态也对，
+       只有颜色不动）。旧版本样式内联在 CSS 字段里（head）所以从没暴露。 */
+    const o3 = await open(browser, { theme: 'blue', cssInBody: true });
+    const got3 = await o3.p.evaluate(() => getComputedStyle(document.documentElement)
+      .getPropertyValue('--accent').trim());
+    expect('样式在 body 里也能改色', got3, '#3b82f6');
+    await o3.ctx.close();
   }
 
   /* ---------- 5. 移动端 ---------- */

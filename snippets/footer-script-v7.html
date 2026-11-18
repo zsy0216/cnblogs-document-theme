@@ -1,8 +1,8 @@
-<!-- 流苏主题 v7.32 · 2026-11-17 页脚 HTML 重要脚本
+<!-- 流苏主题 v7.33 · 2026-11-18 页脚 HTML 重要脚本
      位置：博客园后台 -> 设置 -> 页脚 HTML 代码
      说明：1. 这里的 script 包含全部 DOM 操作逻辑（目录生成、滚动高亮、部件搬运）。2. 粘贴前务必备份原有内容。3. 博客园 HTML 校验器：确保没有未配对的尖括号，所有符号合法。 -->
 <script>
-/* 流苏主题 v7.32 · 2026-11-17 页脚：列表页文章目录 / 详情页文章目录 / 归档时间线 / 分页 / 回到顶部 / 滚动高亮 */
+/* 流苏主题 v7.33 · 2026-11-18 页脚：列表页文章目录 / 详情页文章目录 / 归档时间线 / 分页 / 回到顶部 / 滚动高亮 */
 (function () {
   'use strict';
 
@@ -447,24 +447,49 @@
     if (!list.children.length) return false;
     panel.appendChild(list);
 
-    /* 27 篇以上时太占高度，给列表一个上限，内部滚动 */
     var n = list.children.length;
-    list.style.maxHeight = 'calc(100vh - 220px)';
     list.style.overflowY = 'auto';
     list.style.overscrollBehavior = 'contain';
     panel.children[0].appendChild(mk('span', 'qb-count', n + ' 篇'));
 
+    left.insertBefore(panel, left.firstChild);
+
+    /* 列表高度按「这一列真正能给出多少」算，不再拍死一个 100vh - 220px。
+       列本身就是吸顶滚动容器（css: max-height: calc(100vh - 96px)），列表再固定留
+       220px 余量，等于在列内部又套了一层更矮的上限：1440×740 这种笔记本视口下，
+       首页 17 篇（544px）正好被卡出一条 24px 的滚动条 —— 内容明明放得下，
+       却要滚一下才看得全最后两条。现在只有真的装不下（长列表 / 窗口很矮）才给内部滚动。 */
+    fitPostList(list, panel);
+
     /* 真的超出可视高度时才加 .qb-scroll：CSS 用它做底部渐隐，
        避免最后一行被切成半截露出半个字（短列表不加，免得淡掉末项） */
-    watchOverflow(list);
-
-    left.insertBefore(panel, left.firstChild);
+    watchOverflow(list, function () { fitPostList(list, panel); });
     return true;
   }
 
-  /* 列表是否溢出：溢出才打标记，随窗口变化实时更新 */
-  function watchOverflow(el) {
+  /* 给文章列表定上限：可用高度 = 列的 max-height − 面板除列表外的占位（内边距/标题/边框）。
+     用「面板高 − 列表高」现算，而不是把 15px/12px/8px 这些内边距抄一遍 ——
+     以后改卡片留白，这里不用跟着改。 */
+  function fitPostList(list, panel) {
+    var left = document.getElementById('qb-left');
+    if (!left || !panel) return;
+    /* css 是 calc(100vh - 96px)，computedStyle 已解析成 px；读不到就退回视口估算 */
+    var mh = parseFloat(getComputedStyle(left).maxHeight);
+    if (!mh || isNaN(mh)) mh = window.innerHeight - 96;
+
+    /* 先撤掉上次的上限，量到的才是内容真实高度 */
+    list.style.maxHeight = '';
+    var chrome = panel.offsetHeight - list.offsetHeight;
+    var avail = Math.floor(mh - chrome);
+    /* 至少给 8 行的位置，否则窗口极矮时列表会缩成一条缝，还不如让它整列滚 */
+    if (avail >= 260 && list.scrollHeight > avail) list.style.maxHeight = avail + 'px';
+  }
+
+  /* 列表是否溢出：溢出才打标记，随窗口变化实时更新。
+     extra：每次重算时先跑一遍（文章列表用它重新量上限）。 */
+  function watchOverflow(el, extra) {
     function upd() {
+      if (extra) extra();
       var over = el.scrollHeight - el.clientHeight > 4;
       if (over) { el.classList.add('qb-scroll'); } else { el.classList.remove('qb-scroll'); }
     }
@@ -1095,12 +1120,18 @@
     try {
       var st = document.createElement('style');
       st.id = 'qb-theme-sel';
-      /* 三个选择器必须并列：暗色下 html/body 各自重定义了 --accent，只写 :root 会被盖回去 */
+      /* 三个选择器必须并列：暗色下 html/body 各自重定义了 --accent，只写 :root 会被盖回去。
+
+         这里必须 !important（v7.33 修）：主题样式是页首里的 document.write 写进去的，
+         落点在 #page_begin_html（body 开头），而这段 <style> 追加在 <head> 末尾 ——
+         文档顺序上反而排在主题样式「前面」。同为 :root、同特异度，后出现的赢，
+         于是色点能点、选中态也对、localStorage 也写了，唯独变量被主题样式覆盖回紫色。
+         （v7.30 及以前样式内联在 CSS 字段里、位置在 head，所以从来没暴露。） */
       st.textContent =
-        ':root{--accent:' + t.l + ';--accent-deep:' + shade(t.l, .82) +
-        ';--accent-soft:rgba(' + lr + ',.11)}' +
-        'html.qb-dark,body.qb-dark{--accent:' + t.d + ';--accent-deep:' + tint(t.d, .2) +
-        ';--accent-soft:rgba(' + dr + ',.16)}';
+        ':root{--accent:' + t.l + ' !important;--accent-deep:' + shade(t.l, .82) +
+        ' !important;--accent-soft:rgba(' + lr + ',.11) !important}' +
+        'html.qb-dark,body.qb-dark{--accent:' + t.d + ' !important;--accent-deep:' +
+        tint(t.d, .2) + ' !important;--accent-soft:rgba(' + dr + ',.16) !important}';
       (document.head || document.documentElement).appendChild(st);
     } catch (e) { /* 无 head 时忽略，配色退回默认 */ }
   }

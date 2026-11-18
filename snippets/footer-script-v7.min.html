@@ -1,4 +1,4 @@
-<!-- 流苏主题 v7.32 · 2026-11-17 页脚 HTML（压缩版）
+<!-- 流苏主题 v7.33 · 2026-11-18 页脚 HTML（压缩版）
      位置：博客园后台 -> 设置 -> 页脚 HTML 代码（粘贴前先清空）
      说明：本文件由 _dev-tools/gen-footer-min.py 从 footer-script-v7.html 生成，
            功能完全一致，只删注释与缩进。要改逻辑请改源文件后重新生成，不要改这里。 -->
@@ -315,16 +315,27 @@ list.appendChild(li);
 if (!list.children.length) return false;
 panel.appendChild(list);
 var n = list.children.length;
-list.style.maxHeight = 'calc(100vh - 220px)';
 list.style.overflowY = 'auto';
 list.style.overscrollBehavior = 'contain';
 panel.children[0].appendChild(mk('span', 'qb-count', n + ' 篇'));
-watchOverflow(list);
 left.insertBefore(panel, left.firstChild);
+fitPostList(list, panel);
+watchOverflow(list, function () { fitPostList(list, panel); });
 return true;
 }
-function watchOverflow(el) {
+function fitPostList(list, panel) {
+var left = document.getElementById('qb-left');
+if (!left || !panel) return;
+var mh = parseFloat(getComputedStyle(left).maxHeight);
+if (!mh || isNaN(mh)) mh = window.innerHeight - 96;
+list.style.maxHeight = '';
+var chrome = panel.offsetHeight - list.offsetHeight;
+var avail = Math.floor(mh - chrome);
+if (avail >= 260 && list.scrollHeight > avail) list.style.maxHeight = avail + 'px';
+}
+function watchOverflow(el, extra) {
 function upd() {
+if (extra) extra();
 var over = el.scrollHeight - el.clientHeight > 4;
 if (over) { el.classList.add('qb-scroll'); } else { el.classList.remove('qb-scroll'); }
 }
@@ -769,10 +780,10 @@ try {
 var st = document.createElement('style');
 st.id = 'qb-theme-sel';
 st.textContent =
-':root{--accent:' + t.l + ';--accent-deep:' + shade(t.l, .82) +
-';--accent-soft:rgba(' + lr + ',.11)}' +
-'html.qb-dark,body.qb-dark{--accent:' + t.d + ';--accent-deep:' + tint(t.d, .2) +
-';--accent-soft:rgba(' + dr + ',.16)}';
+':root{--accent:' + t.l + ' !important;--accent-deep:' + shade(t.l, .82) +
+' !important;--accent-soft:rgba(' + lr + ',.11) !important}' +
+'html.qb-dark,body.qb-dark{--accent:' + t.d + ' !important;--accent-deep:' +
+tint(t.d, .2) + ' !important;--accent-soft:rgba(' + dr + ',.16) !important}';
 (document.head || document.documentElement).appendChild(st);
 } catch (e) { }
 }
