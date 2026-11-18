@@ -10,9 +10,9 @@
     样式.css          = 「页面定制 CSS 代码」字段：首帧标记 + 完整压缩样式
     页首.html         = 「页首 HTML 代码」字段（通用版，发给别人用）：
                         配置整块留空，脚本按当前站点推导品牌名与站内链接；
-                        js 从 jsDelivr 取，主源 gcore、备源 cdn，两个地址都钉版本号。
-    页首-我的站.html  = 同一套模板，但配置是作者本站的（品牌 / 头像 / 公告 / 菜单），
-                        备源换成作者自己的博客园文件空间。只有作者自己贴这一份。
+                        js 从 jsDelivr 取，主源 cdn、备源 gcore，两个地址都跟随 @latest。
+    页首-我的站.html  = 同一套模板，但配置是作者本站的（品牌 / 头像 / 公告 / 菜单）。
+                        只有作者自己贴这一份。
     页脚、公告两个字段留空即可，不再生成占位文件。
 
     为什么通用版不能共用作者那份配置：v7.26 之前只有一份，别人照 README 贴完，
@@ -51,6 +51,8 @@ SNIP = os.path.join(ROOT, 'snippets')
 DEFAULT_OUT = os.path.join(ROOT, 'dist', 'paste')
 
 # 合并版在博客园文件空间的直链。换账号 / 换文件名时改这一行。
+# v7.34 起不再当备源：那份文件是手工上传的，发版后很容易停在旧包（实测 v7.32 发布当天
+# 该地址仍是上一版），兜底下来会和刚贴的 CSS 版本错配。留作应急手工回滚用。
 BUNDLE_URL = 'https://blog-static.cnblogs.com/files/blogs/477677/document-theme.js'
 # GitHub 仓库镜像（jsDelivr），页首优先取它。改版只要 push 并打 tag，不必再登后台传文件；
 # 缺点在国际线路，所以页首里配了 onerror 兜底回 BUNDLE_URL。
@@ -70,7 +72,14 @@ BUNDLE_URL = 'https://blog-static.cnblogs.com/files/blogs/477677/document-theme.
 #       所以 URL 里拼一个「当天日期」——每天换一次 key，浏览器不会拿 7 天前的缓存，
 #       发版后最迟次日全网生效，不需要任何人动后台；
 #     · 忘了打 tag 也不会 404：@latest 仍解析到上一个 tag，页面停在旧版但不破。
-MIRROR_REPO = 'https://gcore.jsdelivr.net/gh/zsy0216/cnblogs-document-theme'
+#
+# v7.34：主源从 gcore 换成 cdn.jsdelivr.net，备源留给 gcore。原因只有一条 —— 可清除性：
+#   gcore 会把「@latest 解析出的版本」缓存 12 小时，且 purge.jsdelivr.net 的 providers
+#   只有 CF / FY，gcore 不在清除名单里。实测 v7.33 发布后 cdn / fastly 立刻是新版，
+#   gcore 仍是 v7.32，换全新查询串也绕不过（它缓存的是解析结果，不是 URL）。
+#   cdn.jsdelivr.net 支持 purge，发版后调一次 purge 就即时生效 —— 这对「报了个 bug 立刻要看到」
+#   是硬需求。代价是 cdn 在某些国内线路比 gcore 略慢，但都在可用范围内（实测均 200）。
+MIRROR_REPO = 'https://cdn.jsdelivr.net/gh/zsy0216/cnblogs-document-theme'
 
 
 def mirror_url(ver):
@@ -860,25 +869,25 @@ def build(ver, mode='hosted'):
                         .replace('__CFG__', cfg)
                         .replace('__NAVBLOCK__', navblock))
 
-    # 通用版备源 = 同一 CDN 的另一个节点（cdn.jsdelivr.net）：版本一致、跨域可用。
+    # 备源 = 同一 CDN 的另一个节点（gcore.jsdelivr.net）：版本一致、跨域可用。
     # 不用作者的 blog-static 做备源，两个理由都有实测撑：
     #   · 它对 Referer 只放行 *.cnblogs.com（2026-11-17 实测 https://example.com/ → 403），
     #     绑了自定义域名的博客用不了；
     #   · 那份文件是手工上传的，同一天查还是 109628 B 的旧包 —— 兜底下来会和用户刚贴的
     #     新 CSS 版本错配，有样式没功能，比干脆没有更难看。
-    generic_fallback = mirror_url(ver).replace('//gcore.jsdelivr.net', '//cdn.jsdelivr.net')
-    # 作者版备源 = 自己的博客园文件空间：同域 CDN 最快，且作者自己能保证每次发版都传
-    author_fallback = '%s?v=%s' % (BUNDLE_URL, ver.lstrip('v'))
+    generic_fallback = mirror_url(ver).replace('//cdn.jsdelivr.net', '//gcore.jsdelivr.net')
+    # 作者版备源同理走 gcore：blog-static 那份要手工上传，忘了传就会把读者按在旧包上。
+    author_fallback = mirror_url(ver).replace('//cdn.jsdelivr.net', '//gcore.jsdelivr.net')
 
     # 样式的外链与备源：同一个 @latest，换节点就是备源（样式没有手工上传的副本可用）。
     css_m = css_url()
-    css_f = css_m.replace('//gcore.jsdelivr.net', '//cdn.jsdelivr.net')
+    css_f = css_m.replace('//cdn.jsdelivr.net', '//gcore.jsdelivr.net')
 
     # 通用版不写 <link rel="icon">：那是作者的头像，别人贴了会把人家站的图标换掉；
     # 不写就沿用博客园自己的 favicon。
-    generic_links = ('<link rel="preconnect" href="https://gcore.jsdelivr.net" crossorigin />\n'
-                     '<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />')
-    author_links = ('<link rel="preconnect" href="https://blog-static.cnblogs.com" />\n'
+    generic_links = ('<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />\n'
+                     '<link rel="preconnect" href="https://gcore.jsdelivr.net" crossorigin />')
+    author_links = ('<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />\n'
                     '<link rel="preconnect" href="https://gcore.jsdelivr.net" crossorigin />\n'
                     '<link rel="icon" href="%s" />' % ICON_URL)
 
@@ -897,7 +906,7 @@ def build(ver, mode='hosted'):
         '页首-我的站.html': head_for(
             CFG_AUTHOR, author_fallback,
             hdr='全托管 · 作者自用',
-            note='带本站品牌 / 头像 / 公告与菜单；备源用自己博客园文件空间。\n'
+            note='带本站品牌 / 头像 / 公告与菜单；主源 cdn、备源 gcore（都可 purge，发版即时生效）。\n'
                  '     别人装主题请用「页首.html」，那份不带任何作者信息。',
             links=author_links, css_m=css_m, css_f=css_f,
             # 作者站的 nav 是确定的，直接渲染成静态 HTML，跨页过渡才拍得到完整顶栏
@@ -954,8 +963,8 @@ def main():
             print('镜像 js：%s' % mirror_url(ver))
             print('镜像 css：%s' % css_url())
             print('      ↑ @latest 由 CDN 解析到最新 tag，必须先 push 并 git tag %s（否则停在上一版）' % ver)
-            print('作者备源：%s?v=%s （改了 js 记得重新上传到这个地址，否则作者自己的站会停在旧版）'
-                  % (BUNDLE_URL, ver.lstrip('v')))
+            print('备源：gcore.jsdelivr.net（同样 @latest，主源挂了自动接管）')
+            print('      ↑ 发版后想让前台立刻生效，务必 curl purge.jsdelivr.net 清一次 cdn 的解析缓存')
             print('应急：CDN 全挂时贴「样式-内联备份.css」，页首换回 tag v7.30 那份（内联模式不受影响）')
     sys.exit(0 if ok else 1)
 

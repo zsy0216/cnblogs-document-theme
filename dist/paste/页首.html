@@ -1,4 +1,4 @@
-<!-- 流苏主题 v7.33 · 页首 HTML（全托管 · 通用版）
+<!-- 流苏主题 v7.34 · 页首 HTML（全托管 · 通用版）
      贴到「页首 HTML 代码」字段即可：样式和脚本都从 GitHub 仓库（jsDelivr @latest）加载，不需要上传任何文件。
      配置留空就用你自己的博客信息；以后升级不用再动任何字段 —— 自动跟随作者最新版。 -->
 
@@ -9,8 +9,8 @@ if (/\/(?:p\/)?archive\/\d{4}\/\d{1,2}/.test(location.pathname)) {
 }
 </script>
 
-<link rel="preconnect" href="https://gcore.jsdelivr.net" crossorigin />
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+<link rel="preconnect" href="https://gcore.jsdelivr.net" crossorigin />
 
 <!-- 顶栏整条在这里一次性落地，不「先放空壳、再回填」：
      跨页视图过渡的快照取的是「新页首绘那一帧」，壳已解析、内容还没填的中间态
@@ -180,10 +180,10 @@ window.LS_CONFIG = {
   var d = new Date(), pad = function (n) { return n < 10 ? '0' + n : '' + n; };
   var stamp = '' + d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate());
   var q = function (u) { return u + (u.indexOf('?') < 0 ? '?' : '&') + 'd=' + stamp; };
-  var MIRROR = q('https://gcore.jsdelivr.net/gh/zsy0216/cnblogs-document-theme@latest/dist/document-theme.js');
-  var FALLBACK = q('https://cdn.jsdelivr.net/gh/zsy0216/cnblogs-document-theme@latest/dist/document-theme.js');
-  var CSS_M = q('https://gcore.jsdelivr.net/gh/zsy0216/cnblogs-document-theme@latest/css/theme-v7.min.css');
-  var CSS_F = q('https://cdn.jsdelivr.net/gh/zsy0216/cnblogs-document-theme@latest/css/theme-v7.min.css');
+  var MIRROR = q('https://cdn.jsdelivr.net/gh/zsy0216/cnblogs-document-theme@latest/dist/document-theme.js');
+  var FALLBACK = q('https://gcore.jsdelivr.net/gh/zsy0216/cnblogs-document-theme@latest/dist/document-theme.js');
+  var CSS_M = q('https://cdn.jsdelivr.net/gh/zsy0216/cnblogs-document-theme@latest/css/theme-v7.min.css');
+  var CSS_F = q('https://gcore.jsdelivr.net/gh/zsy0216/cnblogs-document-theme@latest/css/theme-v7.min.css');
   var KEY = 'qb-src-fail', TTL = 3600000;
 
   /* 样式：解析期就写进去，和下面的脚本并行下载（不是串行等）。

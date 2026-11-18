@@ -83,8 +83,8 @@ CSS 字段里那 5 KB 只放「必须早于首绘」的三段（顶栏骨架、�
 
 | 顺序 | 地址 | 说明 |
 |:---:|:---|:---|
-| 主源 | `gcore.jsdelivr.net/gh/zsy0216/cnblogs-document-theme@latest/…` | GitHub 仓库镜像，`@latest` 指向最新 tag |
-| 备源 | `cdn.jsdelivr.net/gh/zsy0216/…@latest/…` | 同一 CDN 的另一节点，主源失败时自动接管 |
+| 主源 | `cdn.jsdelivr.net/gh/zsy0216/cnblogs-document-theme@latest/…` | GitHub 仓库镜像，`@latest` 指向最新 tag，支持 purge，发版即时生效 |
+| 备源 | `gcore.jsdelivr.net/gh/zsy0216/…@latest/…` | 同一 CDN 的另一节点，主源失败时自动接管 |
 
 两个都在公网 CDN 上，`*.cnblogs.com` 和绑了自定义域名的博客都能取。主源失败会记进 `localStorage`，
 一小时内直连备源，不会每次进站都等一遍超时。样式两个源都取不到时，`document-theme.js` 会把自带的
@@ -119,9 +119,10 @@ CSS 字段里那 5 KB 只放「必须早于首绘」的三段（顶栏骨架、�
 
 - **别用 `@master`**：分支引用在 jsDelivr 各节点会长期缓存。push 完新版本，fastly / cdn 已回源，
   gcore 仍返回两周前的旧包；加 `?v=` 也无效（gcore 的缓存键不含 query），`purge.jsdelivr.net` 也清不动它。
+  这也是**主源用 cdn、gcore 只当备源**的原因：gcore 连 `@latest` 的解析结果都缓存 12 小时，且清不掉。
   `@latest` 不一样：它由 CDN 端解析成最新 **tag**（tag 是不可变路径，缓存命中即是正确内容），
   解析结果 12 小时内刷新，配合页首的每日日期参数就够用了。
-- **`blog-static` 只能当你自己的备源**：它对 Referer 只放行 `*.cnblogs.com`
+- **`blog-static` 只能当你自己的备源**（v7.34 起页首默认不再引用它）：它对 Referer 只放行 `*.cnblogs.com`
   （2026-11-17 实测 `https://example.com/` 直接 403），绑了自定义域名的读者取不到。
 
 ### 装完怎么确认
@@ -132,8 +133,8 @@ CSS 字段里那 5 KB 只放「必须早于首绘」的三段（顶栏骨架、�
 |:---|:---|
 | `--qb-field` | 1 处（第 1 行） |
 | `@view-transition` | 1 处 |
-| `gcore.jsdelivr.net` | 1 处（主源） |
-| `cdn.jsdelivr.net` | 1 处（备源） |
+| `cdn.jsdelivr.net` | 1 处（主源） |
+| `gcore.jsdelivr.net` | 1 处（备源） |
 | `document-theme.js` | 2 处（主源 + 备源各一处） |
 | `qb-right` | **0 处**（有的话说明页脚旧脚本没清干净） |
 

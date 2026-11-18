@@ -1,5 +1,5 @@
-<!-- 流苏主题 v7.33 · 页首 HTML（全托管 · 作者自用）
-     带本站品牌 / 头像 / 公告与菜单；备源用自己博客园文件空间。
+<!-- 流苏主题 v7.34 · 页首 HTML（全托管 · 作者自用）
+     带本站品牌 / 头像 / 公告与菜单；主源 cdn、备源 gcore（都可 purge，发版即时生效）。
      别人装主题请用「页首.html」，那份不带任何作者信息。 -->
 
 <script>
@@ -9,7 +9,7 @@ if (/\/(?:p\/)?archive\/\d{4}\/\d{1,2}/.test(location.pathname)) {
 }
 </script>
 
-<link rel="preconnect" href="https://blog-static.cnblogs.com" />
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
 <link rel="preconnect" href="https://gcore.jsdelivr.net" crossorigin />
 <link rel="icon" href="https://images.cnblogs.com/cnblogs_com/blogs/477677/galleries/1560097/t_261107101943_blog-icon.jpeg" />
 
@@ -131,10 +131,10 @@ window.LS_CONFIG = {
   var d = new Date(), pad = function (n) { return n < 10 ? '0' + n : '' + n; };
   var stamp = '' + d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate());
   var q = function (u) { return u + (u.indexOf('?') < 0 ? '?' : '&') + 'd=' + stamp; };
-  var MIRROR = q('https://gcore.jsdelivr.net/gh/zsy0216/cnblogs-document-theme@latest/dist/document-theme.js');
-  var FALLBACK = q('https://blog-static.cnblogs.com/files/blogs/477677/document-theme.js?v=7.33');
-  var CSS_M = q('https://gcore.jsdelivr.net/gh/zsy0216/cnblogs-document-theme@latest/css/theme-v7.min.css');
-  var CSS_F = q('https://cdn.jsdelivr.net/gh/zsy0216/cnblogs-document-theme@latest/css/theme-v7.min.css');
+  var MIRROR = q('https://cdn.jsdelivr.net/gh/zsy0216/cnblogs-document-theme@latest/dist/document-theme.js');
+  var FALLBACK = q('https://gcore.jsdelivr.net/gh/zsy0216/cnblogs-document-theme@latest/dist/document-theme.js');
+  var CSS_M = q('https://cdn.jsdelivr.net/gh/zsy0216/cnblogs-document-theme@latest/css/theme-v7.min.css');
+  var CSS_F = q('https://gcore.jsdelivr.net/gh/zsy0216/cnblogs-document-theme@latest/css/theme-v7.min.css');
   var KEY = 'qb-src-fail', TTL = 3600000;
 
   /* 样式：解析期就写进去，和下面的脚本并行下载（不是串行等）。
