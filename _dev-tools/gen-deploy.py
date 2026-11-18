@@ -713,8 +713,11 @@ __NAVBLOCK__
      · 备源 = 主源失效时自动接管（装配脚本按发放对象写入，见下方 FALLBACK 常量）；
      · 主源失败过就 1 小时内直接走备源，免得每次进站都等一遍超时（记 localStorage，
        不写 cookie，换设备互不影响，也不会把失败态永久钉死）；
-     · 地址后面拼一个「当天日期」：jsDelivr 给文件的缓存是浏览器 7 天 / 边缘 12 小时，
-       每天换一次 URL，浏览器就不会一直吃旧缓存，发版最迟次日生效；
+     · 地址后面拼一个「年月日时」：jsDelivr 给文件的缓存是浏览器 7 天 / 边缘 12 小时，
+       换 URL 是唯一能让浏览器重新取的可靠手段（-H 的 no-cache 只对本次请求有效）。
+       按天拼过一次，结果一天里发第二版时浏览器仍吃旧 CSS（同一个 key、7 天不过期），
+       表现为「样式改了但页面没变」—— 所以这里细到小时，发版最迟 1 小时生效，
+       急着看就 Ctrl+F5（硬刷新会跳过缓存）。一次贴好，此后不用再动本字段；
      · 仍然必须是 document.write：博客园会把页首里的外部 <script src> 改写成 defer，
        那样样式就排到首帧之后；内联脚本不会被改写，document.write 插入的是「解析期
        脚本」—— 阻塞解析、按序立刻执行，顶栏/目录/侧栏/公告全部赶在首帧之前就位。
@@ -722,7 +725,7 @@ __NAVBLOCK__
 (function () {
   var s = 'script';
   var d = new Date(), pad = function (n) { return n < 10 ? '0' + n : '' + n; };
-  var stamp = '' + d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate());
+  var stamp = '' + d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate()) + pad(d.getHours());
   var q = function (u) { return u + (u.indexOf('?') < 0 ? '?' : '&') + 'd=' + stamp; };
   var MIRROR = q('__MIRROR__');
   var FALLBACK = q('__FALLBACK__');
