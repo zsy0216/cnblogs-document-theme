@@ -166,6 +166,33 @@ def field_css(css):
 FIELD_MARK_LINK = 'html{--qb-field:2}\n'
 
 
+def min_css(src):
+    """把字段 CSS 压成一行。口径与 gen-min.py 相同：括号内原样保留
+    （calc(...) 里的空格、rgba(...) 里的逗号都不能动）。
+
+    为什么单独出一份压缩版（v7.35）：
+      字段内容不到 5 KB，压缩只省 2.5 KB，性能上无所谓 —— 真正的理由是「贴进去以后
+      后台编辑器里是三百行中文注释 + 缩进」，作者 2026-11-18 直接问「粘贴的 css 没有压缩」。
+      压缩版去掉注释、收成一行，视觉上就是一段 CSS；解释性文字在 README / 开发指南里。
+    """
+    body = re.sub(r'/\*[\s\S]*?\*/', '', src)
+    body = body.replace('\r', ' ').replace('\n', ' ').replace('\t', ' ')
+    parts = re.split(r'(\([^\)]*\))', body)     # 括号内原样保留
+    out = []
+    for part in parts:
+        if part.startswith('(') and part.endswith(')'):
+            out.append(part)
+        else:
+            part = re.sub(r'\s+', ' ', part)
+            part = re.sub(r'\s*([{};:,>~+])\s*', r'\1', part)
+            out.append(part)
+    body = ''.join(out).strip()
+    body = body.replace(';}', '}')                                  # 块尾分号
+    body = re.sub(r'(?<![\w#.])0\.(\d+)', r'.\1', body)             # 0.5 -> .5
+    body = re.sub(r'(?<![\w.])0px\b', '0', body)                    # 0px -> 0
+    return body
+
+
 def field_css_external(url):
     """全托管形态的「页面定制 CSS 代码」字段：首帧必需的那一段（约 5.0 KB）。
 
@@ -893,6 +920,9 @@ def build(ver, mode='hosted'):
 
     return {
         '样式.css': field_css_external(css_m),
+        # 压缩版：内容与上一份完全等价，只是去掉注释、收成一行（贴出来像一段 CSS）。
+        # 两份都留着 —— 想读懂这字段在干什么用上面那份，只是要贴就用这份。
+        '样式.min.css': min_css(field_css_external(css_m)),
         # 内联备份：CDN 全挂、或想退回「样式贴字段」的老形态时，贴这份即可（手动应急用，
         # 页首字段同时要换回 --qb-field:1 的老版本，见 README「应急回滚」）。
         '样式-内联备份.css': field_css(css),
@@ -956,7 +986,7 @@ def main():
         if 'inline' in modes:
             print('零闪版（推荐）：样式贴「页面定制 CSS 代码」，页脚贴「2-页脚.html」，页首贴「1-页首.html」')
         if 'hosted' in modes:
-            print('托管版（发给别人）：CSS 字段贴「样式.css」（闸门 + 顶栏骨架 + 跨页过渡，约 5.0 KB），'
+            print('托管版（发给别人）：CSS 字段贴「样式.min.css」（压缩版 3.0 KB；「样式.css」是同内容可读版），'
                   '页首字段贴「页首.html」；页脚与公告留空。')
             print('                   样式和脚本都跟随 @latest —— 以后发版两个字段都不用再动。')
             print('作者自用：页首改贴「页首-我的站.html」（带本站品牌/头像/公告），其余同上。')
