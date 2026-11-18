@@ -43,13 +43,13 @@
 
 | 步骤 | 贴到哪 | 贴什么 | 大小 |
 |:---:|:---|:---|---:|
-| 1 | 页面定制 CSS 代码 | `dist/paste/样式.css` | 53 KB |
-| 2 | 页首 HTML 代码 | `dist/paste/页首.html` | 4.3 KB |
+| 1 | 页面定制 CSS 代码 | `dist/paste/样式.min.css` | 3 KB |
+| 2 | 页首 HTML 代码 | `dist/paste/页首.html` | 11.5 KB |
 | 3 | 页脚 HTML 代码 / 公告 | 全选删除（公告留空即可） | — |
 
 保存后前台 `Ctrl+F5` 强刷。
 
-页首里那段加载器会从 `cdn.jsdelivr.net`（GitHub 仓库镜像）取 js，取不到自动换 `gcore.jsdelivr.net`；地址跟随最新 tag（`@latest`），所以以后发版我推个 tag 就行，你不用动任何字段。页首里没有任何我的信息：首标题取你页面标题里的博客名，菜单指向你自己的站，公告用你后台那份原文。
+页首里那段加载器会从 `cdn.jsdelivr.net`（GitHub 仓库镜像）取 js，取不到自动换 `fastly.jsdelivr.net`；地址跟随仓库主线（`@master`），所以我推上去就是发布，你不用动任何字段。页首里没有任何我的信息：首标题取你页面标题里的博客名，菜单指向你自己的站，公告用你后台那份原文。
 
 顶栏菜单、公告文案、强调色在页首那段 `window.LS_CONFIG` 里配，不用改源码：
 

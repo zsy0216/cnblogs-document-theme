@@ -110,13 +110,18 @@ async function open(browser, head) {
        这两处都是设计的一部分。真正不能出现的是「作者个人主页」那种身份链接。 */
     ck('不含作者个人 GitHub 主页', !/github\.com\/zsy0216(?!\/)/.test(HEAD_GENERIC), 'github.com/zsy0216');
 
-    const m = HEAD_GENERIC.match(/var MIRROR = '([^']+)'/);
-    const f = HEAD_GENERIC.match(/var FALLBACK = '([^']+)'/);
+    /* 地址可能直接是字符串，也可能被 q() 包一层（拼当天日期参数用，v7.30 起） */
+    const m = HEAD_GENERIC.match(/var MIRROR = (?:q\()?'([^']+)'/);
+    const f = HEAD_GENERIC.match(/var FALLBACK = (?:q\()?'([^']+)'/);
     ck('主源是 jsDelivr', !!m && /jsdelivr\.net/.test(m[1]), m && m[1]);
     ck('备源也是 jsDelivr', !!f && /jsdelivr\.net/.test(f[1]), f && f[1]);
-    const vm = m && (m[1].match(/@(v\d+\.\d+)\//) || [])[1];
-    const vf = f && (f[1].match(/@(v\d+\.\d+)\//) || [])[1];
-    ck('两个源版本号一致（' + vm + ' / ' + vf + '）', !!vm && vm === vf, [vm, vf]);
+    /* v7.36 起锚点是分支（@master），不再钉版本号 tag：两个源必须跟同一个引用、同一路径 */
+    const am = m && (m[1].match(/@([\w.-]+)\//) || [])[1];
+    const af = f && (f[1].match(/@([\w.-]+)\//) || [])[1];
+    ck('两个源跟随同一个引用（' + am + ' / ' + af + '）', !!am && am === af, [am, af]);
+    ck('两个源路径一致', !!m && !!f
+       && m[1].replace(/^https?:\/\/[^/]+/, '') === f[1].replace(/^https?:\/\/[^/]+/, ''),
+       [m && m[1], f && f[1]]);
     ck('两个源不是同一节点', !!m && !!f && m[1] !== f[1], [m && m[1], f && f[1]]);
   }
 
@@ -125,7 +130,8 @@ async function open(browser, head) {
   {
     ck('含作者品牌名', HEAD_AUTHOR.includes('Ep流苏'), '');
     ck('含作者头像 icon', HEAD_AUTHOR.includes('<link rel="icon"'), '');
-    ck('备源是自己的 blog-static', /blog-static\.cnblogs\.com/.test(HEAD_AUTHOR), '');
+    ck('备源是同一路径的另一个 jsDelivr 节点', /fastly\.jsdelivr\.net/.test(HEAD_AUTHOR), '');
+    ck('作者版也不再引用 blog-static 当备源', !/blog-static\.cnblogs\.com\/files/.test(HEAD_AUTHOR), '');
   }
 
   /* ---------- 3. 运行：别人的站上，通用版应该长成别人的样子 ---------- */

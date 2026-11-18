@@ -2,8 +2,8 @@
  * 页首加载器的双源逻辑，两份页首各测一遍。
  *
  * 现在有两份（gen-deploy.py 生成）：
- *   dist/paste/页首.html          通用版（发给别人）：主源 gcore、备源 cdn，两个都是 jsDelivr
- *   dist/paste/页首-我的站.html    作者版：主源 gcore、备源作者自己的 blog-static
+ *   dist/paste/页首.html          通用版（发给别人）：主源 cdn、备源 fastly，两个都是 jsDelivr
+ *   dist/paste/页首-我的站.html    作者版：同上（v7.36 起不再用作者的 blog-static）
  *
  * 每条链路都要真跑四种情况：
  *   A 主源正常   → 只发一个脚本请求，主题生效，不写失败记忆
@@ -27,8 +27,15 @@ function ck(label, ok, got) {
 }
 
 function lit(head, name) {
-  const m = head.match(new RegExp("var " + name + " = '([^']+)'"));
+  /* 地址可能被 q() 包着（拼当天日期参数用），两种写法都要认 */
+  const m = head.match(new RegExp("var " + name + " = (?:q\\()?'([^']+)'"));
   return m && m[1];
+}
+
+/* 把真实的源地址换成测试域名：q('…') 与 '…' 两种写法都替换 */
+function swap(head, name, litText, newUrl) {
+  head = head.replace("var " + name + " = q('" + litText + "')", "var " + name + " = '" + newUrl + "'");
+  return head.replace("var " + name + " = '" + litText + "'", "var " + name + " = '" + newUrl + "'");
 }
 
 function makeCase(file, tag) {
@@ -42,9 +49,7 @@ function makeCase(file, tag) {
   const MIRROR = 'https://' + tag + '-main.test/bundle.js';
   const FALLBACK = 'https://' + tag + '-backup.test/bundle.js';
   const page = '<!doctype html><html><head><meta charset="utf-8"><title>loader</title></head><body>'
-    + head
-        .replace("var MIRROR = '" + mirrorLit + "'", "var MIRROR = '" + MIRROR + "'")
-        .replace("var FALLBACK = '" + fallbackLit + "'", "var FALLBACK = '" + FALLBACK + "'")
+    + swap(swap(head, 'MIRROR', mirrorLit, MIRROR), 'FALLBACK', fallbackLit, FALLBACK)
     + '<div id="main"><div id="post_detail"><h1 class="postTitle">测试</h1>'
     + '<div class="postBody"><h2>一、小节</h2><p>正文。</p></div></div></div>'
     + '</body></html>';

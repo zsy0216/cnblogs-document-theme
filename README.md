@@ -47,20 +47,20 @@
 
 | 步骤 | 贴到哪 | 贴什么 | 大小 |
 |:---:|:---|:---|---:|
-| 1 | 设置 → **页面定制 CSS 代码** | `dist/paste/样式.min.css` | 3.0 KB（压缩版；`样式.css` 是同内容的可读版） |
+| 1 | 设置 → **页面定制 CSS 代码** | `dist/paste/样式.min.css` | 3.0 KB |
 | 2 | 设置 → **页首 HTML 代码** | `dist/paste/页首.html` | 11.5 KB |
 | 3 | 设置 → **页脚 HTML 代码** | **全选删除，必须清空** | — |
 | 4 | 设置 → **公告** | 全选删除（公告由脚本渲染；不删也行，会自动取原文） | — |
 
-样式和脚本都由页首自己从 GitHub 仓库加载（jsDelivr 镜像，跟随 `@latest`）—— **不用你传、不用你打 tag、不用你改任何地址**。
-CSS 字段里那 5 KB 只放「必须早于首绘」的三段（顶栏骨架、首帧闸门、跨页过渡），不含样式本身；所以以后作者改配色、改布局、发新版，**你的字段一个字都不用动**。
+样式和脚本都由页首自己从 GitHub 仓库加载（jsDelivr 镜像，跟随 `@master`）—— **不用你传、不用你改任何地址、也不用等作者打 tag**。
+CSS 字段里那 3 KB 只放「必须早于首绘」的三段（顶栏骨架、首帧闸门、跨页过渡），不含样式本身；所以以后作者改配色、改布局、发新版，**你的字段一个字都不用动**。
 
 ### 具体怎么贴
 
 > 动手前先做一件事：**页脚 HTML 代码 + 公告**两个字段 `Ctrl+A` → `Delete` → 保存。
 > ⚠️ 不能省：页脚里若残留旧版内联脚本，它会自己建一套右栏、和新版同时跑，怎么贴都不对。
 
-1. **贴 CSS（5.0 KB）**
+1. **贴 CSS（3.0 KB，一行）**
    页面定制 CSS 代码 → 全选删除 → 粘贴 `样式.min.css` 全文（一行，3 KB）→ 保存。
    首行是 `html{--qb-field:2}`（给 js 的标记，别删），后面是三段必须在首帧前生效的规则：
    博客园默认 `margin` 归零 + 整条顶栏的骨架、首帧闸门（结构齐之前不显示 `#home`，
@@ -83,8 +83,8 @@ CSS 字段里那 5 KB 只放「必须早于首绘」的三段（顶栏骨架、�
 
 | 顺序 | 地址 | 说明 |
 |:---:|:---|:---|
-| 主源 | `cdn.jsdelivr.net/gh/zsy0216/cnblogs-document-theme@latest/…` | GitHub 仓库镜像，`@latest` 指向最新 tag，支持 purge，发版即时生效 |
-| 备源 | `gcore.jsdelivr.net/gh/zsy0216/…@latest/…` | 同一 CDN 的另一节点，主源失败时自动接管 |
+| 主源 | `cdn.jsdelivr.net/gh/zsy0216/cnblogs-document-theme@master/…` | GitHub 仓库镜像，跟随 master 分支，作者 push 即发布，支持 purge |
+| 备源 | `fastly.jsdelivr.net/gh/zsy0216/…@master/…` | 同一 CDN 的另一节点，主源失败时自动接管 |
 
 两个都在公网 CDN 上，`*.cnblogs.com` 和绑了自定义域名的博客都能取。主源失败会记进 `localStorage`，
 一小时内直连备源，不会每次进站都等一遍超时。样式两个源都取不到时，`document-theme.js` 会把自带的
@@ -97,10 +97,10 @@ CSS 字段里那 5 KB 只放「必须早于首绘」的三段（顶栏骨架、�
 
 ### 升级到新版本
 
-**什么都不用做。** 页首取的是 `@latest`，作者推新 tag 后最迟次日自动生效：js 变了自动换，
+**什么都不用做。** 页首取的是 `@master`，作者一 push 就生效（受缓存所限，最迟次日）：js 变了自动换，
 样式变了也自动换，你后台那两个字段一个字都不用改。
 
-只有一种情况需要动手：**想退回内联形态**（比如 CDN 在你那边不可用）。那就贴 `dist/paste/样式-内联备份.css`
+只有一种情况需要动手：**想退回内联形态**（比如 CDN 在你那边不可用）。那就贴 `dist/fallback/样式-内联备份.css`
 （54 KB，含完整样式，`--qb-field:1`），同时把页首换回 tag `v7.30` 那一版（那一版不写样式外链）。
 
 有没有新版看 [CHANGELOG](CHANGELOG.md) 或仓库的 Releases。
@@ -109,7 +109,8 @@ CSS 字段里那 5 KB 只放「必须早于首绘」的三段（顶栏骨架、�
 
 上面那套用的还是我的仓库。要改源码、或不想依赖别人的仓库：
 
-1. fork（或 clone）仓库，改完 push，并打一个与版本号同名的 tag：`git tag v7.31 && git push --tags`；
+1. fork（或 clone）仓库，改完 push 就行 —— 页首取的是 `@master`，push 即发布；想冻结在某一版，
+   把地址里的 `@master` 换成 tag 名（这时才需要 `git tag vX.Y && git push origin vX.Y`）；
 2. 把页首里 `var MIRROR` / `var FALLBACK` / `var CSS_M` / `var CSS_F` 四行的地址换成你的账号
    （前两个是 js，后两个是样式；`CSS_F` 只在主源失败时用）；
 3. 也可以把 `dist/document-theme.js` 传到自己博客的「文件」，让 `FALLBACK` 指向
@@ -117,11 +118,12 @@ CSS 字段里那 5 KB 只放「必须早于首绘」的三段（顶栏骨架、�
 
 两个坑，实测踩过：
 
-- **别用 `@master`**：分支引用在 jsDelivr 各节点会长期缓存。push 完新版本，fastly / cdn 已回源，
-  gcore 仍返回两周前的旧包；加 `?v=` 也无效（gcore 的缓存键不含 query），`purge.jsdelivr.net` 也清不动它。
-  这也是**主源用 cdn、gcore 只当备源**的原因：gcore 连 `@latest` 的解析结果都缓存 12 小时，且清不掉。
-  `@latest` 不一样：它由 CDN 端解析成最新 **tag**（tag 是不可变路径，缓存命中即是正确内容），
-  解析结果 12 小时内刷新，配合页首的每日日期参数就够用了。
+- **`@master` 能不能用，全看你挂了哪几个节点**：分支引用不像 tag 那样是不可变路径，会被节点长期缓存。
+  `gcore.jsdelivr.net` 实测会吐两周前的旧包，换 `?v=` 也绕不过（它的缓存键不含 query），
+  `purge.jsdelivr.net` 又清不到它 —— 所以本项目**只挂 cdn 与 fastly 两个节点**：实测两者 push 后立刻回源，
+  purge 返回 `{"CF":true,"FY":true}`，两条链路都清得动，gcore 已彻底不用。你自己加节点前先 `curl` 看它跟不跟得上。
+  （v7.30~v7.35 曾用 `@latest` + 每次发版打 tag 来回避这件事，代价是 tag 列表成流水账；
+  v7.36 起改回 `@master`，tag 只留给大版本里程碑。）
 - **`blog-static` 只能当你自己的备源**（v7.34 起页首默认不再引用它）：它对 Referer 只放行 `*.cnblogs.com`
   （2026-11-17 实测 `https://example.com/` 直接 403），绑了自定义域名的读者取不到。
 
@@ -134,7 +136,7 @@ CSS 字段里那 5 KB 只放「必须早于首绘」的三段（顶栏骨架、�
 | `--qb-field` | 1 处（第 1 行） |
 | `@view-transition` | 1 处 |
 | `cdn.jsdelivr.net` | 1 处（主源） |
-| `gcore.jsdelivr.net` | 1 处（备源） |
+| `fastly.jsdelivr.net` | 1 处（备源） |
 | `document-theme.js` | 2 处（主源 + 备源各一处） |
 | `qb-right` | **0 处**（有的话说明页脚旧脚本没清干净） |
 

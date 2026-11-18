@@ -1,5 +1,5 @@
-<!-- 流苏主题 v7.35 · 页首 HTML（全托管 · 作者自用）
-     带本站品牌 / 头像 / 公告与菜单；主源 cdn、备源 gcore（都可 purge，发版即时生效）。
+<!-- 流苏主题 v7.36 · 页首 HTML（全托管 · 作者自用）
+     带本站品牌 / 头像 / 公告与菜单；主源 cdn、备源 fastly，两个都跟随 master 分支、都能 purge。
      别人装主题请用「页首.html」，那份不带任何作者信息。 -->
 
 <script>
@@ -10,7 +10,7 @@ if (/\/(?:p\/)?archive\/\d{4}\/\d{1,2}/.test(location.pathname)) {
 </script>
 
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
-<link rel="preconnect" href="https://gcore.jsdelivr.net" crossorigin />
+<link rel="preconnect" href="https://fastly.jsdelivr.net" crossorigin />
 <link rel="icon" href="https://images.cnblogs.com/cnblogs_com/blogs/477677/galleries/1560097/t_261107101943_blog-icon.jpeg" />
 
 <!-- 顶栏整条在这里一次性落地，不「先放空壳、再回填」：
@@ -115,7 +115,7 @@ window.LS_CONFIG = {
 
 <script>
 /* 4) 同步加载：样式与脚本都从这里取，主源 + 备源，失败自动切换（不需要你上传任何文件）。
-     · 主源 = GitHub 仓库（jsDelivr 的 @latest）：作者发版只要 push 打 tag，
+     · 主源 = GitHub 仓库（jsDelivr 的 @master 分支）：作者 push 即发布，
        这里永远取最新那版，你不需要为了升级再贴一次页首，也不用重贴样式字段；
      · 备源 = 主源失效时自动接管（装配脚本按发放对象写入，见下方 FALLBACK 常量）；
      · 主源失败过就 1 小时内直接走备源，免得每次进站都等一遍超时（记 localStorage，
@@ -131,10 +131,10 @@ window.LS_CONFIG = {
   var d = new Date(), pad = function (n) { return n < 10 ? '0' + n : '' + n; };
   var stamp = '' + d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate());
   var q = function (u) { return u + (u.indexOf('?') < 0 ? '?' : '&') + 'd=' + stamp; };
-  var MIRROR = q('https://cdn.jsdelivr.net/gh/zsy0216/cnblogs-document-theme@latest/dist/document-theme.js');
-  var FALLBACK = q('https://gcore.jsdelivr.net/gh/zsy0216/cnblogs-document-theme@latest/dist/document-theme.js');
-  var CSS_M = q('https://cdn.jsdelivr.net/gh/zsy0216/cnblogs-document-theme@latest/css/theme-v7.min.css');
-  var CSS_F = q('https://gcore.jsdelivr.net/gh/zsy0216/cnblogs-document-theme@latest/css/theme-v7.min.css');
+  var MIRROR = q('https://cdn.jsdelivr.net/gh/zsy0216/cnblogs-document-theme@master/dist/document-theme.js');
+  var FALLBACK = q('https://fastly.jsdelivr.net/gh/zsy0216/cnblogs-document-theme@master/dist/document-theme.js');
+  var CSS_M = q('https://cdn.jsdelivr.net/gh/zsy0216/cnblogs-document-theme@master/css/theme-v7.min.css');
+  var CSS_F = q('https://fastly.jsdelivr.net/gh/zsy0216/cnblogs-document-theme@master/css/theme-v7.min.css');
   var KEY = 'qb-src-fail', TTL = 3600000;
 
   /* 样式：解析期就写进去，和下面的脚本并行下载（不是串行等）。

@@ -1,6 +1,6 @@
 html{--qb-field:2}
 /* 流苏主题 · 样式外链模式（v7.31 起）
-   完整样式由页首从 https://cdn.jsdelivr.net/gh/zsy0216/cnblogs-document-theme@latest/css/theme-v7.min.css 加载，改配色/布局不需要再回来贴这个字段。
+   完整样式由页首从 https://cdn.jsdelivr.net/gh/zsy0216/cnblogs-document-theme@master/css/theme-v7.min.css 加载，改配色/布局不需要再回来贴这个字段。
    本字段只保留「必须早于首绘生效」的三段：布局零点 + 顶栏骨架、闸门、跨页过渡。
    样式或脚本挂了，2.5 秒纯 CSS 兜底放行，不会白屏。 */
 html { background: #fff }

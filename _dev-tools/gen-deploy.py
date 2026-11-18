@@ -7,12 +7,15 @@
     python _dev-tools/gen-deploy.py --check         只比对，不写盘
 
 产物（全托管 = 后台只填 CSS 与页首两个字段，页脚与公告保持空白；**不需要上传任何文件**）
-    样式.css          = 「页面定制 CSS 代码」字段：首帧标记 + 完整压缩样式
-    页首.html         = 「页首 HTML 代码」字段（通用版，发给别人用）：
-                        配置整块留空，脚本按当前站点推导品牌名与站内链接；
-                        js 从 jsDelivr 取，主源 cdn、备源 gcore，两个地址都跟随 @latest。
-    页首-我的站.html  = 同一套模板，但配置是作者本站的（品牌 / 头像 / 公告 / 菜单）。
-                        只有作者自己贴这一份。
+    落点遵循一条规矩（作者 2026-11-18）：**paste 目录只放要粘贴的文件**，别的一律挪开。
+    dist/paste/样式.min.css       = 「页面定制 CSS 代码」字段（压缩成一行，3 KB）
+    dist/paste/页首.html          = 「页首 HTML 代码」字段（通用版，发给别人用）：
+                                    配置整块留空，脚本按当前站点推导品牌名与站内链接；
+                                    js 从 jsDelivr 取，主源 cdn、备源 fastly，都跟随 @master。
+    dist/paste/页首-我的站.html    = 同一套模板，但配置是作者本站的（品牌 / 头像 / 公告 / 菜单）。
+                                    只有作者自己贴这一份。
+    dist/readable/样式-字段可读版.css = 同内容带注释，只用来读，不往后台贴。
+    dist/fallback/样式-内联备份.css   = CDN 全挂或退回内联形态时贴的全量样式（54 KB）。
     页脚、公告两个字段留空即可，不再生成占位文件。
 
     为什么通用版不能共用作者那份配置：v7.26 之前只有一份，别人照 README 贴完，
@@ -50,46 +53,52 @@ CSS = os.path.join(ROOT, 'css/theme-v7.css')
 SNIP = os.path.join(ROOT, 'snippets')
 DEFAULT_OUT = os.path.join(ROOT, 'dist', 'paste')
 
+# 全托管模式的落点（作者 2026-11-18 的要求：paste 目录只放「要粘贴的文件」）：
+#   paste/    样式.min.css、页首.html、页首-我的站.html   ← 打开就知道该贴哪个
+#   readable/ 样式-字段可读版.css   ← 带注释，想读懂这个字段在干什么时看（内容与 min 等价）
+#   fallback/ 样式-内联备份.css      ← 应急回滚 / 内联模式要贴的全量样式（54 KB）
+HOSTED_LAYOUT = {
+    '样式.css': ('readable', '样式-字段可读版.css'),
+    '样式-内联备份.css': ('fallback', '样式-内联备份.css'),
+}
+
 # 合并版在博客园文件空间的直链。换账号 / 换文件名时改这一行。
 # v7.34 起不再当备源：那份文件是手工上传的，发版后很容易停在旧包（实测 v7.32 发布当天
 # 该地址仍是上一版），兜底下来会和刚贴的 CSS 版本错配。留作应急手工回滚用。
 BUNDLE_URL = 'https://blog-static.cnblogs.com/files/blogs/477677/document-theme.js'
-# GitHub 仓库镜像（jsDelivr），页首优先取它。改版只要 push 并打 tag，不必再登后台传文件；
-# 缺点在国际线路，所以页首里配了 onerror 兜底回 BUNDLE_URL。
+# GitHub 仓库镜像（jsDelivr），页首优先取它。改版只要 push，不必再登后台传文件。
 #
-# 为什么钉 tag 而不是 @master（实测有据，别再改回去）：
-#   · jsDelivr 各节点会长期缓存分支引用。实测 push 完 v7.22 后，fastly / cdn 已回源
-#     到新包，gcore 仍返回两周前的 v7.17；带 ?v=7.22 也一样 —— gcore 的缓存键不含
-#     query，所以「加 ?v= 防旧缓存」对它无效。
-#   · purge.jsdelivr.net 只覆盖 CF / FY 两条链路，gcore 不在其中，清不动。
-#   · tag 是不可变 ref（新路径 = 无旧缓存），实测 @06359f6 立即拿到完整 109628 B 新包。
+# v7.36：锚点从 @latest（最新 tag）改成 @master（分支）。
+#   起因是作者 2026-11-18 的要求：「不用每次都打 tag，大版本的时候才打」。@latest 的语义是
+#   「最新 tag」，不打 tag 就永远停在旧版 —— 所以这两件事只能二选一：
+#     · @latest + 每次发版打 tag（v7.28~v7.35 的做法，tag 列表成了一本流水账）
+#     · @master + 大版本才打 tag（现在这个）
+#   选后者。以前不敢用分支引用的两个理由，现在都不成立了：
+#     ① gcore 会把分支引用缓存两周、且 purge 清不掉 —— gcore 已不用（v7.36 起备源换
+#        fastly.jsdelivr.net）。实测 @master 在 cdn / fastly 上都立刻拿到当前 HEAD，
+#        且 purge 返回 providers {"CF":true,"FY":true}，两条链路都清得动。
+#     ② 浏览器侧 max-age=604800（7 天）—— 跟 @latest 完全一样，靠页首运行时拼的
+#        「当天日期」参数打散：每天一个 key，发版最迟次日全网生效，谁都不用动后台。
+#   tag 从此只当里程碑：够得上一个版本节点（v8.0、大改版）时才打；平时 push 就是发布。
 #
-# v7.30：从「钉死某个 tag」改成「@latest + 当天日期参数」。
-#   上一版把 tag 写进页首，副作用是每发一版都得重贴页首 —— 这跟「装一次就不用再管」
-#   的初衷正好相反（作者本人 2026-11-17 指出）。现在：
-#     · @latest 由 CDN 端解析成最新 tag（实测 2026-11-17 返回 v7.29 的包，gcore/cdn 均 200）；
-#     · 响应头 Cache-Control 是 max-age=604800（浏览器 7 天）、s-maxage=43200（边缘 12 小时），
-#       所以 URL 里拼一个「当天日期」——每天换一次 key，浏览器不会拿 7 天前的缓存，
-#       发版后最迟次日全网生效，不需要任何人动后台；
-#     · 忘了打 tag 也不会 404：@latest 仍解析到上一个 tag，页面停在旧版但不破。
-#
-# v7.34：主源从 gcore 换成 cdn.jsdelivr.net，备源留给 gcore。原因只有一条 —— 可清除性：
-#   gcore 会把「@latest 解析出的版本」缓存 12 小时，且 purge.jsdelivr.net 的 providers
-#   只有 CF / FY，gcore 不在清除名单里。实测 v7.33 发布后 cdn / fastly 立刻是新版，
-#   gcore 仍是 v7.32，换全新查询串也绕不过（它缓存的是解析结果，不是 URL）。
-#   cdn.jsdelivr.net 支持 purge，发版后调一次 purge 就即时生效 —— 这对「报了个 bug 立刻要看到」
-#   是硬需求。代价是 cdn 在某些国内线路比 gcore 略慢，但都在可用范围内（实测均 200）。
+# 历史（记着别再走回头路）：
+#   · v7.30 之前把某个具体 tag 钉进页首，于是每发一版都得重贴页首，与「装一次就不用再管」
+#     的初衷相反（作者 2026-11-17 指出）；v7.30 改成 @latest + 当天日期参数。
+#   · v7.34 主源从 gcore 换成 cdn，只因可清除性：gcore 会缓存「@latest 解析出的版本」12 小时，
+#     而 purge.jsdelivr.net 只覆盖 CF / FY，gcore 不在名单里 —— 发版后 cdn 已是新版、gcore 还
+#     停在两版前，换全新查询串也绕不过（它缓存的是解析结果，不是 URL）。
 MIRROR_REPO = 'https://cdn.jsdelivr.net/gh/zsy0216/cnblogs-document-theme'
+MIRROR_BACKUP = MIRROR_REPO.replace('//cdn.jsdelivr.net', '//fastly.jsdelivr.net')
 
 
 def mirror_url(ver):
-    """镜像地址：跟随最新标签（@latest）。日期参数由页首在运行时拼上，见 HEAD_TOP。"""
-    return '%s@latest/dist/document-theme.js' % MIRROR_REPO
+    """镜像地址：跟随 master 分支。日期参数由页首在运行时拼上，见 HEAD_TOP。"""
+    return '%s@master/dist/document-theme.js' % MIRROR_REPO
 
 
 def css_url():
-    """样式外链：与 js 同源同版本，同样 @latest，日期参数同样运行时拼。"""
-    return '%s@latest/css/theme-v7.min.css' % MIRROR_REPO
+    """样式外链：与 js 同源同版本，同样 @master，日期参数同样运行时拼。"""
+    return '%s@master/css/theme-v7.min.css' % MIRROR_REPO
 
 
 # v7.31：样式从「内联进 CSS 字段」改成「外链 + 字段只留闸门」。
@@ -685,7 +694,7 @@ __NAVBLOCK__
 
 <script>
 /* 4) 同步加载：样式与脚本都从这里取，主源 + 备源，失败自动切换（不需要你上传任何文件）。
-     · 主源 = GitHub 仓库（jsDelivr 的 @latest）：作者发版只要 push 打 tag，
+     · 主源 = GitHub 仓库（jsDelivr 的 @master 分支）：作者 push 即发布，
        这里永远取最新那版，你不需要为了升级再贴一次页首，也不用重贴样式字段；
      · 备源 = 主源失效时自动接管（装配脚本按发放对象写入，见下方 FALLBACK 常量）；
      · 主源失败过就 1 小时内直接走备源，免得每次进站都等一遍超时（记 localStorage，
@@ -896,47 +905,48 @@ def build(ver, mode='hosted'):
                         .replace('__CFG__', cfg)
                         .replace('__NAVBLOCK__', navblock))
 
-    # 备源 = 同一 CDN 的另一个节点（gcore.jsdelivr.net）：版本一致、跨域可用。
+    # 备源 = 同一 CDN 的另一个节点（fastly.jsdelivr.net）：版本一致、跨域可用。
+    # v7.36 起不再用 gcore：它会把分支引用缓存两周，且 purge 覆盖不到（它缓存的是解析结果）。
     # 不用作者的 blog-static 做备源，两个理由都有实测撑：
     #   · 它对 Referer 只放行 *.cnblogs.com（2026-11-17 实测 https://example.com/ → 403），
     #     绑了自定义域名的博客用不了；
     #   · 那份文件是手工上传的，同一天查还是 109628 B 的旧包 —— 兜底下来会和用户刚贴的
     #     新 CSS 版本错配，有样式没功能，比干脆没有更难看。
-    generic_fallback = mirror_url(ver).replace('//cdn.jsdelivr.net', '//gcore.jsdelivr.net')
-    # 作者版备源同理走 gcore：blog-static 那份要手工上传，忘了传就会把读者按在旧包上。
-    author_fallback = mirror_url(ver).replace('//cdn.jsdelivr.net', '//gcore.jsdelivr.net')
+    generic_fallback = mirror_url(ver).replace('//cdn.jsdelivr.net', '//fastly.jsdelivr.net')
+    # 作者版备源同理走 fastly：blog-static 那份要手工上传，忘了传就会把读者按在旧包上。
+    author_fallback = mirror_url(ver).replace('//cdn.jsdelivr.net', '//fastly.jsdelivr.net')
 
-    # 样式的外链与备源：同一个 @latest，换节点就是备源（样式没有手工上传的副本可用）。
+    # 样式的外链与备源：同一个 @master，换节点就是备源（样式没有手工上传的副本可用）。
     css_m = css_url()
-    css_f = css_m.replace('//cdn.jsdelivr.net', '//gcore.jsdelivr.net')
+    css_f = css_m.replace('//cdn.jsdelivr.net', '//fastly.jsdelivr.net')
 
     # 通用版不写 <link rel="icon">：那是作者的头像，别人贴了会把人家站的图标换掉；
     # 不写就沿用博客园自己的 favicon。
     generic_links = ('<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />\n'
-                     '<link rel="preconnect" href="https://gcore.jsdelivr.net" crossorigin />')
+                     '<link rel="preconnect" href="https://fastly.jsdelivr.net" crossorigin />')
     author_links = ('<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />\n'
-                    '<link rel="preconnect" href="https://gcore.jsdelivr.net" crossorigin />\n'
+                    '<link rel="preconnect" href="https://fastly.jsdelivr.net" crossorigin />\n'
                     '<link rel="icon" href="%s" />' % ICON_URL)
 
     return {
+        # 可读版：落地在 readable/（见 HOSTED_LAYOUT），只用来读，不往后台贴。
         '样式.css': field_css_external(css_m),
-        # 压缩版：内容与上一份完全等价，只是去掉注释、收成一行（贴出来像一段 CSS）。
-        # 两份都留着 —— 想读懂这字段在干什么用上面那份，只是要贴就用这份。
+        # 压缩版：内容与上一份完全等价，只是去掉注释、收成一行。这是 paste/ 里贴的那份。
         '样式.min.css': min_css(field_css_external(css_m)),
         # 内联备份：CDN 全挂、或想退回「样式贴字段」的老形态时，贴这份即可（手动应急用，
-        # 页首字段同时要换回 --qb-field:1 的老版本，见 README「应急回滚」）。
+        # 页首字段同时要换回 --qb-field:1 的老版本，见 README「应急回滚」）。落地在 fallback/。
         '样式-内联备份.css': field_css(css),
         '页首.html': head_for(
             CFG_GENERIC, generic_fallback,
             hdr='全托管 · 通用版',
-            note='贴到「页首 HTML 代码」字段即可：样式和脚本都从 GitHub 仓库（jsDelivr @latest）加载，'
+            note='贴到「页首 HTML 代码」字段即可：样式和脚本都从 GitHub 仓库（jsDelivr，跟随 master）加载，'
                  '不需要上传任何文件。\n'
                  '     配置留空就用你自己的博客信息；以后升级不用再动任何字段 —— 自动跟随作者最新版。',
             links=generic_links, css_m=css_m, css_f=css_f, navblock=NAV_RUNTIME),
         '页首-我的站.html': head_for(
             CFG_AUTHOR, author_fallback,
             hdr='全托管 · 作者自用',
-            note='带本站品牌 / 头像 / 公告与菜单；主源 cdn、备源 gcore（都可 purge，发版即时生效）。\n'
+            note='带本站品牌 / 头像 / 公告与菜单；主源 cdn、备源 fastly，两个都跟随 master 分支、都能 purge。\n'
                  '     别人装主题请用「页首.html」，那份不带任何作者信息。',
             links=author_links, css_m=css_m, css_f=css_f,
             # 作者站的 nav 是确定的，直接渲染成静态 HTML，跨页过渡才拍得到完整顶栏
@@ -970,15 +980,19 @@ def main():
         files = build(ver, mode)
         print('[%s]' % mode)
         for name, text in files.items():
-            path = os.path.join(out, name)
+            # 全托管：只有「现在就要贴」的几份留在 paste，可读版与应急备份挪去同级目录
+            sub, fname = HOSTED_LAYOUT.get(name, (None, name)) if mode == 'hosted' else (None, name)
+            out_dir = os.path.join(os.path.dirname(out), sub) if sub else out
+            path = os.path.join(out_dir, fname)
             if args.check:
                 same = os.path.exists(path) and read(path) == text
-                print('  %s %-14s %s' % ('✓' if same else '✗', name, '一致' if same else '不一致/缺失'))
+                print('  %s %-14s %s' % ('✓' if same else '✗', fname, '一致' if same else '不一致/缺失'))
                 ok = ok and same
             else:
-                os.makedirs(out, exist_ok=True)
+                os.makedirs(out_dir, exist_ok=True)
                 write(path, text)
-                print('  ✓ %-14s %6d B' % (name, len(text.encode('utf-8'))))
+                print('  ✓ %-14s %6d B   %s' % (fname, len(text.encode('utf-8')),
+                                                os.path.relpath(out_dir, ROOT)))
         print('  目录：%s' % out)
 
     if not args.check:
@@ -986,16 +1000,19 @@ def main():
         if 'inline' in modes:
             print('零闪版（推荐）：样式贴「页面定制 CSS 代码」，页脚贴「2-页脚.html」，页首贴「1-页首.html」')
         if 'hosted' in modes:
-            print('托管版（发给别人）：CSS 字段贴「样式.min.css」（压缩版 3.0 KB；「样式.css」是同内容可读版），'
-                  '页首字段贴「页首.html」；页脚与公告留空。')
-            print('                   样式和脚本都跟随 @latest —— 以后发版两个字段都不用再动。')
-            print('作者自用：页首改贴「页首-我的站.html」（带本站品牌/头像/公告），其余同上。')
+            print('托管版（发给别人）：CSS 字段贴 paste/样式.min.css，'
+                  '页首字段贴 paste/页首.html；页脚与公告留空。')
+            print('                   样式和脚本都跟随 @master —— 以后发版两个字段都不用再动。')
+            print('作者自用：页首改贴 paste/页首-我的站.html（带本站品牌/头像/公告），其余同上。')
             print('镜像 js：%s' % mirror_url(ver))
             print('镜像 css：%s' % css_url())
-            print('      ↑ @latest 由 CDN 解析到最新 tag，必须先 push 并 git tag %s（否则停在上一版）' % ver)
-            print('备源：gcore.jsdelivr.net（同样 @latest，主源挂了自动接管）')
-            print('      ↑ 发版后想让前台立刻生效，务必 curl purge.jsdelivr.net 清一次 cdn 的解析缓存')
-            print('应急：CDN 全挂时贴「样式-内联备份.css」，页首换回 tag v7.30 那份（内联模式不受影响）')
+            print('      ↑ @master 跟随分支：push 就是发布，不需要打 tag（大版本才打）')
+            print('      ↑ 想让前台立刻生效，push 后 curl purge.jsdelivr.net 清一次 cdn 边缘缓存：')
+            print('        curl https://purge.jsdelivr.net/gh/zsy0216/cnblogs-document-theme@master/dist/document-theme.js')
+            print('        同法清 css/theme-v7.min.css；不清也行，最迟次日换日期参数后全网生效')
+            print('备源：fastly.jsdelivr.net（同样 @master，主源挂了自动接管）')
+            print('应急：CDN 全挂时贴 fallback/样式-内联备份.css，页首换回 tag v7.30 那份（内联模式不受影响）')
+            print('读字段说明：readable/样式-字段可读版.css（带注释，与 paste 里那份内容等价）')
     sys.exit(0 if ok else 1)
 
 

@@ -19,8 +19,8 @@ const URL_PAGE = process.env.URL || 'https://www.cnblogs.com/zhangshuaiyin/p/235
 const DELAY = Number(process.argv[2] || 0);
 const BUNDLE = fs.readFileSync(path.join(ROOT, 'dist', 'document-theme.js'), 'utf8');
 const HEAD = fs.readFileSync(path.join(ROOT, 'dist', 'paste', 'hosted', '1-页首.html'), 'utf8');
-// 闸门就在 dist/paste/hosted/4-样式.css 里（贴到「页面定制 CSS 代码」字段的内容）
-const CSS_FIELD = fs.readFileSync(path.join(ROOT, 'dist', 'paste', 'hosted', '4-样式.css'), 'utf8');
+// 闸门就在 dist/paste/样式.min.css 里（贴到「页面定制 CSS 代码」字段的内容）
+const CSS_FIELD = fs.readFileSync(path.join(ROOT, 'dist', 'paste', '样式.min.css'), 'utf8');
 
 /* <div> 开闭配对找 page_begin_html 的结束位。
    ⚠ 必须跳过注释 / <script> / <style> 的内容：博客园页首字段的注释里常出现

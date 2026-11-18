@@ -14,7 +14,7 @@ const FROM = 'https://www.cnblogs.com/zhangshuaiyin/p/23587183';
 const TO = 'https://www.cnblogs.com/zhangshuaiyin/';
 const BUNDLE = fs.readFileSync(path.join(ROOT, 'dist', 'document-theme.js'), 'utf8');
 const HEAD = fs.readFileSync(path.join(ROOT, 'dist', 'paste', 'hosted', '1-页首.html'), 'utf8');
-const CSS_FIELD = fs.readFileSync(path.join(ROOT, 'dist', 'paste', 'hosted', '4-样式.css'), 'utf8');
+const CSS_FIELD = fs.readFileSync(path.join(ROOT, 'dist', 'paste', '样式.min.css'), 'utf8');
 
 const NOGATE = process.env.NOGATE === '1';
 const VT = process.env.VT === '1';
