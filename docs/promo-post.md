@@ -2,7 +2,7 @@
 
 > 仓库：<https://github.com/zsy0216/cnblogs-document-theme>
 > 技术栈：纯 CSS（Grid）+ 原生 JS，零依赖、零构建、零后端
-> 当前版本：v7.36，MIT
+> 当前版本：v7.37，MIT
 
 ## 长什么样
 

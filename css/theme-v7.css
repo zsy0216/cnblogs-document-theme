@@ -1,6 +1,6 @@
 /* ============================================================
-   流苏主题 v7.36 · 2026-11-18
-   最近：发版流程改为「push 即发布」：页首锚点从 @latest（最新 tag）换成 @master（分支），tag 只留给大版本里程碑（作者 2026-11-18 要求）；备源从 gcore 换成 fastly（gcore 缓存分支两周且 purge 清不到）；dist/paste 只放要粘贴的三份，可读版挪到 readable/、应急备份挪到 fallback/
+   流苏主题 v7.37 · 2026-11-18
+   最近：标签页（/tag）重做 —— 博客园用 <table> 排标签，每行四个 <td>、列宽随内容撑开，390px 下表格 454px 直接撑出横向滚动条。改成 table/tbody/tr 摊平的网格（tr 用 display:contents），PC 四列、窄屏两列，块状样式与分类页对齐；同时去掉 #taglist 与 #taglist_main 的父子双层卡片。
    ------------------------------------------------------------
    主题 v6 —— 基于博客园 2026 真实 DOM 重写
    ------------------------------------------------------------
@@ -971,11 +971,13 @@ html.qb-arc-page #mainContent .entrylist {
 /* ---------- 5. 文章列表卡片 ---------- */
 #mainContent .forFlow { padding: 0 !important; }
 
-/* 标签页/分类页/归档页：统一卡片化 */
+/* 标签页/分类页/归档页：统一卡片化
+   #taglist 不在此列：#taglist_main 与 #taglist 是父子两层，两个都上卡片就会
+   套成「卡片里的卡片」，标签页左右各多出 22px 内边距、还多一圈描边。
+   只留外层 #taglist_main 一张卡（见 5.2b）。 */
 .day,
 .post,
 #taglist_main,
-#taglist,
 .category-block {
     background: var(--card);
     border: 1px solid var(--line);
@@ -1302,21 +1304,111 @@ body.qb-dark .qb-arc-idx-m.on i { color: rgba(13, 17, 23, .7); }
     font-size: 13.5px !important;
 }
 
-/* 标签云胶囊（标签名称列表） */
-#taglist_main table { width: 100% !important; }
-#MyTag1_dtTagList a,
-#taglist a {
-    display: inline-block;
-    padding: 5px 10px;
-    margin: 4px;
-    border-radius: 20px;
-    background: var(--bg);
-    color: var(--body) !important;
-    font-size: 13px;
-    transition: background .16s ease, color .16s ease;
+/* ---------- 5.2b 标签云页（taglist） ----------
+   博客园标签页的 HTML 是 <table>，每行四个 <td>、列宽由内容撑开：
+   390px 视口下表格实测 454px（#taglist 只有 324px），整页被撑出横向滚动条；
+   而且列宽各行不一，读起来像被打散的碎片。
+   这里的做法是把 table / tbody / tr 摊平成一个网格 —— tr 用 display:contents
+   不生成盒子，td 直接成为网格项，列宽均分，任何宽度下都不会溢出。
+   视觉对齐「5.3 分类页」：同一套浅灰块、8px 圆角、8px/10px 内边距、
+   数量紧跟标签名而不是单甩到一头。 */
+#taglist_main { padding: 20px 22px 18px; }   /* 外层唯一的卡片，见 5 节 */
+#taglist {
+    background: none;
+    border: 0;
+    box-shadow: none;
+    padding: 0;
+    margin: 0;
 }
-#MyTag1_dtTagList a:hover,
-#taglist a:hover { background: var(--accent-soft); color: var(--accent-deep) !important; }
+
+#taglist_title_wrap { margin: 0 0 14px; }
+/* 标题与分类页的 .category-block-title 同一套：15px / 600 / 下划分隔线 / 左对齐。
+   原件是 <h3>我的标签 <small style="float:right">排序：…</small></h3>，
+   内联 float 必须显式清掉，否则窄屏会和标题挤成一团。 */
+#taglist_title {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 4px 12px;
+    font-size: 15px !important;
+    font-weight: 600 !important;
+    color: var(--ink) !important;
+    letter-spacing: .02em;
+    line-height: 1.6;
+    margin: 0 !important;
+    padding: 0 0 10px;
+    border-bottom: 1px solid var(--line);
+}
+#taglist_title small {
+    float: none !important;
+    margin: 0 0 0 auto !important;
+    font-size: 12.5px !important;
+    font-weight: 400 !important;
+    color: var(--meta);
+    white-space: nowrap;
+}
+#taglist_title small a { color: var(--meta) !important; transition: color .16s ease; }
+#taglist_title small a:hover { color: var(--accent-deep) !important; }
+
+/* 摊平表格 → 网格 */
+#taglist_main table,
+#MyTag1_dtTagList {
+    width: 100% !important;
+    max-width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin: 0;
+}
+#MyTag1_dtTagList { display: block; }
+#MyTag1_dtTagList tbody {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px;
+    width: 100%;
+}
+#MyTag1_dtTagList tr { display: contents; }
+#MyTag1_dtTagList td {
+    display: flex;
+    align-items: baseline;
+    gap: 2px;
+    min-width: 0;
+    margin: 0;
+    padding: 8px 10px;
+    background: var(--bg);
+    border: 0;
+    border-radius: var(--radius-sm);
+    color: var(--body);
+    font-size: 13.5px;
+    line-height: 1.45;
+    transition: background .16s ease;
+}
+#MyTag1_dtTagList td:hover { background: var(--accent-soft); }
+/* 标签名超长就截断：标签是短词，宁可省略号也不要换行把格子撑高 */
+#MyTag1_dtTagList td a {
+    display: block;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    padding: 0;
+    margin: 0;
+    background: none;
+    border-radius: 0;
+    color: var(--body) !important;
+    font-size: 13.5px;
+    transition: color .16s ease;
+}
+#MyTag1_dtTagList td:hover a { color: var(--accent-deep) !important; }
+/* 数量「(6)」：跟分类页一样紧贴在名字后面，用次要色、等宽数字 */
+#MyTag1_dtTagList td .small,
+#MyTag1_dtTagList td span {
+    flex: 0 0 auto;
+    color: var(--meta) !important;
+    font-size: 11.5px;
+    font-variant-numeric: tabular-nums;
+}
+#taglist a { color: var(--body) !important; }
+#taglist a:hover { color: var(--accent-deep) !important; }
 
 /* ---------- 5.3 分类页（category-block） ---------- */
 .category-block-title {
@@ -2398,6 +2490,8 @@ body.qb-dark #cnblogs_post_body img:hover {
     #cnblogs_post_body .qb-cl { padding-right: 12px; }
     #cnblogs_post_body .qb-code-bar { padding: 4px 8px 4px 10px; }
     .day { padding: 16px 16px 12px; }
+    /* 标签页与文章卡同一档内边距 */
+    #taglist_main { padding: 16px 16px 12px; }
     /* 小屏顶栏：logo 与字号同步收一档，菜单改为横向滑动，避免挤出行外把暗色按钮顶没 */
     .qb-nav-inner { padding: 0 14px; height: 52px; gap: 10px; }
     /* 窄屏内层 52px，外壳的 min-height 也要跟着降，否则会多出 6px 空白 */
@@ -2720,6 +2814,16 @@ html.qb-mmenu-lock body { overflow: hidden !important; }
     .qb-arc-link { padding: 7px 10px; }
 }
 
+@media screen and (max-width: 640px) {
+    /* 标签页：4 列降 2 列。390 宽下 4 列每格只剩 ~74px，
+       「编程语言注释」这种六个字的标签必然被省略号吃掉，2 列每格 ~160px 正合适
+       （与 5.3 分类页在小屏的两列一致）。 */
+    #MyTag1_dtTagList tbody { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; }
+    #MyTag1_dtTagList td { padding: 8px 9px; }
+    #taglist_title { font-size: 14.5px !important; gap: 2px 10px; }
+    #taglist_title small { font-size: 12px !important; }
+}
+
 @media screen and (max-width: 480px) {
     /* 375/390 宽：左右留白各收 4px，正文有效宽度 +8px，
        15px 的字号下这 8px 大概能多放半个字，但一行能少折一次 */
@@ -2735,6 +2839,7 @@ html.qb-mmenu-lock body { overflow: hidden !important; }
     #cnblogs_post_body .qb-code { margin: 1em 0; }
     #cnblogs_post_body .qb-code-bar { font-size: 11px; }
     .day { padding: 14px 14px 10px; }
+    #taglist_main { padding: 14px 14px 10px; }
     .day .postTitle { font-size: 18px; }
     #post_detail .qb-readtime { margin-bottom: 16px; }
     #cnblogs_post_body .qb-copyright { padding: 12px 13px 11px; line-height: 1.85; }
